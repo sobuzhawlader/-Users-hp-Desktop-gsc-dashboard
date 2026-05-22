@@ -1,0 +1,14 @@
+flask
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+pandas
+plotly
+streamlit
+sqlalchemy
+reportlab
+fpdf2
+requests
+python-dotenv
+schedule
