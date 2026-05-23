@@ -188,10 +188,13 @@ with st.sidebar:
         with st.spinner("Connecting..."):
             try:
                 service = get_gsc_service()
-                sites = get_sites(service)
-                st.session_state.service = service
-                st.session_state.sites = sites
-                st.success(f"✅ Connected! {len(sites)} sites found")
+                if service:
+                    sites = get_sites(service)
+                    st.session_state.service = service
+                    st.session_state.sites = sites
+                    st.success(f"✅ Connected! {len(sites)} sites found")
+                else:
+                    st.error("❌ Token not found! Please run locally first.")
             except Exception as e:
                 st.error(f"Connection failed: {e}")
     
