@@ -184,17 +184,30 @@ with st.sidebar:
     st.divider()
     
     # Connect Button
-    if st.button("🔗 Connect Google Account", use_container_width=True):
-        with st.spinner("Connecting..."):
-            try:
-                service = get_gsc_service()
-                if service:
-                    sites = get_sites(service)
-                    st.session_state.service = service
-                    st.session_state.sites = sites
-                    st.success(f"✅ Connected! {len(sites)} sites found")
-                else:
-                    st.error("❌ Token not found! Please run locally first.")
+   query_params = st.query_params
+if 'code' in query_params:
+    try:
+        code = query_params['code']
+        state = query_params.get('state', '')
+        from auth_gsc import exchange_code
+        creds = exchange_code(code, state)
+        service = get_gsc_service(creds)
+        if service:
+            sites = get_sites(service)
+            st.session_state.service = service
+            st.session_state.sites = sites
+            st.query_params.clear()
+            st.success(f"✅ Connected! {len(sites)} sites found")
+    except Exception as e:
+        st.error(f"OAuth error: {e}")
+
+if st.button("🔗 Connect Google Account", use_container_width=True):
+    from auth_gsc import get_auth_url
+    auth_url, state = get_auth_url()
+    st.session_state.oauth_state = state
+    st.markdown(f'<meta http-equiv="refresh" content="0;url={auth_url}">',
+                unsafe_allow_html=True)
+    st.markdown(f"[👉 Click here if not redirected]({auth_url})")
             except Exception as e:
                 st.error(f"Connection failed: {e}")
     
