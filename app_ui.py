@@ -156,17 +156,22 @@ if 'user_creds' not in st.session_state:
 def resolve_redirect_uri(cfg):
     """Picks the best redirect URI matching cloud or local environment."""
     if not cfg or 'web' not in cfg:
-        return 'http://localhost:8501/'
-    uris = cfg.get('web', {}).get('redirect_uris', ['http://localhost:8501/'])
+        return 'http://localhost:8501'
+    uris = cfg.get('web', {}).get('redirect_uris', ['http://localhost:8501'])
     if not uris:
-        return 'http://localhost:8501/'
-    # If running on Streamlit Cloud (credentials.json doesn't exist locally or STREAMLIT_SERVER_BASE_URL set)
-    is_cloud = not os.path.exists(os.path.join(os.path.dirname(__file__), 'credentials.json'))
+        return 'http://localhost:8501'
+    # Detect Streamlit Cloud (Linux OS or container)
+    is_cloud = (os.name != 'nt') or ('STREAMLIT_SHARING_MODE' in os.environ)
     if is_cloud:
         for u in uris:
             if 'streamlit.app' in u:
-                return u
-    return uris[0]
+                return u.rstrip('/')
+    else:
+        for u in uris:
+            if 'localhost' in u:
+                return u.rstrip('/')
+    return uris[0].rstrip('/')
+
 
 # ==============================
 # Multi-User Web OAuth Callback Handler
