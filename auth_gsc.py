@@ -46,9 +46,13 @@ def load_client_config():
 
     # 3. Check local file
     if os.path.exists(CREDENTIALS_FILE):
-        with open(CREDENTIALS_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        try:
+            with open(CREDENTIALS_FILE, 'r', encoding='utf-8-sig') as f:
+                return json.load(f)
+        except Exception as e:
+            pass
     return None
+
 
 def get_auth_url(redirect_uri: str, config: dict = None):
     """
