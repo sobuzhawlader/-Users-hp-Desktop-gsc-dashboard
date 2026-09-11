@@ -13,8 +13,30 @@ CREDENTIALS_FILE = os.path.join(BASE_DIR, 'credentials.json')
 SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, 'service_account.json')
 
 def load_client_config():
-    """Loads the OAuth client secrets from file or environment variable."""
-    # Check environment variable first (useful for cloud deployments)
+    """Loads the OAuth client secrets from Streamlit secrets, session, file, or environment variable."""
+    # 0. Check per-session uploaded config
+    try:
+        import streamlit as st
+        if 'client_config' in st.session_state and st.session_state.client_config:
+            return st.session_state.client_config
+    except Exception:
+        pass
+
+    # 1. Check Streamlit Cloud secrets
+    try:
+        import streamlit as st
+        if hasattr(st, 'secrets'):
+            if 'GSC_CREDENTIALS_JSON' in st.secrets:
+                val = st.secrets['GSC_CREDENTIALS_JSON']
+                if isinstance(val, dict):
+                    return val
+                return json.loads(val)
+            if 'web' in st.secrets:
+                return {'web': dict(st.secrets['web'])}
+    except Exception:
+        pass
+
+    # 2. Check environment variable
     env_creds = os.environ.get('GSC_CREDENTIALS_JSON')
     if env_creds:
         try:
@@ -22,19 +44,21 @@ def load_client_config():
         except Exception:
             pass
 
+    # 3. Check local file
     if os.path.exists(CREDENTIALS_FILE):
         with open(CREDENTIALS_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
     return None
 
-def get_auth_url(redirect_uri: str):
+def get_auth_url(redirect_uri: str, config: dict = None):
     """
     Generates a web OAuth authorization URL for multi-user browser authentication.
     Google will redirect back to redirect_uri with ?code=...
     """
-    config = load_client_config()
     if not config:
-        raise FileNotFoundError("Missing 'credentials.json' or GSC_CREDENTIALS_JSON environment variable.")
+        config = load_client_config()
+    if not config:
+        raise FileNotFoundError("Missing 'credentials.json' or GSC_CREDENTIALS_JSON in secrets/environment.")
 
     flow = Flow.from_client_config(
         config,
@@ -48,16 +72,18 @@ def get_auth_url(redirect_uri: str):
     )
     return auth_url, state
 
-def exchange_code(code: str, redirect_uri: str):
+def exchange_code(code: str, redirect_uri: str, config: dict = None):
     """
     Exchanges the authorization code returned by Google for a user's isolated credentials.
     """
-    config = load_client_config()
+    if not config:
+        config = load_client_config()
     if not config:
         raise FileNotFoundError("Missing 'credentials.json'.")
 
     flow = Flow.from_client_config(
         config,
+
         scopes=SCOPES,
         redirect_uri=redirect_uri
     )

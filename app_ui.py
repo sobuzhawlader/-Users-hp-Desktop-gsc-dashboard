@@ -153,6 +153,21 @@ if 'current_site' not in st.session_state:
 if 'user_creds' not in st.session_state:
     st.session_state.user_creds = None
 
+def resolve_redirect_uri(cfg):
+    """Picks the best redirect URI matching cloud or local environment."""
+    if not cfg or 'web' not in cfg:
+        return 'http://localhost:8501/'
+    uris = cfg.get('web', {}).get('redirect_uris', ['http://localhost:8501/'])
+    if not uris:
+        return 'http://localhost:8501/'
+    # If running on Streamlit Cloud (credentials.json doesn't exist locally or STREAMLIT_SERVER_BASE_URL set)
+    is_cloud = not os.path.exists(os.path.join(os.path.dirname(__file__), 'credentials.json'))
+    if is_cloud:
+        for u in uris:
+            if 'streamlit.app' in u:
+                return u
+    return uris[0]
+
 # ==============================
 # Multi-User Web OAuth Callback Handler
 # ==============================
@@ -161,11 +176,9 @@ if 'code' in query_params and st.session_state.service is None:
     code = query_params['code']
     try:
         cfg = load_client_config()
-        registered_uris = cfg.get('web', {}).get('redirect_uris', ['http://localhost:8501/'])
-        # Match redirect URI from registered list or fallback to localhost
-        redirect_uri = registered_uris[0] if registered_uris else 'http://localhost:8501/'
+        redirect_uri = resolve_redirect_uri(cfg)
         
-        creds = exchange_code(code, redirect_uri)
+        creds = exchange_code(code, redirect_uri, config=cfg)
         svc = get_gsc_service(creds)
         svc_v1 = get_searchconsole_v1_service(creds)
         sites = get_sites(svc)
@@ -212,32 +225,45 @@ with st.sidebar:
         st.info("👋 Log in with your Google account to access your Search Console data.")
         
         # 1. Web OAuth (Cloud / Any Device)
-        try:
-            cfg = load_client_config()
-            registered_uris = cfg.get('web', {}).get('redirect_uris', ['http://localhost:8501/']) if cfg else ['http://localhost:8501/']
-            default_redirect = registered_uris[0] if registered_uris else 'http://localhost:8501/'
-            
-            auth_url, _ = get_auth_url(default_redirect)
-            st.link_button("🌐 Connect with Google (Cloud/Web)", auth_url, use_container_width=True)
-        except Exception:
-            pass
+        cfg = load_client_config()
+        if cfg:
+            default_redirect = resolve_redirect_uri(cfg)
+            try:
+                auth_url, _ = get_auth_url(default_redirect, config=cfg)
+                st.link_button("🌐 Connect with Google (Cloud/Web)", auth_url, use_container_width=True)
+            except Exception as ex:
+                st.error(f"OAuth config error: {ex}")
+        else:
+            st.warning("⚠️ Google Cloud credentials not configured.")
+            st.caption("Paste `GSC_CREDENTIALS_JSON` into Streamlit Secrets, or upload `credentials.json` below:")
+            uploaded_creds = st.file_uploader("Upload credentials.json", type=['json'], key="sidebar_creds_uploader")
+            if uploaded_creds:
+                try:
+                    loaded_cfg = json.load(uploaded_creds)
+                    st.session_state.client_config = loaded_cfg
+                    st.success("Credentials saved to session!")
+                    st.rerun()
+                except Exception as ex:
+                    st.error(f"Invalid JSON: {ex}")
 
         # 2. Local Desktop 1-Click Popup
-        if st.button("💻 Local 1-Click Login (Desktop)", use_container_width=True):
-            with st.spinner("Authorizing in browser..."):
-                try:
-                    creds = authenticate_local(port=8080)
-                    svc = get_gsc_service(creds)
-                    svc_v1 = get_searchconsole_v1_service(creds)
-                    sites = get_sites(svc)
-                    st.session_state.user_creds = creds
-                    st.session_state.service = svc
-                    st.session_state.service_v1 = svc_v1
-                    st.session_state.sites = sites
-                    st.success(f"✅ Connected! Found {len(sites)} sites.")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Auth failed: {e}")
+        if os.path.exists(os.path.join(os.path.dirname(__file__), 'credentials.json')):
+            if st.button("💻 Local 1-Click Login (Desktop)", use_container_width=True):
+                with st.spinner("Authorizing in browser..."):
+                    try:
+                        creds = authenticate_local(port=8080)
+                        svc = get_gsc_service(creds)
+                        svc_v1 = get_searchconsole_v1_service(creds)
+                        sites = get_sites(svc)
+                        st.session_state.user_creds = creds
+                        st.session_state.service = svc
+                        st.session_state.service_v1 = svc_v1
+                        st.session_state.sites = sites
+                        st.success(f"✅ Connected! Found {len(sites)} sites.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Auth failed: {e}")
+
 
     st.divider()
 
