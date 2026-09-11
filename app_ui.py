@@ -1,10 +1,15 @@
+import os
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-from auth_gsc import get_gsc_service, get_sites
-from data_fetcher import fetch_gsc_data, get_date_range
+
+from auth_gsc import (
+    get_gsc_service, get_searchconsole_v1_service, get_sites, 
+    authenticate_local, get_auth_url, exchange_code, load_client_config
+)
+from data_fetcher import fetch_gsc_data
 from database import init_db, save_data, load_data, load_alerts
 from seo_engine import (
     get_overview, get_quick_wins, get_cannibalization,
@@ -16,11 +21,19 @@ from seo_engine import (
 from report_generator import generate_pdf_report
 from alerts import get_unread_alerts
 
+# Advanced Engines
+from inspection_engine import inspect_single_url, inspect_bulk_urls
+from algo_analyzer import analyze_algorithm_impact, MAJOR_ALGO_UPDATES
+from ctr_modeler import build_empirical_ctr_curve, forecast_traffic_opportunity
+from sitemap_engine import list_sitemaps, submit_sitemap
+from log_reconciliation import reconcile_crawl_with_gsc, reconcile_server_logs_with_gsc
+from automation_generator import generate_automation_bundle, GITHUB_ACTIONS_WORKFLOW, HEADLESS_AUDIT_SCRIPT
+
 # ==============================
 # Page Config
 # ==============================
 st.set_page_config(
-    page_title="GSC Pro Dashboard",
+    page_title="GSC Pro - Enterprise SEO Dashboard",
     page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -32,702 +45,751 @@ st.set_page_config(
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
     * { font-family: 'Inter', sans-serif; }
-    
     .main { background: #0f0f1a; }
-    
     .stApp {
         background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
     }
-    
-    /* Sidebar */
     section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
         border-right: 1px solid rgba(99, 102, 241, 0.3);
     }
-    
     section[data-testid="stSidebar"] .stRadio label {
         color: #e2e8f0 !important;
-        font-size: 14px;
-        padding: 8px 12px;
-        border-radius: 8px;
-        transition: all 0.2s;
+        font-size: 13px;
+        padding: 5px 8px;
+        border-radius: 6px;
     }
-    
-    /* KPI Cards */
     .kpi-card {
         background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.1));
         border: 1px solid rgba(99, 102, 241, 0.3);
-        border-radius: 16px;
-        padding: 20px;
+        border-radius: 12px;
+        padding: 14px;
         text-align: center;
         backdrop-filter: blur(10px);
         transition: transform 0.2s;
     }
-    
     .kpi-card:hover { transform: translateY(-3px); }
-    
     .kpi-value {
-        font-size: 32px;
+        font-size: 26px;
         font-weight: 700;
         background: linear-gradient(135deg, #6366f1, #a855f7);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
-    
     .kpi-label {
-        font-size: 13px;
+        font-size: 11px;
         color: #94a3b8;
-        margin-top: 5px;
+        margin-top: 4px;
         font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    
-    /* Section Headers */
     .section-header {
         background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(168,85,247,0.1));
         border-left: 4px solid #6366f1;
         border-radius: 8px;
-        padding: 12px 16px;
-        margin: 20px 0 15px 0;
+        padding: 10px 14px;
+        margin: 15px 0 12px 0;
         color: #e2e8f0;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 600;
     }
-    
-    /* Alert Cards */
     .alert-danger {
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.3);
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.35);
         border-radius: 10px;
         padding: 12px;
-        margin: 5px 0;
+        margin: 8px 0;
         color: #fca5a5;
     }
-    
     .alert-warning {
-        background: rgba(245, 158, 11, 0.1);
-        border: 1px solid rgba(245, 158, 11, 0.3);
+        background: rgba(245, 158, 11, 0.12);
+        border: 1px solid rgba(245, 158, 11, 0.35);
         border-radius: 10px;
         padding: 12px;
-        margin: 5px 0;
+        margin: 8px 0;
         color: #fcd34d;
     }
-    
     .alert-success {
-        background: rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.3);
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.35);
         border-radius: 10px;
         padding: 12px;
-        margin: 5px 0;
+        margin: 8px 0;
         color: #6ee7b7;
     }
-    
-    /* Dataframe */
-    .dataframe { color: #e2e8f0 !important; }
-    
-    /* Buttons */
     .stButton > button {
         background: linear-gradient(135deg, #6366f1, #a855f7);
         color: white;
         border: none;
-        border-radius: 10px;
-        padding: 8px 20px;
+        border-radius: 8px;
+        padding: 7px 16px;
         font-weight: 600;
         transition: all 0.2s;
     }
-    
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
     }
-    
-    /* Hide Streamlit branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================
-# Initialize DB
+# Database & State Initialization (Per-User Session)
 # ==============================
 init_db()
 
-# ==============================
-# Session State
-# ==============================
 if 'service' not in st.session_state:
     st.session_state.service = None
+if 'service_v1' not in st.session_state:
+    st.session_state.service_v1 = None
 if 'sites' not in st.session_state:
     st.session_state.sites = []
 if 'df' not in st.session_state:
     st.session_state.df = pd.DataFrame()
+if 'current_site' not in st.session_state:
+    st.session_state.current_site = None
+if 'user_creds' not in st.session_state:
+    st.session_state.user_creds = None
+
+# ==============================
+# Multi-User Web OAuth Callback Handler
+# ==============================
+query_params = st.query_params
+if 'code' in query_params and st.session_state.service is None:
+    code = query_params['code']
+    try:
+        cfg = load_client_config()
+        registered_uris = cfg.get('web', {}).get('redirect_uris', ['http://localhost:8501/'])
+        # Match redirect URI from registered list or fallback to localhost
+        redirect_uri = registered_uris[0] if registered_uris else 'http://localhost:8501/'
+        
+        creds = exchange_code(code, redirect_uri)
+        svc = get_gsc_service(creds)
+        svc_v1 = get_searchconsole_v1_service(creds)
+        sites = get_sites(svc)
+        
+        st.session_state.user_creds = creds
+        st.session_state.service = svc
+        st.session_state.service_v1 = svc_v1
+        st.session_state.sites = sites
+        st.query_params.clear()
+        st.rerun()
+    except Exception as e:
+        st.error(f"Web OAuth Error: {e}")
 
 # ==============================
 # Sidebar
 # ==============================
 with st.sidebar:
     st.markdown("""
-    <div style='text-align:center; padding: 20px 0;'>
-        <div style='font-size:40px'>🔍</div>
-        <div style='font-size:20px; font-weight:700; 
+    <div style='text-align:center; padding: 12px 0 8px 0;'>
+        <div style='font-size:32px'>🔍</div>
+        <div style='font-size:18px; font-weight:700; 
              background: linear-gradient(135deg, #6366f1, #a855f7);
              -webkit-background-clip: text;
              -webkit-text-fill-color: transparent;'>
-             GSC Pro
+             GSC Pro Enterprise
         </div>
-        <div style='font-size:11px; color:#64748b;'>Advanced SEO Dashboard</div>
+        <div style='font-size:11px; color:#94a3b8;'>Multi-User Cloud & Local Ready</div>
     </div>
     """, unsafe_allow_html=True)
-    
     st.divider()
-    
-    # Connect Button
-   query_params = st.query_params
-if 'code' in query_params:
-    try:
-        code = query_params['code']
-        state = query_params.get('state', '')
-        from auth_gsc import exchange_code
-        creds = exchange_code(code, state)
-        service = get_gsc_service(creds)
-        if service:
-            sites = get_sites(service)
-            st.session_state.service = service
-            st.session_state.sites = sites
-            st.query_params.clear()
-            st.success(f"✅ Connected! {len(sites)} sites found")
-    except Exception as e:
-        st.error(f"OAuth error: {e}")
 
-if st.button("🔗 Connect Google Account", use_container_width=True):
-    from auth_gsc import get_auth_url
-    auth_url, state = get_auth_url()
-    st.session_state.oauth_state = state
-    st.markdown(f'<meta http-equiv="refresh" content="0;url={auth_url}">',
-                unsafe_allow_html=True)
-    st.markdown(f"[👉 Click here if not redirected]({auth_url})")
-            except Exception as e:
-                st.error(f"Connection failed: {e}")
-    
-    # Site Selector
+    # Connection Status
+    if st.session_state.service and st.session_state.sites:
+        st.markdown(f"**Status:** <span style='color:#10b981; font-weight:600;'>● Connected</span> ({len(st.session_state.sites)} properties)", unsafe_allow_html=True)
+        if st.button("🚪 Logout / Switch Account", use_container_width=True):
+            st.session_state.service = None
+            st.session_state.service_v1 = None
+            st.session_state.sites = []
+            st.session_state.df = pd.DataFrame()
+            st.session_state.current_site = None
+            st.session_state.user_creds = None
+            st.rerun()
+    else:
+        st.info("👋 Log in with your Google account to access your Search Console data.")
+        
+        # 1. Web OAuth (Cloud / Any Device)
+        try:
+            cfg = load_client_config()
+            registered_uris = cfg.get('web', {}).get('redirect_uris', ['http://localhost:8501/']) if cfg else ['http://localhost:8501/']
+            default_redirect = registered_uris[0] if registered_uris else 'http://localhost:8501/'
+            
+            auth_url, _ = get_auth_url(default_redirect)
+            st.link_button("🌐 Connect with Google (Cloud/Web)", auth_url, use_container_width=True)
+        except Exception:
+            pass
+
+        # 2. Local Desktop 1-Click Popup
+        if st.button("💻 Local 1-Click Login (Desktop)", use_container_width=True):
+            with st.spinner("Authorizing in browser..."):
+                try:
+                    creds = authenticate_local(port=8080)
+                    svc = get_gsc_service(creds)
+                    svc_v1 = get_searchconsole_v1_service(creds)
+                    sites = get_sites(svc)
+                    st.session_state.user_creds = creds
+                    st.session_state.service = svc
+                    st.session_state.service_v1 = svc_v1
+                    st.session_state.sites = sites
+                    st.success(f"✅ Connected! Found {len(sites)} sites.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Auth failed: {e}")
+
+    st.divider()
+
+    # Property & Date Selectors
+    selected_site = None
+    start_str = None
+    end_str = None
+
     if st.session_state.sites:
-        selected_site = st.selectbox(
-            "🌐 Select Site",
-            st.session_state.sites
-        )
-        
-        # Date Range
+        selected_site = st.selectbox("🌐 GSC Property", st.session_state.sites)
+        if st.session_state.current_site != selected_site:
+            st.session_state.current_site = selected_site
+            st.session_state.df = pd.DataFrame()
+
         st.markdown("**📅 Date Range**")
-        period = st.radio("", [
-            "Last 7 days",
-            "Last 30 days", 
-            "Last 90 days",
-            "Last 6 months",
-            "Custom"
-        ], index=1)
-        
+        period = st.radio("Period", [
+            "Last 7 days", "Last 30 days", "Last 90 days", "Last 6 months", "Custom"
+        ], index=1, label_visibility="collapsed")
+
         if period == "Custom":
-            start_date = st.date_input("Start Date", 
-                datetime.now() - timedelta(days=30))
-            end_date = st.date_input("End Date", datetime.now())
+            c1, c2 = st.columns(2)
+            with c1:
+                start_date = st.date_input("Start", datetime.now() - timedelta(days=30))
+            with c2:
+                end_date = st.date_input("End", datetime.now())
             start_str = start_date.strftime('%Y-%m-%d')
             end_str = end_date.strftime('%Y-%m-%d')
         else:
-            days_map = {
-                "Last 7 days": 7,
-                "Last 30 days": 30,
-                "Last 90 days": 90,
-                "Last 6 months": 180
-            }
+            days_map = {"Last 7 days": 7, "Last 30 days": 30, "Last 90 days": 90, "Last 6 months": 180}
             days = days_map[period]
             end_str = datetime.now().strftime('%Y-%m-%d')
             start_str = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
-        
-        # Fetch Data Button
-        if st.button("🚀 Fetch Data", use_container_width=True):
-            with st.spinner("Fetching data from GSC..."):
-                try:
-                    df = fetch_gsc_data(
-                        st.session_state.service,
-                        selected_site,
-                        start_str, end_str
-                    )
-                    if not df.empty:
-                        save_data(df, selected_site)
-                        st.session_state.df = df
-                        st.success(f"✅ {len(df):,} rows fetched!")
-                    else:
-                        st.warning("No data found!")
-                except Exception as e:
-                    st.error(f"Error: {e}")
-        
-        # Load from DB
-        if st.button("📂 Load from Database", use_container_width=True):
-            df = load_data(selected_site, start_str, end_str)
-            if not df.empty:
-                st.session_state.df = df
-                st.success(f"✅ {len(df):,} rows loaded!")
-            else:
-                st.warning("No data in database!")
-    
+
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            if st.button("🚀 Fetch Live", use_container_width=True):
+                with st.spinner("Fetching GSC API data..."):
+                    try:
+                        df = fetch_gsc_data(st.session_state.service, selected_site, start_str, end_str)
+                        if not df.empty:
+                            save_data(df, selected_site)
+                            st.session_state.df = df
+                            st.success(f"Fetched {len(df):,} rows!")
+                        else:
+                            st.warning("No data found.")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+        with col_b2:
+            if st.button("📂 Load Saved", use_container_width=True):
+                df = load_data(selected_site, start_str, end_str)
+                if not df.empty:
+                    st.session_state.df = df
+                    st.success(f"Loaded {len(df):,} rows!")
+                else:
+                    st.info("No saved data.")
+
     st.divider()
-    
-    # Navigation
+
+    # Navigation Menu
     page = st.radio("📌 Navigation", [
         "📊 Overview",
         "🔍 Keywords",
         "📄 Pages",
-        "🌍 Countries & Devices",
         "⚡ Quick Wins",
+        "🔬 URL & Canonical Inspector",
+        "📉 Algo Update Impact",
+        "📈 Custom CTR Curve",
+        "🗺️ Sitemaps Manager",
+        "🪵 Log Reconciliation",
+        "🎯 Intent & Regex",
+        "🤖 AEO & Preferred Sources",
+        "⚙️ 24/7 Automation",
         "🚨 Alerts",
-        "📤 Reports"
+        "📤 Reports & Export"
     ])
 
 # ==============================
 # Main Content
 # ==============================
 df = st.session_state.df
+service = st.session_state.service
+service_v1 = st.session_state.service_v1
+current_site = st.session_state.current_site
 
-# ==============================
-# PAGE: Overview
-# ==============================
+# ----------------------------------------------------
+# 1. Performance Overview
+# ----------------------------------------------------
 if page == "📊 Overview":
-    st.markdown("<div class='section-header'>📊 Performance Overview</div>", 
-                unsafe_allow_html=True)
-    
+    st.markdown("<div class='section-header'>📊 Performance Overview</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Connect your Google account and fetch data to get started!")
+        st.info("👈 Connect your Google account and click **🚀 Fetch Live**.")
     else:
         overview = get_overview(df)
-        
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.markdown(f"""
-            <div class='kpi-card'>
-                <div class='kpi-value'>{overview['total_clicks']:,}</div>
-                <div class='kpi-label'>👆 Total Clicks</div>
-            </div>""", unsafe_allow_html=True)
-        with col2:
-            st.markdown(f"""
-            <div class='kpi-card'>
-                <div class='kpi-value'>{overview['total_impressions']:,}</div>
-                <div class='kpi-label'>👁️ Total Impressions</div>
-            </div>""", unsafe_allow_html=True)
-        with col3:
-            st.markdown(f"""
-            <div class='kpi-card'>
-                <div class='kpi-value'>{overview['avg_ctr']}%</div>
-                <div class='kpi-label'>🎯 Average CTR</div>
-            </div>""", unsafe_allow_html=True)
-        with col4:
-            st.markdown(f"""
-            <div class='kpi-card'>
-                <div class='kpi-value'>{overview['avg_position']}</div>
-                <div class='kpi-label'>📍 Avg Position</div>
-            </div>""", unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Traffic Chart
-        if 'date' in df.columns:
-            st.markdown("<div class='section-header'>📈 Traffic Trend</div>",
-                       unsafe_allow_html=True)
-            daily = df.groupby('date').agg(
-                clicks=('clicks', 'sum'),
-                impressions=('impressions', 'sum')
-            ).reset_index()
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=daily['date'], y=daily['clicks'],
-                name='Clicks', line=dict(color='#6366f1', width=2),
-                fill='tozeroy', fillcolor='rgba(99,102,241,0.1)'
-            ))
-            fig.add_trace(go.Scatter(
-                x=daily['date'], y=daily['impressions'],
-                name='Impressions', line=dict(color='#a855f7', width=2),
-                fill='tozeroy', fillcolor='rgba(168,85,247,0.1)',
-                yaxis='y2'
-            ))
-            fig.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='#e2e8f0'),
-                legend=dict(bgcolor='rgba(0,0,0,0)'),
-                yaxis2=dict(overlaying='y', side='right',
-                           gridcolor='rgba(255,255,255,0.05)'),
-                yaxis=dict(gridcolor='rgba(255,255,255,0.05)'),
-                xaxis=dict(gridcolor='rgba(255,255,255,0.05)'),
-                hovermode='x unified',
-                margin=dict(l=0, r=0, t=10, b=0)
-            )
-            st.plotly_chart(fig, use_container_width=True)
-        
-        # Device Breakdown
-        col1, col2 = st.columns(2)
-        with col1:
-            if 'device' in df.columns:
-                st.markdown("<div class='section-header'>📱 Device Breakdown</div>",
-                           unsafe_allow_html=True)
-                device_df = get_device_breakdown(df)
-                fig = px.pie(device_df, values='clicks', names='device',
-                            color_discrete_sequence=['#6366f1', '#a855f7', '#ec4899'])
-                fig.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#e2e8f0'),
-                    legend=dict(bgcolor='rgba(0,0,0,0)'),
-                    margin=dict(l=0, r=0, t=10, b=0)
-                )
-                st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            if 'country' in df.columns:
-                st.markdown("<div class='section-header'>🌍 Top Countries</div>",
-                           unsafe_allow_html=True)
-                country_df = get_country_breakdown(df).head(10)
-                fig = px.bar(country_df, x='clicks', y='country',
-                            orientation='h',
-                            color='clicks',
-                            color_continuous_scale=['#6366f1', '#a855f7'])
-                fig.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#e2e8f0'),
-                    margin=dict(l=0, r=0, t=10, b=0),
-                    showlegend=False
-                )
-                st.plotly_chart(fig, use_container_width=True)
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            st.markdown(f"<div class='kpi-card'><div class='kpi-value'>{overview.get('total_clicks', 0):,}</div><div class='kpi-label'>Clicks</div></div>", unsafe_allow_html=True)
+        with c2:
+            st.markdown(f"<div class='kpi-card'><div class='kpi-value'>{overview.get('total_impressions', 0):,}</div><div class='kpi-label'>Impressions</div></div>", unsafe_allow_html=True)
+        with c3:
+            st.markdown(f"<div class='kpi-card'><div class='kpi-value'>{overview.get('avg_ctr', 0)}%</div><div class='kpi-label'>Avg CTR</div></div>", unsafe_allow_html=True)
+        with c4:
+            st.markdown(f"<div class='kpi-card'><div class='kpi-value'>{overview.get('avg_position', 0)}</div><div class='kpi-label'>Avg Position</div></div>", unsafe_allow_html=True)
 
-# ==============================
-# PAGE: Keywords
-# ==============================
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        if 'date' in df.columns:
+            st.markdown("<div class='section-header'>📈 Daily Performance Trend</div>", unsafe_allow_html=True)
+            daily = df.groupby('date').agg(clicks=('clicks', 'sum'), impressions=('impressions', 'sum')).reset_index().sort_values('date')
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=daily['date'], y=daily['clicks'], name='Clicks', line=dict(color='#6366f1', width=2.5), fill='tozeroy', fillcolor='rgba(99,102,241,0.12)'))
+            fig.add_trace(go.Scatter(x=daily['date'], y=daily['impressions'], name='Impressions', line=dict(color='#a855f7', width=2.5), fill='tozeroy', fillcolor='rgba(168,85,247,0.12)', yaxis='y2'))
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#e2e8f0'), legend=dict(bgcolor='rgba(0,0,0,0)'),
+                              yaxis2=dict(overlaying='y', side='right', gridcolor='rgba(255,255,255,0.06)', title="Impressions"),
+                              yaxis=dict(gridcolor='rgba(255,255,255,0.06)', title="Clicks"), xaxis=dict(gridcolor='rgba(255,255,255,0.06)'), hovermode='x unified', margin=dict(l=0, r=0, t=10, b=0))
+            st.plotly_chart(fig, use_container_width=True)
+
+# ----------------------------------------------------
+# 2. Keywords
+# ----------------------------------------------------
 elif page == "🔍 Keywords":
-    st.markdown("<div class='section-header'>🔍 Keyword Analysis</div>",
-               unsafe_allow_html=True)
-    
+    st.markdown("<div class='section-header'>🔍 Keyword Intelligence</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Fetch data first!")
+        st.info("👈 Please fetch data first.")
     else:
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "🏆 Top Keywords",
-            "🎯 Search Intent",
-            "📏 Long Tail",
-            "⚠️ Cannibalization",
-            "🚫 Zero Clicks"
-        ])
-        
-        with tab1:
+        t1, t2, t3, t4, t5 = st.tabs(["🏆 Top Ranking", "📏 Long Tail", "⚠️ Cannibalization", "🚫 Zero Clicks", "🏷️ Brand vs Non-Brand"])
+        with t1:
             winning = get_winning_keywords(df)
+            search_query = st.text_input("🔎 Search keyword...", key="kw_search")
             if not winning.empty:
-                search = st.text_input("🔎 Search keyword...")
-                if search:
-                    winning = winning[winning['query'].str.contains(
-                        search, case=False, na=False)]
-                st.dataframe(
-                    winning[['query', 'clicks', 'impressions', 'ctr', 'position']],
-                    use_container_width=True, height=400
-                )
-        
-        with tab2:
-            intent_df = get_search_intent(df.copy())
-            if 'intent' in intent_df.columns:
-                col1, col2 = st.columns(2)
-                with col1:
-                    intent_counts = intent_df['intent'].value_counts().reset_index()
-                    fig = px.pie(intent_counts, values='count', names='intent',
-                                color_discrete_sequence=['#6366f1','#a855f7','#ec4899','#f59e0b'])
-                    fig.update_layout(
-                        paper_bgcolor='rgba(0,0,0,0)',
-                        font=dict(color='#e2e8f0'),
-                        legend=dict(bgcolor='rgba(0,0,0,0)'),
-                        margin=dict(l=0, r=0, t=10, b=0)
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                with col2:
-                    selected_intent = st.selectbox("Filter by intent", 
-                        ['All', 'Informational', 'Commercial', 'Transactional', 'Navigational'])
-                    if selected_intent != 'All':
-                        filtered = intent_df[intent_df['intent'] == selected_intent]
-                    else:
-                        filtered = intent_df
-                    st.dataframe(
-                        filtered[['query', 'intent', 'clicks', 'impressions', 'position']],
-                        use_container_width=True, height=300
-                    )
-        
-        with tab3:
+                if search_query:
+                    winning = winning[winning['query'].str.contains(search_query, case=False, na=False)]
+                st.dataframe(winning[['query', 'clicks', 'impressions', 'ctr', 'position']], use_container_width=True, height=400)
+        with t2:
             long_tail = get_long_tail_keywords(df)
-            if not long_tail.empty:
-                st.dataframe(
-                    long_tail[['query', 'word_count', 'clicks', 'impressions', 'position']],
-                    use_container_width=True, height=400
-                )
-        
-        with tab4:
+            st.dataframe(long_tail[['query', 'word_count', 'clicks', 'impressions', 'position']], use_container_width=True, height=400)
+        with t3:
             cannibal = get_cannibalization(df)
             if not cannibal.empty:
-                st.warning(f"⚠️ Found {len(cannibal)} cannibalized keywords!")
+                st.warning(f"⚠️ Found {len(cannibal)} keywords ranking across multiple pages!")
                 st.dataframe(cannibal, use_container_width=True, height=400)
             else:
-                st.success("✅ No cannibalization detected!")
-        
-        with tab5:
+                st.success("✅ No keyword cannibalization detected!")
+        with t4:
             zero_clicks = get_zero_click_keywords(df)
-            if not zero_clicks.empty:
-                st.dataframe(
-                    zero_clicks[['query', 'impressions', 'position']],
-                    use_container_width=True, height=400
-                )
+            st.dataframe(zero_clicks[['query', 'impressions', 'position']], use_container_width=True, height=400)
+        with t5:
+            b_in = st.text_input("Brand keywords (comma-separated):", "example, brandname")
+            if b_in:
+                b_list = [b.strip() for b in b_in.split(",") if b.strip()]
+                b_metrics = get_brand_vs_nonbrand(df, b_list)
+                c_b1, c_b2 = st.columns(2)
+                with c_b1:
+                    b_pie = pd.DataFrame({'Type': ['Branded', 'Non-Branded'], 'Clicks': [b_metrics['branded_clicks'], b_metrics['non_branded_clicks']]})
+                    fig_b = px.pie(b_pie, values='Clicks', names='Type', color_discrete_sequence=['#10b981', '#6366f1'])
+                    fig_b.update_layout(paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e2e8f0'))
+                    st.plotly_chart(fig_b, use_container_width=True)
+                with c_b2:
+                    st.write(f"**Branded Clicks:** {b_metrics['branded_clicks']:,}")
+                    st.write(f"**Non-Branded Clicks:** {b_metrics['non_branded_clicks']:,}")
 
-# ==============================
-# PAGE: Pages
-# ==============================
+# ----------------------------------------------------
+# 3. Pages
+# ----------------------------------------------------
 elif page == "📄 Pages":
-    st.markdown("<div class='section-header'>📄 Page Performance</div>",
-               unsafe_allow_html=True)
-    
+    st.markdown("<div class='section-header'>📄 Page Level Performance</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Fetch data first!")
+        st.info("👈 Please fetch data first.")
     else:
-        tab1, tab2, tab3, tab4 = st.tabs([
-            "🏆 Top Pages",
-            "📉 Content Decay",
-            "🧟 Zombie Pages",
-            "👁️ High Impression Low CTR"
-        ])
-        
-        with tab1:
-            top_pages = get_top_pages(df)
-            if not top_pages.empty:
-                st.dataframe(top_pages, use_container_width=True, height=400)
-        
-        with tab2:
+        p1, p2, p3, p4 = st.tabs(["🏆 Top Pages", "📉 Content Decay", "🧟 Zombie Pages", "🎯 High Imp / Low CTR"])
+        with p1:
+            st.dataframe(get_top_pages(df), use_container_width=True, height=450)
+        with p2:
             decay = get_content_decay(df)
             if not decay.empty:
-                st.error(f"🚨 {len(decay)} pages showing content decay!")
-                fig = px.bar(decay.head(15), x='decay', y='page',
-                            orientation='h', color='decay',
-                            color_continuous_scale=['#ef4444', '#f59e0b'])
-                fig.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#e2e8f0'),
-                    margin=dict(l=0, r=0, t=10, b=0)
-                )
-                st.plotly_chart(fig, use_container_width=True)
+                st.error(f"🚨 {len(decay)} pages showing click decay vs previous 30 days!")
                 st.dataframe(decay, use_container_width=True)
             else:
-                st.success("✅ No content decay detected!")
-        
-        with tab3:
+                st.success("✅ No content decay detected.")
+        with p3:
             zombies = get_zombie_pages(df)
-            if not zombies.empty:
-                st.warning(f"🧟 Found {len(zombies)} zombie pages!")
-                st.dataframe(zombies, use_container_width=True, height=400)
-            else:
-                st.success("✅ No zombie pages found!")
-        
-        with tab4:
-            high_imp = get_high_impression_low_ctr(df)
-            if not high_imp.empty:
-                st.dataframe(
-                    high_imp[['query', 'impressions', 'ctr', 'position']],
-                    use_container_width=True, height=400
-                )
+            st.dataframe(zombies, use_container_width=True, height=400)
+        with p4:
+            st.dataframe(get_high_impression_low_ctr(df), use_container_width=True, height=400)
 
-# ==============================
-# PAGE: Countries & Devices
-# ==============================
-elif page == "🌍 Countries & Devices":
-    st.markdown("<div class='section-header'>🌍 Countries & Devices</div>",
-               unsafe_allow_html=True)
-    
-    if df.empty:
-        st.info("👈 Fetch data first!")
-    else:
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("<div class='section-header'>📱 Device Performance</div>",
-                       unsafe_allow_html=True)
-            device_df = get_device_breakdown(df)
-            if not device_df.empty:
-                st.dataframe(device_df, use_container_width=True)
-                fig = px.bar(device_df, x='device', y=['clicks', 'impressions'],
-                            barmode='group',
-                            color_discrete_sequence=['#6366f1', '#a855f7'])
-                fig.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#e2e8f0'),
-                    legend=dict(bgcolor='rgba(0,0,0,0)'),
-                    margin=dict(l=0, r=0, t=10, b=0)
-                )
-                st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("<div class='section-header'>🌍 Country Performance</div>",
-                       unsafe_allow_html=True)
-            country_df = get_country_breakdown(df)
-            if not country_df.empty:
-                st.dataframe(country_df, use_container_width=True)
-                fig = px.choropleth(country_df, locations='country',
-                                   locationmode='country names',
-                                   color='clicks',
-                                   color_continuous_scale=['#1a1a2e', '#6366f1', '#a855f7'])
-                fig.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#e2e8f0'),
-                    margin=dict(l=0, r=0, t=10, b=0),
-                    geo=dict(bgcolor='rgba(0,0,0,0)',
-                            lakecolor='rgba(0,0,0,0)',
-                            landcolor='rgba(26,26,46,0.8)',
-                            showframe=False)
-                )
-                st.plotly_chart(fig, use_container_width=True)
-
-# ==============================
-# PAGE: Quick Wins
-# ==============================
+# ----------------------------------------------------
+# 4. Quick Wins
+# ----------------------------------------------------
 elif page == "⚡ Quick Wins":
-    st.markdown("<div class='section-header'>⚡ Quick Win Opportunities</div>",
-               unsafe_allow_html=True)
-    
+    st.markdown("<div class='section-header'>⚡ Quick Wins (Page 2 Striking Distance)</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Fetch data first!")
+        st.info("👈 Please fetch data first.")
     else:
-        quick_wins = get_quick_wins(df)
-        if not quick_wins.empty:
-            st.success(f"🎯 Found {len(quick_wins)} quick win opportunities!")
-            st.markdown("""
-            <div class='alert-success'>
-            💡 These keywords are on page 2 (position 11-20). 
-            A little SEO push can bring them to page 1!
-            </div>
-            """, unsafe_allow_html=True)
-            
-            fig = px.scatter(quick_wins.head(30),
-                           x='position', y='impressions',
-                           size='clicks', color='ctr',
-                           hover_data=['query'],
-                           color_continuous_scale=['#6366f1', '#a855f7', '#ec4899'])
-            fig.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='#e2e8f0'),
-                margin=dict(l=0, r=0, t=10, b=0)
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(
-                quick_wins[['query', 'clicks', 'impressions', 'ctr', 'position']],
-                use_container_width=True, height=400
-            )
+        qw = get_quick_wins(df)
+        if not qw.empty:
+            st.success(f"🎯 Found {len(qw)} keywords ranking on Page 2 (pos 11-20) with >100 impressions!")
+            fig_qw = px.scatter(qw.head(40), x='position', y='impressions', size='clicks', color='ctr', hover_data=['query'], color_continuous_scale=['#6366f1', '#a855f7', '#ec4899'])
+            fig_qw.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#e2e8f0'))
+            st.plotly_chart(fig_qw, use_container_width=True)
+            st.dataframe(qw[['query', 'clicks', 'impressions', 'ctr', 'position']], use_container_width=True, height=400)
         else:
-            st.info("No quick wins found for this period.")
+            st.info("No quick win candidates found.")
 
-# ==============================
-# PAGE: Alerts
-# ==============================
-elif page == "🚨 Alerts":
-    st.markdown("<div class='section-header'>🚨 Alerts & Notifications</div>",
-               unsafe_allow_html=True)
-    
-    alerts_df = get_unread_alerts()
-    
-    if alerts_df.empty:
-        st.success("✅ No active alerts!")
+# ----------------------------------------------------
+# 5. URL & Canonical Inspector (NEW)
+# ----------------------------------------------------
+elif page == "🔬 URL & Canonical Inspector":
+    st.markdown("<div class='section-header'>🔬 Live URL Inspection & Canonical Mismatch Checker</div>", unsafe_allow_html=True)
+    if not service_v1 or not current_site:
+        st.warning("⚠️ Please connect your Google account and select a site property from the sidebar.")
     else:
-        st.warning(f"⚠️ {len(alerts_df)} unread alerts!")
-        for _, alert in alerts_df.iterrows():
-            alert_type = alert.get('alert_type', '')
-            if 'drop' in alert_type:
-                css_class = 'alert-danger'
-                icon = '🔴'
+        st.markdown("""
+        Queries Google's live **URL Inspection API** (up to 2,000 URLs/day free).
+        Detects **Canonical Mismatches** (where Google rejects your canonical and picks its own), indexing errors, and last crawl timestamps.
+        """)
+
+        tab_single, tab_bulk = st.tabs(["Single URL Inspection", "Bulk URLs Inspection"])
+
+        with tab_single:
+            sample_url = current_site.replace('sc-domain:', 'https://') if 'http' not in current_site else current_site
+            target_url = st.text_input("Enter exact URL to inspect:", sample_url)
+
+            if st.button("🔎 Inspect Live URL", use_container_width=True):
+                with st.spinner("Connecting to GSC URL Inspection API..."):
+                    res = inspect_single_url(service_v1, current_site, target_url)
+                    c_res1, c_res2 = st.columns(2)
+                    with c_res1:
+                        st.markdown(f"**Index Verdict:** `{res.get('verdict')}`")
+                        st.markdown(f"**Coverage State:** {res.get('coverage_state')}")
+                        st.markdown(f"**Indexing Allowed:** `{res.get('indexing_state')}`")
+                        st.markdown(f"**Robots.txt:** `{res.get('robots_txt_state')}`")
+                    with c_res2:
+                        st.markdown(f"**User Canonical:** `{res.get('user_canonical')}`")
+                        st.markdown(f"**Google Canonical:** `{res.get('google_canonical')}`")
+                        st.markdown(f"**Canonical Status:** **{res.get('canonical_mismatch')}**")
+                        st.markdown(f"**Last Crawled:** `{res.get('last_crawl_time')}` ({res.get('crawled_as')})")
+
+        with tab_bulk:
+            st.markdown("Paste a list of URLs (one per line) to audit in bulk:")
+            urls_text = st.text_area("URLs List", height=150)
+            if st.button("🚀 Audit Bulk URLs", use_container_width=True):
+                url_list = [u.strip() for u in urls_text.split('\n') if u.strip().startswith('http')]
+                if url_list:
+                    progress_bar = st.progress(0)
+                    with st.spinner(f"Inspecting {len(url_list)} URLs..."):
+                        bulk_res = inspect_bulk_urls(service_v1, current_site, url_list, lambda cur, tot: progress_bar.progress(cur / tot))
+                        st.success("✅ Inspection complete!")
+                        st.dataframe(bulk_res, use_container_width=True)
+                else:
+                    st.warning("Please paste at least one valid HTTP/HTTPS URL.")
+
+# ----------------------------------------------------
+# 6. Algorithm Update Impact (NEW)
+# ----------------------------------------------------
+elif page == "📉 Algo Update Impact":
+    st.markdown("<div class='section-header'>📉 Google Algorithm Update Impact Analyzer (Before vs. After)</div>", unsafe_allow_html=True)
+    if not service or not current_site:
+        st.warning("⚠️ Please connect your Google account and select a site property.")
+    else:
+        st.markdown("Compare search visibility **before vs. after** major Google Core Updates or custom dates to find which pages/queries won or lost.")
+
+        col_a1, col_a2 = st.columns([2, 1])
+        with col_a1:
+            sel_algo = st.selectbox("Select Google Core / Spam Update:", list(MAJOR_ALGO_UPDATES.keys()))
+            if sel_algo == "Custom Date":
+                algo_date = st.date_input("Update Date:", datetime.now() - timedelta(days=20)).strftime('%Y-%m-%d')
             else:
-                css_class = 'alert-warning'
-                icon = '🟡'
-            
-            st.markdown(f"""
-            <div class='{css_class}'>
-                {icon} <b>{alert.get('alert_type', '').replace('_', ' ').title()}</b><br>
-                {alert.get('message', '')}<br>
-                <small>{alert.get('created_at', '')}</small>
-            </div>
-            """, unsafe_allow_html=True)
+                algo_date = MAJOR_ALGO_UPDATES[sel_algo]
+        with col_a2:
+            window_days = st.slider("Comparison Window (Days Before & After):", min_value=7, max_value=30, value=14)
 
-# ==============================
-# PAGE: Reports
-# ==============================
-elif page == "📤 Reports":
-    st.markdown("<div class='section-header'>📤 Generate Reports</div>",
-               unsafe_allow_html=True)
-    
+        if st.button("📊 Run Algorithm Impact Analysis", use_container_width=True):
+            with st.spinner(f"Analyzing {window_days} days before vs after {algo_date}..."):
+                impact = analyze_algorithm_impact(service, current_site, algo_date, window_days)
+                if impact.get('status') == 'success':
+                    s = impact['summary']
+                    p = impact['periods']
+                    st.markdown(f"**Period Before:** `{p['before']}` | **Period After:** `{p['after']}`")
+
+                    c1, c2, c3, c4 = st.columns(4)
+                    with c1:
+                        st.metric("Clicks Change", f"{s['clicks_diff']:+,}", f"{s['clicks_pct']:+.1f}%")
+                    with c2:
+                        st.metric("Impressions Change", f"{s['imp_diff']:+,}", f"{s['imp_pct']:+.1f}%")
+                    with c3:
+                        st.metric("Avg Position Before", f"{s['pos_before']}")
+                    with c4:
+                        st.metric("Avg Position After", f"{s['pos_after']}", f"{-s['pos_diff']:+.2f}")
+
+                    t_win, t_lose = st.tabs(["🏆 Winning Pages & Queries", "🔴 Losing Pages & Queries"])
+                    with t_win:
+                        st.markdown("#### Top Pages That Gained Traffic:")
+                        st.dataframe(impact['top_winning_pages'], use_container_width=True)
+                        st.markdown("#### Top Queries That Gained Traffic:")
+                        st.dataframe(impact['top_winning_queries'], use_container_width=True)
+                    with t_lose:
+                        st.markdown("#### Top Pages That Lost Traffic:")
+                        st.dataframe(impact['top_losing_pages'], use_container_width=True)
+                        st.markdown("#### Top Queries That Lost Traffic:")
+                        st.dataframe(impact['top_losing_queries'], use_container_width=True)
+                else:
+                    st.warning(impact.get('message', 'Failed to retrieve data.'))
+
+# ----------------------------------------------------
+# 7. Custom CTR Curve & Traffic Forecaster (NEW)
+# ----------------------------------------------------
+elif page == "📈 Custom CTR Curve":
+    st.markdown("<div class='section-header'>📈 Custom Empirical CTR Curve & Traffic Opportunity Forecaster</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Fetch data first!")
+        st.info("👈 Please fetch performance data first.")
     else:
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("### 📄 PDF Report")
-            site_name = st.text_input("Site URL", 
-                value=st.session_state.sites[0] if st.session_state.sites else "")
-            
-            if st.button("📥 Generate PDF Report", use_container_width=True):
-                with st.spinner("Generating PDF..."):
+        st.markdown("Builds your domain's **actual CTR curve by rank** and calculates predicted traffic gains if rankings improve.")
+
+        ctr_curve = build_empirical_ctr_curve(df)
+        if not ctr_curve.empty:
+            fig_curve = go.Figure()
+            fig_curve.add_trace(go.Scatter(x=ctr_curve['serp_rank'], y=ctr_curve['actual_ctr'], name='Your Actual CTR %', line=dict(color='#10b981', width=3), mode='lines+markers'))
+            fig_curve.add_trace(go.Scatter(x=ctr_curve['serp_rank'], y=ctr_curve['benchmark_ctr'], name='Industry Benchmark CTR %', line=dict(color='#94a3b8', width=2, dash='dash'), mode='lines'))
+            fig_curve.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#e2e8f0'),
+                                    xaxis=dict(title="SERP Rank (1 - 20)", gridcolor='rgba(255,255,255,0.06)', dtick=1),
+                                    yaxis=dict(title="Click-Through Rate (%)", gridcolor='rgba(255,255,255,0.06)'))
+            st.plotly_chart(fig_curve, use_container_width=True)
+            st.dataframe(ctr_curve[['serp_rank', 'actual_ctr', 'benchmark_ctr', 'total_clicks', 'total_impressions', 'ctr_performance']], use_container_width=True)
+
+            st.markdown("---")
+            st.markdown("### 🔮 Traffic Opportunity Forecaster")
+            col_f1, col_f2 = st.columns(2)
+            with col_f1:
+                target_pos = st.slider("Target Ranking Goal:", min_value=1, max_value=5, value=3)
+            with col_f2:
+                min_imp = st.number_input("Minimum Impressions Threshold:", value=100, step=50)
+
+            forecast_df, total_gain = forecast_traffic_opportunity(df, target_rank=target_pos, min_impressions=min_imp)
+            if not forecast_df.empty:
+                st.success(f"🚀 Moving these {len(forecast_df)} keywords to Rank #{target_pos} will produce an estimated **+{total_gain:,} additional clicks**!")
+                st.dataframe(forecast_df, use_container_width=True)
+            else:
+                st.info("No candidates found below target rank.")
+
+# ----------------------------------------------------
+# 8. Sitemaps Manager (NEW)
+# ----------------------------------------------------
+elif page == "🗺️ Sitemaps Manager":
+    st.markdown("<div class='section-header'>🗺️ GSC Sitemaps Manager & Health Inspector</div>", unsafe_allow_html=True)
+    if not service or not current_site:
+        st.warning("⚠️ Please connect your Google account and select a site property.")
+    else:
+        st.markdown("View all submitted XML sitemaps, error statuses, and submit new sitemaps directly.")
+
+        c_sub1, c_sub2 = st.columns([3, 1])
+        with c_sub1:
+            new_sitemap = st.text_input("Enter new sitemap URL to submit:", "https://example.com/sitemap.xml")
+        with c_sub2:
+            st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+            if st.button("📤 Submit Sitemap", use_container_width=True):
+                res_sub = submit_sitemap(service, current_site, new_sitemap)
+                if res_sub['success']:
+                    st.success(res_sub['message'])
+                else:
+                    st.error(res_sub['message'])
+
+        st.markdown("### Current Submitted Sitemaps")
+        sitemaps_df = list_sitemaps(service, current_site)
+        if not sitemaps_df.empty:
+            st.dataframe(sitemaps_df, use_container_width=True)
+        else:
+            st.info("No sitemaps found or property does not have submitted sitemaps.")
+
+# ----------------------------------------------------
+# 9. Log & Crawl Reconciliation (NEW)
+# ----------------------------------------------------
+elif page == "🪵 Log Reconciliation":
+    st.markdown("<div class='section-header'>🪵 Server Log & Crawl Reconciliation (Orphan & Waste Finder)</div>", unsafe_allow_html=True)
+    if df.empty:
+        st.info("👈 Please fetch GSC performance data first.")
+    else:
+        st.markdown("""
+        Cross-reference your live GSC data with **Screaming Frog Internal Crawl CSV** or **Server Access Logs** to detect:
+        * **Orphaned Performers:** URLs earning clicks in GSC but having **0 internal links** in your site architecture.
+        * **Programmatic Crawl Waste:** URLs receiving heavy Googlebot requests but **0 organic clicks/impressions**.
+        """)
+
+        tab_crawl, tab_logs = st.tabs(["Internal Crawl CSV (Orphan Finder)", "Server Access Logs (Crawl Waste Finder)"])
+
+        with tab_crawl:
+            crawl_file = st.file_uploader("Upload Screaming Frog Crawl CSV (must contain URL/Address and Inlinks):", type=['csv'])
+            if crawl_file:
+                try:
+                    c_df = pd.read_csv(crawl_file)
+                except UnicodeDecodeError:
+                    crawl_file.seek(0)
+                    c_df = pd.read_csv(crawl_file, encoding='latin1')
+                except Exception as ex:
+                    st.error(f"Failed to read CSV: {ex}")
+                    c_df = pd.DataFrame()
+
+                if not c_df.empty:
+                    reconciled = reconcile_crawl_with_gsc(c_df, df)
+                    if reconciled['status'] == 'success':
+                        st.error(f"🚨 Found **{reconciled['total_orphans_found']} Orphaned Performers** (Ranking in Google with 0 internal links)!")
+                        st.dataframe(reconciled['orphaned_performers'], use_container_width=True)
+                        st.markdown("#### Heavily Linked Pages with 0 Impressions:")
+                        st.dataframe(reconciled['unindexed_inlinked'], use_container_width=True)
+                    else:
+                        st.warning(reconciled['message'])
+
+        with tab_logs:
+            log_file = st.file_uploader("Upload Server Access Log CSV (with URL/Path and Hit count):", type=['csv'], key="log_csv")
+            if log_file:
+                try:
+                    l_df = pd.read_csv(log_file)
+                except UnicodeDecodeError:
+                    log_file.seek(0)
+                    l_df = pd.read_csv(log_file, encoding='latin1')
+                except Exception as ex:
+                    st.error(f"Failed to read CSV: {ex}")
+                    l_df = pd.DataFrame()
+
+                if not l_df.empty:
+                    rec_log = reconcile_server_logs_with_gsc(l_df, df)
+                    if rec_log['status'] == 'success':
+                        st.warning(f"⚠️ Found **{rec_log['total_waste_urls']} Crawl Waste URLs** (Googlebot hits with 0 GSC clicks/impressions):")
+                        st.dataframe(rec_log['crawl_waste'], use_container_width=True)
+                    else:
+                        st.warning(rec_log['message'])
+
+# ----------------------------------------------------
+# 10. Intent & Regex
+# ----------------------------------------------------
+elif page == "🎯 Intent & Regex":
+    st.markdown("<div class='section-header'>🎯 Search Intent & RE2 Regex Explorer</div>", unsafe_allow_html=True)
+    if df.empty:
+        st.info("👈 Please fetch data first.")
+    else:
+        t1, t2 = st.tabs(["🏷️ Intent Classification", "🧪 Custom RE2 Regex Filter"])
+        with t1:
+            intent_df = get_search_intent(df.copy())
+            if 'intent' in intent_df.columns:
+                c1, c2 = st.columns([1, 2])
+                with c1:
+                    intent_counts = intent_df['intent'].value_counts().reset_index()
+                    intent_counts.columns = ['Intent', 'Count']
+                    fig_i = px.pie(intent_counts, values='Count', names='Intent', color_discrete_sequence=['#6366f1', '#a855f7', '#ec4899', '#10b981'])
+                    fig_i.update_layout(paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e2e8f0'))
+                    st.plotly_chart(fig_i, use_container_width=True)
+                with c2:
+                    sel_intent = st.selectbox("Filter Intent", ['All'] + list(intent_df['intent'].unique()))
+                    filtered_intent = intent_df if sel_intent == 'All' else intent_df[intent_df['intent'] == sel_intent]
+                    st.dataframe(filtered_intent[['query', 'intent', 'clicks', 'impressions', 'position']], use_container_width=True, height=350)
+        with t2:
+            preset = st.selectbox("Choose a Course Preset or Enter Custom:", [
+                "Custom Regex",
+                "Informational Queries: (?i)^(who|what|where|when|why|how|guide|tutorial|vs|compare|difference)[\" \"].*",
+                "Long-tail 7+ words: ^([^\\s]+\\s+){6,}[^\\s]+$",
+                "Exclude Archive / Temp: ^(?!.*(?:_archive|\\.tmp|\\.bak)).*$"
+            ])
+            if "Informational" in preset:
+                default_regex = r'(?i)^(who|what|where|when|why|how|guide|tutorial|vs|compare|difference)[" "].*'
+            elif "Long-tail" in preset:
+                default_regex = r'^([^\s]+\s+){6,}[^\s]+$'
+            elif "Exclude" in preset:
+                default_regex = r'^(?!.*(?:_archive|\.tmp|\.bak)).*$'
+            else:
+                default_regex = r'.*'
+
+            custom_pat = st.text_input("Regex Pattern:", default_regex)
+            target_col = st.radio("Apply Regex on:", ["query", "page"], horizontal=True)
+            if custom_pat and target_col in df.columns:
+                try:
+                    matched_df = df[df[target_col].str.contains(custom_pat, regex=True, na=False)]
+                    st.success(f"Matched **{len(matched_df):,}** out of {len(df):,} rows!")
+                    st.dataframe(matched_df[[target_col, 'clicks', 'impressions', 'ctr', 'position']], use_container_width=True, height=400)
+                except Exception as ex:
+                    st.error(f"Regex Error: {ex}")
+
+# ----------------------------------------------------
+# 11. AEO & Preferred Sources
+# ----------------------------------------------------
+elif page == "🤖 AEO & Preferred Sources":
+    st.markdown("<div class='section-header'>🤖 Generative Engine Optimization (GEO/AEO) & Preferred Sources</div>", unsafe_allow_html=True)
+    current_domain = current_site or "yourdomain.com"
+    clean_domain = current_domain.replace('sc-domain:', '').replace('https://', '').replace('http://', '').strip('/')
+
+    st.markdown(f"""
+    ### 🌟 Google Preferred Sources in AI Overviews & AI Mode
+    Google lets users add websites to their **Preferred Sources** preferences. Preferred citations gain a distinctive badge and **2x higher CTR**.
+    
+    #### 🔗 Direct Deep-Link Generator:
+    """)
+    pref_link = f"https://google.com/preferences/source?q={clean_domain}"
+    st.code(pref_link, language="markdown")
+    st.markdown(f"[👉 Test Direct Deep Link in Browser]({pref_link})")
+
+# ----------------------------------------------------
+# 12. 24/7 Automation Generator (NEW)
+# ----------------------------------------------------
+elif page == "⚙️ 24/7 Automation":
+    st.markdown("<div class='section-header'>⚙️ 24/7 Free Automated Monitoring via GitHub Actions</div>", unsafe_allow_html=True)
+    st.markdown("""
+    Run nightly GSC SEO audits completely free using **GitHub Actions**.
+    No servers or paid subscriptions required. Automatically alerts your **Telegram** bot if weekly traffic drops by 20%+!
+    """)
+
+    col_w1, col_w2 = st.columns(2)
+    with col_w1:
+        st.markdown("#### 1. Workflow YAML (`.github/workflows/gsc_audit.yml`)")
+        st.code(GITHUB_ACTIONS_WORKFLOW, language="yaml")
+    with col_w2:
+        st.markdown("#### 2. Headless Python Runner (`automated_audit.py`)")
+        st.code(HEADLESS_AUDIT_SCRIPT, language="python")
+
+    if st.button("💾 Generate Files in Project Directory", use_container_width=True):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        wf_path, audit_path = generate_automation_bundle(base_dir)
+        st.success(f"✅ Generated `{wf_path}` and `{audit_path}`! Commit and push to GitHub to activate.")
+
+# ----------------------------------------------------
+# 13. Alerts
+# ----------------------------------------------------
+elif page == "🚨 Alerts":
+    st.markdown("<div class='section-header'>🚨 Recorded Alerts</div>", unsafe_allow_html=True)
+    alerts_df = get_unread_alerts(current_site)
+    if alerts_df.empty:
+        st.success("✅ No active alerts.")
+    else:
+        st.warning(f"⚠️ {len(alerts_df)} unread alerts recorded.")
+        for _, a in alerts_df.iterrows():
+            st.markdown(f"<div class='alert-warning'><b>{a.get('alert_type')}</b><br>{a.get('message')}<br><small>{a.get('created_at')}</small></div>", unsafe_allow_html=True)
+
+# ----------------------------------------------------
+# 14. Reports & Export
+# ----------------------------------------------------
+elif page == "📤 Reports & Export":
+    st.markdown("<div class='section-header'>📤 Branded Client PDF & CSV Exports</div>", unsafe_allow_html=True)
+    if df.empty:
+        st.info("👈 Please fetch data first.")
+    else:
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("### 📄 Branded PDF Client Report")
+            site_target = st.text_input("Property Label", value=current_site or "My Website")
+            if st.button("📥 Generate Instant PDF Report", use_container_width=True):
+                with st.spinner("Compiling PDF..."):
                     try:
-                        overview = get_overview(df)
-                        top_keywords = get_winning_keywords(df)
-                        top_pages = get_top_pages(df)
-                        quick_wins = get_quick_wins(df)
-                        
-                        filename = generate_pdf_report(
-                            site_name, overview, 
-                            top_keywords, top_pages, quick_wins
-                        )
-                        
-                        with open(filename, 'rb') as f:
-                            st.download_button(
-                                "⬇️ Download PDF",
-                                f, filename,
-                                mime='application/pdf',
-                                use_container_width=True
-                            )
-                        st.success("✅ PDF Generated!")
+                        pdf_file = generate_pdf_report(site_target, get_overview(df), get_winning_keywords(df), get_top_pages(df), get_quick_wins(df))
+                        with open(pdf_file, 'rb') as f:
+                            st.download_button("⬇️ Download PDF Report", f, file_name=os.path.basename(pdf_file), mime='application/pdf', use_container_width=True)
+                        st.success("✅ PDF Ready!")
                     except Exception as e:
-                        st.error(f"Error: {e}")
-        
-        with col2:
-            st.markdown("### 📧 Email Report")
-            recipient = st.text_input("Client Email")
-            
-            if st.button("📨 Send Email Report", use_container_width=True):
-                st.info("Configure email in report_generator.py first!")
-        
-        st.divider()
-        
-        # CSV Export
-        st.markdown("### 📊 Export Data")
-        col1, col2 = st.columns(2)
-        with col1:
-            csv = df.to_csv(index=False)
-            st.download_button(
-                "📥 Download CSV",
-                csv,
-                "gsc_data.csv",
-                "text/csv",
-                use_container_width=True
-            )
-        with col2:
-            top_pages_df = get_top_pages(df)
-            if not top_pages_df.empty:
-                csv2 = top_pages_df.to_csv(index=False)
-                st.download_button(
-                    "📥 Download Top Pages CSV",
-                    csv2,
-                    "top_pages.csv",
-                    "text/csv",
-                    use_container_width=True
-                )
+                        st.error(f"PDF Error: {e}")
+        with c2:
+            st.markdown("### 📊 CSV Data Export")
+            st.download_button("📥 Download Raw GSC Data (CSV)", df.to_csv(index=False), "gsc_performance_export.csv", "text/csv", use_container_width=True)
+            top_p = get_top_pages(df)
+            if not top_p.empty:
+                st.download_button("📥 Download Top Pages (CSV)", top_p.to_csv(index=False), "top_pages_export.csv", "text/csv", use_container_width=True)

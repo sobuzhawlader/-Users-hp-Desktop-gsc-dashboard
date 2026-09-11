@@ -1,6 +1,13 @@
 venv/
 token.pickle
+token_b64.txt
+*.pickle
+credentials.json
 gsc_data.db
+*.db
 __pycache__/
 *.pyc
 .env
+.DS_Store
+
+

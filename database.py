@@ -23,6 +23,10 @@ def init_db():
         created_at TEXT
     )''')
     
+    # Create unique index to prevent duplicate entries for the same dimension keys
+    c.execute('''CREATE UNIQUE INDEX IF NOT EXISTS idx_search_data_unique 
+                 ON search_data (site_url, date, query, page, country, device)''')
+    
     c.execute('''CREATE TABLE IF NOT EXISTS sites (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         site_url TEXT UNIQUE,
@@ -40,17 +44,40 @@ def init_db():
     
     conn.commit()
     conn.close()
-    print("Database initialized!")
 
 def save_data(df, site_url):
+    """Saves GSC search analytics rows without creating duplicate rows."""
+    if df.empty:
+        return
+    
     conn = sqlite3.connect(DB_FILE)
-    df['site_url'] = site_url
-    df['created_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    df.to_sql('search_data', conn, if_exists='append', index=False)
+    save_df = df.copy()
+    save_df['site_url'] = site_url
+    save_df['created_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    # Ensure required columns exist
+    for col in ['date', 'query', 'page', 'country', 'device']:
+        if col not in save_df.columns:
+            save_df[col] = ''
+
+    # Deduplicate within the dataframe first
+    save_df.drop_duplicates(subset=['site_url', 'date', 'query', 'page', 'country', 'device'], inplace=True)
+
+    # Use INSERT OR REPLACE to update existing date rows cleanly
+    save_df.to_sql('temp_search_data', conn, if_exists='replace', index=False)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT OR REPLACE INTO search_data (site_url, date, query, page, country, device, clicks, impressions, ctr, position, created_at)
+        SELECT site_url, date, query, page, country, device, clicks, impressions, ctr, position, created_at
+        FROM temp_search_data
+    ''')
+    cursor.execute('DROP TABLE IF EXISTS temp_search_data')
+    conn.commit()
     conn.close()
-    print(f"Saved {len(df)} rows for {site_url}")
+    print(f"Saved {len(save_df)} rows cleanly for {site_url}")
 
 def load_data(site_url=None, start_date=None, end_date=None):
+    """Loads search data for a property, guaranteed deduplicated."""
     conn = sqlite3.connect(DB_FILE)
     query = "SELECT * FROM search_data WHERE 1=1"
     params = []
@@ -67,6 +94,10 @@ def load_data(site_url=None, start_date=None, end_date=None):
     
     df = pd.read_sql_query(query, conn, params=params)
     conn.close()
+
+    if not df.empty:
+        df.drop_duplicates(subset=['site_url', 'date', 'query', 'page', 'country', 'device'], inplace=True)
+
     return df
 
 def save_alert(site_url, alert_type, message):
@@ -82,10 +113,12 @@ def save_alert(site_url, alert_type, message):
 def load_alerts(site_url=None):
     conn = sqlite3.connect(DB_FILE)
     query = "SELECT * FROM alerts WHERE is_read = 0"
+    params = []
     if site_url:
-        query += f" AND site_url = '{site_url}'"
+        query += " AND site_url = ?"
+        params.append(site_url)
     query += " ORDER BY created_at DESC LIMIT 50"
-    df = pd.read_sql_query(query, conn)
+    df = pd.read_sql_query(query, conn, params=params)
     conn.close()
     return df
 
