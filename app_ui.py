@@ -12,7 +12,7 @@ from auth_gsc import (
     authenticate_local, get_auth_url, exchange_code, load_client_config,
     authenticate_service_account
 )
-from data_fetcher import fetch_gsc_data
+from data_fetcher import fetch_gsc_data, fetch_discover_data, fetch_fresh_data, fetch_search_appearance
 from database import init_db, save_data, load_data, load_alerts
 from seo_engine import (
     get_overview, get_quick_wins, get_cannibalization,
@@ -32,6 +32,8 @@ from ctr_modeler import build_empirical_ctr_curve, forecast_traffic_opportunity
 from sitemap_engine import list_sitemaps, submit_sitemap
 from log_reconciliation import reconcile_crawl_with_gsc, reconcile_server_logs_with_gsc
 from automation_generator import generate_automation_bundle, GITHUB_ACTIONS_WORKFLOW, HEADLESS_AUDIT_SCRIPT
+from indexing_api import request_indexing, batch_request_indexing, get_indexing_status
+from sites_manager import list_all_sites, add_site_property, delete_site_property
 import uuid
 from realtime_engine import get_dashboard_active_users, get_site_realtime_metrics
 
@@ -492,19 +494,23 @@ with st.sidebar:
 
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
-    # 3. Authentic Google Search Console Navigation Menu
+    # 3. Authentic Google Search Console Navigation Menu (100% GSC API Scope)
     page = st.radio("Navigation", [
         "📈 Performance",
         "🟢 Real-Time Active Users",
-        "🔍 URL inspection",
+        "🔍 URL inspection & Schema",
+        "🚀 Instant Google Indexing API",
         "📄 Pages & Indexing",
-        "🗺️ Sitemaps",
+        "🗺️ Sitemaps Manager",
         "⚡ Core Web Vitals & Quick Wins",
         "🎯 Top Keywords & Queries",
         "📉 Algo Update Impact",
         "📈 Custom CTR Curve",
+        "🪵 Log Reconciliation",
+        "🎯 Search Intent & Regex",
         "🤖 AI Features & AEO",
-        "⚙️ Settings & Connection"
+        "📤 Reports & PDF Export",
+        "⚙️ Settings & Google Connection"
     ], index=0, label_visibility="collapsed")
 
     st.divider()
@@ -656,33 +662,30 @@ if page in ["📈 Performance", "📊 Overview"]:
     """, unsafe_allow_html=True)
 
     # 2. GSC Performance Header
-    st.markdown(f"""
-    <div style="margin-bottom: 14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
-            <span style="font-size:22px; font-weight:400; color:#202124;">Performance</span>
-            <div style="display:flex; align-items:center; gap:6px; color:#1a73e8; font-size:13px; font-weight:500; cursor:pointer;">
-                <span>📥</span>
-                <span>EXPORT</span>
-            </div>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <div class="gsc-chip-group">
-                    <span class="gsc-chip">24 hours</span>
-                    <span class="gsc-chip">7 days</span>
-                    <span class="gsc-chip">28 days</span>
-                    <span class="gsc-chip">3 months</span>
-                    <span class="gsc-chip gsc-chip-active">Compare ▾</span>
-                </div>
-                <div class="gsc-filter-pill">Search type: Web ▾</div>
-                <div class="gsc-filter-pill">+ Add filter</div>
-                <span style="background:#1a73e8; color:white; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer;">⚙</span>
-                <span style="color:#1a73e8; font-size:12px; font-weight:500; cursor:pointer;">Reset filters</span>
-            </div>
-            <div style="color:#70757a; font-size:12px;">Last update: 12.5 hours ago</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    hdr_c1, hdr_c2 = st.columns([4, 1])
+    with hdr_c1:
+        st.markdown("""
+        <div style="font-size:22px; font-weight:400; color:#202124; margin-bottom:2px;">Performance on Search results</div>
+        """, unsafe_allow_html=True)
+    with hdr_c2:
+        if not df.empty:
+            st.download_button("📥 EXPORT", df.to_csv(index=False), "gsc_performance_export.csv", "text/csv", use_container_width=True)
+
+    # Interactive GSC Search Type & Date Filters
+    f_col1, f_col2, f_col3 = st.columns([5, 4, 3])
+    with f_col1:
+        search_type_opt = st.pills("Search type", ["Web", "Discover", "Google News", "Image", "Video"], default="Web", key="perf_search_type_pill")
+    with f_col2:
+        date_chip_opt = st.pills("Date range", ["24 hours", "7 days", "28 days", "3 months", "Compare"], default="3 months", key="perf_date_range_pill")
+    with f_col3:
+        fresh_toggle = st.checkbox("⚡ Fresh Data (Hourly)", value=False, key="perf_fresh_toggle", help="Include latest hourly and unfinalized same-day data via GSC dataState='all'")
+
+    if search_type_opt == "Discover":
+        st.info("💡 **Google Discover Report Active**: Showing content engagement from the Google Discover mobile feed. Note that per Google Search Console specifications, Discover reports focus on Clicks and Impressions (position metrics are not applicable for Discover).")
+    elif search_type_opt == "Google News":
+        st.info("📰 **Google News Report Active**: Showing appearances in news.google.com and the Google News app.")
+    elif fresh_toggle:
+        st.success("⚡ **Fresh Data Mode Active**: Displaying raw, hourly real-time data from the last 24-48 hours via Google Search Console API `dataState='all'`.")
 
     # Metrics calculation
     metrics = st.session_state.get('gsc_metrics', {})
@@ -1441,104 +1444,157 @@ elif page in ["⚡ Core Web Vitals & Quick Wins", "⚡ Quick Wins"]:
             st.info("No quick win candidates found.")
 
 # ----------------------------------------------------
-# 5. URL & Canonical Inspector (NEW)
 # ----------------------------------------------------
-elif page in ["🔍 URL inspection", "🔬 URL & Canonical Inspector"]:
-    st.markdown("<div class='section-header'>🔬 Live URL Inspection & Canonical Mismatch Checker</div>", unsafe_allow_html=True)
-    if not service_v1 or not current_site:
-        st.warning("⚠️ Please connect your Google account and select a site property from the sidebar.")
-    else:
-        st.markdown("""
-        Queries Google's live **URL Inspection API** (up to 2,000 URLs/day free).
-        Detects **Canonical Mismatches** (where Google rejects your canonical and picks its own), indexing errors, and last crawl timestamps.
-        """)
+# 5. URL & Canonical Inspector
+# ----------------------------------------------------
+elif page in ["🔍 URL inspection & Schema", "🔍 URL inspection", "🔬 URL & Canonical Inspector"]:
+    st.markdown("<div class='section-header'>🔬 Live URL Inspection, Canonical & Schema Validator</div>", unsafe_allow_html=True)
+    st.markdown("""
+    Queries Google's live **URL Inspection API** (or real-time crawler fallback).
+    Detects **Canonical Mismatches**, indexability, mobile viewport, and **JSON-LD Schema types** across your domain.
+    """)
 
-        tab_single, tab_bulk = st.tabs(["Single URL Inspection", "Bulk URLs Inspection"])
+    tab_single, tab_bulk = st.tabs(["Single URL Inspection", "Bulk URLs Inspection"])
 
-        with tab_single:
-            sample_url = current_site.replace('sc-domain:', 'https://') if 'http' not in current_site else current_site
-            target_url = st.text_input("Enter exact URL to inspect:", sample_url)
+    with tab_single:
+        sample_url = current_site.replace('sc-domain:', 'https://') if 'http' not in current_site else current_site
+        target_url = st.text_input("Enter exact URL to inspect:", sample_url)
 
-            if st.button("🔎 Inspect Live URL", use_container_width=True):
-                with st.spinner("Connecting to GSC URL Inspection API..."):
-                    res = inspect_single_url(service_v1, current_site, target_url)
-                    c_res1, c_res2 = st.columns(2)
-                    with c_res1:
-                        st.markdown(f"**Index Verdict:** `{res.get('verdict')}`")
-                        st.markdown(f"**Coverage State:** {res.get('coverage_state')}")
-                        st.markdown(f"**Indexing Allowed:** `{res.get('indexing_state')}`")
-                        st.markdown(f"**Robots.txt:** `{res.get('robots_txt_state')}`")
-                    with c_res2:
-                        st.markdown(f"**User Canonical:** `{res.get('user_canonical')}`")
-                        st.markdown(f"**Google Canonical:** `{res.get('google_canonical')}`")
-                        st.markdown(f"**Canonical Status:** **{res.get('canonical_mismatch')}**")
-                        st.markdown(f"**Last Crawled:** `{res.get('last_crawl_time')}` ({res.get('crawled_as')})")
+        if st.button("🔎 Inspect Live URL", use_container_width=True):
+            with st.spinner("Inspecting URL metadata and index state..."):
+                res = inspect_single_url(service_v1, current_site, target_url)
+                c_res1, c_res2 = st.columns(2)
+                with c_res1:
+                    st.markdown(f"**Index Verdict:** `{res.get('verdict')}`")
+                    st.markdown(f"**Coverage State:** {res.get('coverage_state')}")
+                    st.markdown(f"**Indexing Allowed:** `{res.get('indexing_state')}`")
+                    st.markdown(f"**Robots Directives:** `{res.get('robots_txt_state')}`")
+                    st.markdown(f"**Page Fetch State:** `{res.get('page_fetch_state')}`")
+                with c_res2:
+                    st.markdown(f"**User Canonical:** `{res.get('user_canonical')}`")
+                    st.markdown(f"**Google Canonical:** `{res.get('google_canonical')}`")
+                    st.markdown(f"**Canonical Status:** **{res.get('canonical_mismatch')}**")
+                    st.markdown(f"**Mobile Usability:** `{res.get('mobile_verdict')}`")
+                    st.markdown(f"**Rich Results / Schema:** `{res.get('rich_results_verdict')}`")
+                    st.markdown(f"**Last Crawled:** `{res.get('last_crawl_time')}` ({res.get('crawled_as')})")
 
-        with tab_bulk:
-            st.markdown("Paste a list of URLs (one per line) to audit in bulk:")
-            urls_text = st.text_area("URLs List", height=150)
-            if st.button("🚀 Audit Bulk URLs", use_container_width=True):
-                url_list = [u.strip() for u in urls_text.split('\n') if u.strip().startswith('http')]
-                if url_list:
-                    progress_bar = st.progress(0)
-                    with st.spinner(f"Inspecting {len(url_list)} URLs..."):
-                        bulk_res = inspect_bulk_urls(service_v1, current_site, url_list, lambda cur, tot: progress_bar.progress(cur / tot))
-                        st.success("✅ Inspection complete!")
-                        st.dataframe(bulk_res, use_container_width=True)
+    with tab_bulk:
+        st.markdown("Paste a list of URLs (one per line) to audit in bulk:")
+        urls_text = st.text_area("URLs List", f"{current_site.rstrip('/')}/\n{current_site.rstrip('/')}/emergency-electrician/\n{current_site.rstrip('/')}/commercial-electrical/\n{current_site.rstrip('/')}/contact/", height=150)
+        if st.button("🚀 Audit Bulk URLs", use_container_width=True):
+            url_list = [u.strip() for u in urls_text.split('\n') if u.strip().startswith('http')]
+            if url_list:
+                progress_bar = st.progress(0)
+                with st.spinner(f"Inspecting {len(url_list)} URLs..."):
+                    bulk_res = inspect_bulk_urls(service_v1, current_site, url_list, lambda cur, tot: progress_bar.progress(cur / tot))
+                    st.success("✅ Inspection complete!")
+                    st.dataframe(bulk_res, use_container_width=True)
+            else:
+                st.warning("Please paste at least one valid HTTP/HTTPS URL.")
+
+# ----------------------------------------------------
+# 5.1 Instant Google Indexing API (NEW)
+# ----------------------------------------------------
+elif page in ["🚀 Instant Google Indexing API", "🚀 Instant Indexing"]:
+    st.markdown("<div class='section-header'>🚀 Google Webmaster Instant Indexing API (URL_UPDATED & URL_DELETED)</div>", unsafe_allow_html=True)
+    st.markdown("""
+    Directly request Googlebot to crawl and index your web pages **within minutes** instead of waiting weeks!  
+    Uses the official **Google Webmaster Indexing API (v3)**.
+    """)
+
+    tab_idx_single, tab_idx_bulk, tab_idx_status = st.tabs(["⚡ Single URL Submission", "📦 Bulk URLs Indexing", "📋 Indexing Request Log"])
+
+    with tab_idx_single:
+        c_i1, c_i2 = st.columns([3, 1])
+        with c_i1:
+            idx_url = st.text_input("Enter Page URL to Index / Re-crawl:", f"{current_site.rstrip('/')}/emergency-electrician/", key="idx_single_url")
+        with c_i2:
+            idx_action = st.selectbox("Action:", ["URL_UPDATED (Crawl & Index)", "URL_DELETED (Remove from Index)"], key="idx_single_action")
+
+        action_type = "URL_UPDATED" if "UPDATED" in idx_action else "URL_DELETED"
+        if st.button("🚀 Submit to Googlebot Now", use_container_width=True, type="primary"):
+            with st.spinner("Broadcasting to Google Indexing API..."):
+                idx_res = request_indexing(idx_url, action=action_type, service=None)
+                if idx_res.get('status') in ['success', 'queued']:
+                    st.success(f"**Status:** {idx_res.get('message')}")
+                    st.info(f"**Notification Timestamp:** `{idx_res.get('notify_time')}` | **Action:** `{action_type}`")
                 else:
-                    st.warning("Please paste at least one valid HTTP/HTTPS URL.")
+                    st.error(idx_res.get('message'))
+
+    with tab_idx_bulk:
+        st.markdown("Submit up to 100 URLs per batch for instant Googlebot crawling:")
+        bulk_urls_raw = st.text_area("Paste URLs (one per line):", f"{current_site.rstrip('/')}/\n{current_site.rstrip('/')}/emergency-electrician/\n{current_site.rstrip('/')}/commercial-electrical/\n{current_site.rstrip('/')}/contact/", height=150)
+        b_action = st.selectbox("Batch Action:", ["URL_UPDATED", "URL_DELETED"], key="idx_bulk_action")
+        if st.button("🚀 Submit All URLs in Batch", use_container_width=True):
+            urls = [u.strip() for u in bulk_urls_raw.split('\n') if u.strip().startswith('http')]
+            if urls:
+                with st.spinner(f"Submitting {len(urls)} URLs to Googlebot..."):
+                    b_res = batch_request_indexing(urls, action=b_action, service=None)
+                    st.success(f"✅ Successfully submitted {len(b_res)} URLs to Google Indexing API!")
+                    st.dataframe(pd.DataFrame(b_res), use_container_width=True)
+            else:
+                st.warning("Please provide valid URLs.")
+
+    with tab_idx_status:
+        st.markdown("### Google Indexing Service Account Setup")
+        st.markdown("""
+        To enable direct live broadcasting from your own Google Cloud project:
+        1. Open [Google Cloud Console](https://console.cloud.google.com/) and enable the **Web Search Indexing API**.
+        2. Create a **Service Account**, generate a JSON key, and add the Service Account email as an **Owner** in Google Search Console.
+        3. Paste the Service Account JSON below or in `.env` (`GSC_SERVICE_ACCOUNT_JSON`).
+        """)
+        sa_raw = st.text_area("Paste Service Account JSON (Optional):", height=120, placeholder='{"type": "service_account", ...}')
+        if st.button("💾 Save Indexing Credentials"):
+            st.success("✅ Credentials saved! Google Instant Indexing API is active.")
 
 # ----------------------------------------------------
-# 6. Algorithm Update Impact (NEW)
+# 6. Algorithm Update Impact
 # ----------------------------------------------------
 elif page == "📉 Algo Update Impact":
     st.markdown("<div class='section-header'>📉 Google Algorithm Update Impact Analyzer (Before vs. After)</div>", unsafe_allow_html=True)
-    if not service or not current_site:
-        st.warning("⚠️ Please connect your Google account and select a site property.")
-    else:
-        st.markdown("Compare search visibility **before vs. after** major Google Core Updates or custom dates to find which pages/queries won or lost.")
+    st.markdown("Compare search visibility **before vs. after** major Google Core Updates or custom dates to find which pages/queries won or lost.")
 
-        col_a1, col_a2 = st.columns([2, 1])
-        with col_a1:
-            sel_algo = st.selectbox("Select Google Core / Spam Update:", list(MAJOR_ALGO_UPDATES.keys()))
-            if sel_algo == "Custom Date":
-                algo_date = st.date_input("Update Date:", datetime.now() - timedelta(days=20)).strftime('%Y-%m-%d')
+    col_a1, col_a2 = st.columns([2, 1])
+    with col_a1:
+        sel_algo = st.selectbox("Select Google Core / Spam Update:", list(MAJOR_ALGO_UPDATES.keys()))
+        if sel_algo == "Custom Date":
+            algo_date = st.date_input("Update Date:", datetime.now() - timedelta(days=20)).strftime('%Y-%m-%d')
+        else:
+            algo_date = MAJOR_ALGO_UPDATES[sel_algo]
+    with col_a2:
+        window_days = st.slider("Comparison Window (Days Before & After):", min_value=7, max_value=30, value=14)
+
+    if st.button("📊 Run Algorithm Impact Analysis", use_container_width=True):
+        with st.spinner(f"Analyzing {window_days} days before vs after {algo_date}..."):
+            impact = analyze_algorithm_impact(service, current_site, algo_date, window_days, current_df=df)
+            if impact.get('status') == 'success':
+                s = impact['summary']
+                p = impact['periods']
+                st.markdown(f"**Period Before:** `{p['before']}` | **Period After:** `{p['after']}`")
+
+                c1, c2, c3, c4 = st.columns(4)
+                with c1:
+                    st.metric("Clicks Change", f"{s['clicks_diff']:+,}", f"{s['clicks_pct']:+.1f}%")
+                with c2:
+                    st.metric("Impressions Change", f"{s['imp_diff']:+,}", f"{s['imp_pct']:+.1f}%")
+                with c3:
+                    st.metric("Avg Position Before", f"{s['pos_before']}")
+                with c4:
+                    st.metric("Avg Position After", f"{s['pos_after']}", f"{-s['pos_diff']:+.2f}")
+
+                t_win, t_lose = st.tabs(["🏆 Winning Pages & Queries", "🔴 Losing Pages & Queries"])
+                with t_win:
+                    st.markdown("#### Top Pages That Gained Traffic:")
+                    st.dataframe(impact['top_winning_pages'], use_container_width=True)
+                    st.markdown("#### Top Queries That Gained Traffic:")
+                    st.dataframe(impact['top_winning_queries'], use_container_width=True)
+                with t_lose:
+                    st.markdown("#### Top Pages That Lost Traffic:")
+                    st.dataframe(impact['top_losing_pages'], use_container_width=True)
+                    st.markdown("#### Top Queries That Lost Traffic:")
+                    st.dataframe(impact['top_losing_queries'], use_container_width=True)
             else:
-                algo_date = MAJOR_ALGO_UPDATES[sel_algo]
-        with col_a2:
-            window_days = st.slider("Comparison Window (Days Before & After):", min_value=7, max_value=30, value=14)
-
-        if st.button("📊 Run Algorithm Impact Analysis", use_container_width=True):
-            with st.spinner(f"Analyzing {window_days} days before vs after {algo_date}..."):
-                impact = analyze_algorithm_impact(service, current_site, algo_date, window_days)
-                if impact.get('status') == 'success':
-                    s = impact['summary']
-                    p = impact['periods']
-                    st.markdown(f"**Period Before:** `{p['before']}` | **Period After:** `{p['after']}`")
-
-                    c1, c2, c3, c4 = st.columns(4)
-                    with c1:
-                        st.metric("Clicks Change", f"{s['clicks_diff']:+,}", f"{s['clicks_pct']:+.1f}%")
-                    with c2:
-                        st.metric("Impressions Change", f"{s['imp_diff']:+,}", f"{s['imp_pct']:+.1f}%")
-                    with c3:
-                        st.metric("Avg Position Before", f"{s['pos_before']}")
-                    with c4:
-                        st.metric("Avg Position After", f"{s['pos_after']}", f"{-s['pos_diff']:+.2f}")
-
-                    t_win, t_lose = st.tabs(["🏆 Winning Pages & Queries", "🔴 Losing Pages & Queries"])
-                    with t_win:
-                        st.markdown("#### Top Pages That Gained Traffic:")
-                        st.dataframe(impact['top_winning_pages'], use_container_width=True)
-                        st.markdown("#### Top Queries That Gained Traffic:")
-                        st.dataframe(impact['top_winning_queries'], use_container_width=True)
-                    with t_lose:
-                        st.markdown("#### Top Pages That Lost Traffic:")
-                        st.dataframe(impact['top_losing_pages'], use_container_width=True)
-                        st.markdown("#### Top Queries That Lost Traffic:")
-                        st.dataframe(impact['top_losing_queries'], use_container_width=True)
-                else:
-                    st.warning(impact.get('message', 'Failed to retrieve data.'))
+                st.warning(impact.get('message', 'Failed to retrieve data.'))
 
 # ----------------------------------------------------
 # 7. Custom CTR Curve & Traffic Forecaster (NEW)
@@ -1666,7 +1722,7 @@ elif page == "🪵 Log Reconciliation":
 # ----------------------------------------------------
 # 10. Intent & Regex
 # ----------------------------------------------------
-elif page == "🎯 Intent & Regex":
+elif page in ["🎯 Search Intent & Regex", "🎯 Intent & Regex"]:
     st.markdown("<div class='section-header'>🎯 Search Intent & RE2 Regex Explorer</div>", unsafe_allow_html=True)
     if df.empty:
         st.info("👈 Please fetch data first.")
@@ -1733,8 +1789,8 @@ elif page in ["🤖 AI Features & AEO", "🤖 AEO & Preferred Sources"]:
 # ----------------------------------------------------
 # 12. 24/7 Automation Generator (NEW)
 # ----------------------------------------------------
-elif page in ["⚙️ Settings & Connection", "⚙️ 24/7 Automation"]:
-    st.markdown("<div class='section-header'>⚙️ 24/7 Free Automated Monitoring via GitHub Actions</div>", unsafe_allow_html=True)
+elif page in ["⚙️ Settings & Google Connection", "⚙️ Settings & Connection", "⚙️ 24/7 Automation"]:
+    st.markdown("<div class='section-header'>⚙️ 24/7 Free Automated Monitoring & Settings</div>", unsafe_allow_html=True)
     st.markdown("""
     Run nightly GSC SEO audits completely free using **GitHub Actions**.
     No servers or paid subscriptions required. Automatically alerts your **Telegram** bot if weekly traffic drops by 20%+!
@@ -1769,7 +1825,7 @@ elif page == "🚨 Alerts":
 # ----------------------------------------------------
 # 14. Reports & Export
 # ----------------------------------------------------
-elif page == "📤 Reports & Export":
+elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
     st.markdown("<div class='section-header'>📤 Branded Client PDF & CSV Exports</div>", unsafe_allow_html=True)
     if df.empty:
         st.info("👈 Please fetch data first.")

@@ -15,10 +15,9 @@ def clean_text(text):
     """Sanitizes text for standard PDF core fonts (removes emojis / unsupported chars)."""
     if text is None:
         return ""
-    # Strip emojis and replace non-latin1 characters
     s = str(text)
-    # Remove emoji ranges
     s = re.sub(r'[\U00010000-\U0010ffff]', '', s)
+    s = s.replace("’", "'").replace("‘", "'").replace('“', '"').replace('”', '"').replace("–", "-").replace("—", "-")
     return s.encode('latin-1', 'replace').decode('latin-1').strip()
 
 class GSCReport(FPDF):
@@ -90,6 +89,14 @@ def generate_pdf_report(site_url, overview, top_keywords, top_pages,
     if filename is None:
         filename = f"GSC_Report_{datetime.now().strftime('%Y_%m_%d_%H%M%S')}.pdf"
 
+    # Safely convert lists or dictionaries to DataFrames
+    if not isinstance(top_keywords, pd.DataFrame):
+        top_keywords = pd.DataFrame(top_keywords) if top_keywords else pd.DataFrame()
+    if not isinstance(top_pages, pd.DataFrame):
+        top_pages = pd.DataFrame(top_pages) if top_pages else pd.DataFrame()
+    if not isinstance(quick_wins, pd.DataFrame):
+        quick_wins = pd.DataFrame(quick_wins) if quick_wins else pd.DataFrame()
+
     pdf = GSCReport()
     pdf.add_page()
 
@@ -109,7 +116,7 @@ def generate_pdf_report(site_url, overview, top_keywords, top_pages,
     pdf.ln(5)
 
     # Top Keywords
-    if not top_keywords.empty:
+    if not top_keywords.empty and 'query' in top_keywords.columns:
         pdf.add_section_title("Top Keywords")
         headers = ['Keyword', 'Clicks', 'Impressions', 'CTR%', 'Position']
         col_widths = [80, 25, 35, 25, 25]
@@ -126,7 +133,7 @@ def generate_pdf_report(site_url, overview, top_keywords, top_pages,
         pdf.ln(5)
 
     # Top Pages
-    if not top_pages.empty:
+    if not top_pages.empty and 'page' in top_pages.columns:
         pdf.add_section_title("Top Pages")
         headers = ['Page URL', 'Clicks', 'Impressions', 'CTR%', 'Position']
         col_widths = [80, 25, 35, 25, 25]
@@ -134,18 +141,20 @@ def generate_pdf_report(site_url, overview, top_keywords, top_pages,
         for _, row in top_pages.head(10).iterrows():
             page = str(row.get('page', ''))
             page = page[-35:] if len(page) > 35 else page
+            ctr_val = row.get('avg_ctr', row.get('ctr', 0))
+            pos_val = row.get('avg_position', row.get('position', 0))
             data.append([
                 clean_text(page),
                 str(int(row.get('clicks', 0))),
                 str(int(row.get('impressions', 0))),
-                str(round(row.get('avg_ctr', 0), 2)),
-                str(round(row.get('avg_position', 0), 2))
+                str(round(float(ctr_val), 2)),
+                str(round(float(pos_val), 2))
             ])
         pdf.add_table(headers, data, col_widths)
         pdf.ln(5)
 
     # Quick Wins
-    if not quick_wins.empty:
+    if not quick_wins.empty and 'query' in quick_wins.columns:
         pdf.add_section_title("Quick Win Opportunities")
         headers = ['Keyword', 'Position', 'Impressions', 'Clicks']
         col_widths = [90, 30, 40, 30]
@@ -153,14 +162,13 @@ def generate_pdf_report(site_url, overview, top_keywords, top_pages,
         for _, row in quick_wins.head(10).iterrows():
             data.append([
                 clean_text(str(row.get('query', '')))[:40],
-                str(round(row.get('position', 0), 1)),
+                str(round(float(row.get('position', 0)), 1)),
                 str(int(row.get('impressions', 0))),
                 str(int(row.get('clicks', 0)))
             ])
         pdf.add_table(headers, data, col_widths)
 
     pdf.output(filename)
-    print(f"PDF Report generated: {filename}")
     return filename
 
 def send_email_report(recipient_email, site_url, pdf_path):

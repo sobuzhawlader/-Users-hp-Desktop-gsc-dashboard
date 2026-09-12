@@ -1,14 +1,41 @@
 import pandas as pd
 from datetime import datetime, timedelta
+from typing import List, Dict, Any, Optional
 from auth_gsc import get_gsc_service
 from database import save_data, init_db
 
-def fetch_gsc_data(service, site_url, start_date, end_date, dimensions=None):
+# Supported official GSC search types
+SEARCH_TYPES = ['web', 'image', 'video', 'news', 'discover', 'googleNews']
+
+def fetch_gsc_data(
+    service,
+    site_url: str,
+    start_date: str,
+    end_date: str,
+    dimensions: Optional[List[str]] = None,
+    search_type: str = 'web',
+    data_state: str = 'final',
+    aggregation_type: str = 'auto',
+    dimension_filters: Optional[List[Dict[str, Any]]] = None
+) -> pd.DataFrame:
     """
-    Fetches search analytics data from GSC API with pagination.
-    Includes date, query, page, country, device for deep analysis.
+    Fetches search analytics data from GSC API with full feature support:
+    - Dimensions: date, query, page, country, device, searchAppearance
+    - Search Types: web, image, video, news, discover, googleNews
+    - Data State: 'all' (includes fresh unfinalized/hourly data) or 'final'
+    - RE2 Regex and dimension filters
+    - Complete pagination up to 100,000 rows
     """
-    if dimensions is None:
+    if not service:
+        return pd.DataFrame()
+
+    # Discover and GoogleNews do NOT support the 'query' dimension
+    if search_type in ['discover', 'googleNews']:
+        if dimensions is None:
+            dimensions = ['date', 'page', 'country', 'device']
+        else:
+            dimensions = [d for d in dimensions if d != 'query']
+    elif dimensions is None:
         dimensions = ['date', 'query', 'page', 'country', 'device']
 
     all_rows = []
@@ -21,8 +48,17 @@ def fetch_gsc_data(service, site_url, start_date, end_date, dimensions=None):
             'endDate': end_date,
             'dimensions': dimensions,
             'rowLimit': row_limit,
-            'startRow': start_row
+            'startRow': start_row,
+            'type': search_type if search_type in SEARCH_TYPES else 'web',
+            'dataState': data_state if data_state in ['all', 'final'] else 'final',
+            'aggregationType': aggregation_type if aggregation_type in ['auto', 'byPage', 'byProperty'] else 'auto'
         }
+
+        # Apply dimension filter groups if specified (e.g. query regex, page contains)
+        if dimension_filters:
+            request_body['dimensionFilterGroups'] = [{
+                'filters': dimension_filters
+            }]
 
         try:
             response = service.searchanalytics().query(
@@ -50,50 +86,72 @@ def fetch_gsc_data(service, site_url, start_date, end_date, dimensions=None):
                 all_rows.append(data)
 
             start_row += row_limit
-            print(f"Fetched {len(all_rows)} rows so far...")
 
-            # GSC API pagination limit is 100,000 rows
+            # GSC API hard pagination limit is 100,000 rows
             if len(rows) < row_limit or start_row >= 100000:
                 break
 
         except Exception as e:
-            print(f"Error fetching GSC data: {e}")
+            print(f"Error fetching GSC data (search_type={search_type}): {e}")
             break
 
     df = pd.DataFrame(all_rows)
-    print(f"Total rows fetched: {len(df)}")
     return df
 
-def fetch_last_days(service, site_url, days=30):
+
+def fetch_discover_data(service, site_url: str, start_date: str, end_date: str) -> pd.DataFrame:
+    """Fetches Google Discover feed performance (impressions and clicks)."""
+    return fetch_gsc_data(
+        service=service,
+        site_url=site_url,
+        start_date=start_date,
+        end_date=end_date,
+        dimensions=['date', 'page', 'country'],
+        search_type='discover'
+    )
+
+
+def fetch_fresh_data(service, site_url: str, days: int = 3) -> pd.DataFrame:
+    """Fetches unfinalized/fresh GSC data up to the current day (dataState='all')."""
     end_date = datetime.now().strftime('%Y-%m-%d')
     start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
-    return fetch_gsc_data(service, site_url, start_date, end_date)
+    return fetch_gsc_data(
+        service=service,
+        site_url=site_url,
+        start_date=start_date,
+        end_date=end_date,
+        data_state='all'
+    )
 
-def fetch_and_save(site_url, days=30):
+
+def fetch_search_appearance(service, site_url: str, start_date: str, end_date: str) -> pd.DataFrame:
+    """Fetches performance broken down by rich results / search appearance."""
+    return fetch_gsc_data(
+        service=service,
+        site_url=site_url,
+        start_date=start_date,
+        end_date=end_date,
+        dimensions=['searchAppearance', 'date'],
+        search_type='web'
+    )
+
+
+def fetch_last_days(service, site_url: str, days: int = 30, search_type: str = 'web') -> pd.DataFrame:
+    """Convenience helper to fetch standard period."""
+    end_date = datetime.now().strftime('%Y-%m-%d')
+    start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+    return fetch_gsc_data(service, site_url, start_date, end_date, search_type=search_type)
+
+
+def fetch_and_save(site_url: str, days: int = 30) -> pd.DataFrame:
+    """Automated fetcher for scheduled syncs."""
     init_db()
-    service = get_gsc_service()
+    service = get_gsc_service(None)
     if not service:
         print("No active GSC service.")
         return pd.DataFrame()
-    print(f"Fetching data for {site_url}...")
     df = fetch_last_days(service, site_url, days)
     if not df.empty:
         save_data(df, site_url)
         print(f"Done! Saved {len(df)} rows.")
     return df
-
-def get_date_range(period='last_30'):
-    today = datetime.now()
-    if period == 'last_7':
-        start = today - timedelta(days=7)
-    elif period == 'last_30':
-        start = today - timedelta(days=30)
-    elif period == 'last_90':
-        start = today - timedelta(days=90)
-    elif period == 'last_6_months':
-        start = today - timedelta(days=180)
-    elif period == 'last_12_months':
-        start = today - timedelta(days=365)
-    else:
-        start = today - timedelta(days=30)
-    return start.strftime('%Y-%m-%d'), today.strftime('%Y-%m-%d')
