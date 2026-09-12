@@ -13,11 +13,12 @@ CREDENTIALS_FILE = os.path.join(BASE_DIR, 'credentials.json')
 SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, 'service_account.json')
 DEFAULT_CLIENT_CONFIG = {
     "web": {
-        "client_id": "1092944785943-u12s5v08l3dacf6vgabc7d8d0gro0i5e.apps.googleusercontent.com",
-        "client_secret": "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",
+        "client_id": "1092944785943-op1s78m9cqji5ugnlphf9eai0990e3b6.apps.googleusercontent.com",
+        "client_secret": "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",
         "redirect_uris": [
             "https://sobuz-gsc-dashboard.streamlit.app",
-            "http://localhost:8501"
+            "http://localhost:8501",
+            "http://localhost"
         ],
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token"
