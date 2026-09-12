@@ -68,7 +68,8 @@ def get_auth_url(redirect_uri: str, config: dict = None):
     flow = Flow.from_client_config(
         config,
         scopes=SCOPES,
-        redirect_uri=redirect_uri
+        redirect_uri=redirect_uri,
+        autogenerate_code_verifier=False
     )
     auth_url, state = flow.authorization_url(
         prompt='consent',
@@ -88,9 +89,9 @@ def exchange_code(code: str, redirect_uri: str, config: dict = None):
 
     flow = Flow.from_client_config(
         config,
-
         scopes=SCOPES,
-        redirect_uri=redirect_uri
+        redirect_uri=redirect_uri,
+        autogenerate_code_verifier=False
     )
     flow.fetch_token(code=code)
     return flow.credentials
