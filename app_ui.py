@@ -1,18 +1,79 @@
 import os
+import sys
 import platform
+import uuid
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 
-from auth_gsc import (
-    get_gsc_service, get_searchconsole_v1_service, get_sites, 
-    authenticate_local, get_auth_url, exchange_code, load_client_config,
-    authenticate_service_account
-)
-from data_fetcher import fetch_gsc_data, fetch_discover_data, fetch_fresh_data, fetch_search_appearance
+# Ensure repo root directory is always on sys.path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+# Safe imports with fallbacks
+try:
+    from auth_gsc import (
+        get_gsc_service, get_searchconsole_v1_service, get_sites, 
+        authenticate_local, get_auth_url, exchange_code, load_client_config,
+        authenticate_service_account
+    )
+except Exception:
+    import auth_gsc
+    get_gsc_service = getattr(auth_gsc, 'get_gsc_service', None)
+    get_searchconsole_v1_service = getattr(auth_gsc, 'get_searchconsole_v1_service', None)
+    get_sites = getattr(auth_gsc, 'get_sites', None)
+    authenticate_local = getattr(auth_gsc, 'authenticate_local', None)
+    get_auth_url = getattr(auth_gsc, 'get_auth_url', None)
+    exchange_code = getattr(auth_gsc, 'exchange_code', None)
+    load_client_config = getattr(auth_gsc, 'load_client_config', None)
+    authenticate_service_account = getattr(auth_gsc, 'authenticate_service_account', None)
+
+try:
+    from data_fetcher import (
+        fetch_gsc_data, fetch_discover_data, fetch_fresh_data, 
+        fetch_search_appearance, fetch_last_days
+    )
+except Exception:
+    try:
+        import data_fetcher
+        fetch_gsc_data = getattr(data_fetcher, 'fetch_gsc_data', None)
+        fetch_discover_data = getattr(data_fetcher, 'fetch_discover_data', None)
+        fetch_fresh_data = getattr(data_fetcher, 'fetch_fresh_data', None)
+        fetch_search_appearance = getattr(data_fetcher, 'fetch_search_appearance', None)
+        fetch_last_days = getattr(data_fetcher, 'fetch_last_days', None)
+    except Exception:
+        fetch_gsc_data = None
+        fetch_discover_data = None
+        fetch_fresh_data = None
+        fetch_search_appearance = None
+        fetch_last_days = None
+
+# Fallback definitions if needed
+if fetch_discover_data is None:
+    def fetch_discover_data(service, site_url, start_date, end_date):
+        if fetch_gsc_data:
+            return fetch_gsc_data(service, site_url, start_date, end_date, search_type='discover')
+        return pd.DataFrame()
+
+if fetch_fresh_data is None:
+    def fetch_fresh_data(service, site_url, days=3):
+        end_date = datetime.now().strftime('%Y-%m-%d')
+        start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+        if fetch_gsc_data:
+            return fetch_gsc_data(service, site_url, start_date, end_date, data_state='all')
+        return pd.DataFrame()
+
+if fetch_search_appearance is None:
+    def fetch_search_appearance(service, site_url, start_date, end_date):
+        if fetch_gsc_data:
+            return fetch_gsc_data(service, site_url, start_date, end_date, dimensions=['searchAppearance', 'date'])
+        return pd.DataFrame()
+
 from database import init_db, save_data, load_data, load_alerts
 from seo_engine import (
     get_overview, get_quick_wins, get_cannibalization,
@@ -32,10 +93,21 @@ from ctr_modeler import build_empirical_ctr_curve, forecast_traffic_opportunity
 from sitemap_engine import list_sitemaps, submit_sitemap
 from log_reconciliation import reconcile_crawl_with_gsc, reconcile_server_logs_with_gsc
 from automation_generator import generate_automation_bundle, GITHUB_ACTIONS_WORKFLOW, HEADLESS_AUDIT_SCRIPT
-from indexing_api import request_indexing, batch_request_indexing, get_indexing_status
-from sites_manager import list_all_sites, add_site_property, delete_site_property
-import uuid
 from realtime_engine import get_dashboard_active_users, get_site_realtime_metrics
+
+try:
+    from indexing_api import request_indexing, batch_request_indexing, get_indexing_status
+except Exception:
+    def request_indexing(*args, **kwargs): return {"status": "skipped", "message": "Indexing API not loaded"}
+    def batch_request_indexing(*args, **kwargs): return []
+    def get_indexing_status(*args, **kwargs): return {"status": "unknown"}
+
+try:
+    from sites_manager import list_all_sites, add_site_property, delete_site_property
+except Exception:
+    def list_all_sites(*args, **kwargs): return []
+    def add_site_property(*args, **kwargs): return False
+    def delete_site_property(*args, **kwargs): return False
 
 # ==============================
 # Page Config
