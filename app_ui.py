@@ -51,27 +51,55 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
     * { font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
     
-    .main { 
-        background: #ffffff !important; 
-    }
-    .stApp {
-        background: #ffffff !important;
+    /* Force 100% Light Mode everywhere */
+    html, body, [class*="css"], .stApp, .main, [data-testid="stAppViewContainer"], [data-testid="stHeader"] { 
+        background-color: #ffffff !important; 
         color: #202124 !important;
     }
+    
     section[data-testid="stSidebar"] {
-        background: #f8f9fa !important;
+        background-color: #f8f9fa !important;
         border-right: 1px solid #dadce0 !important;
     }
-    section[data-testid="stSidebar"] .stRadio label {
+    
+    /* GSC Sidebar Menu Styling */
+    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] {
+        gap: 2px !important;
+    }
+    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label {
         color: #3c4043 !important;
-        font-size: 13px;
-        padding: 6px 10px;
-        border-radius: 20px;
+        font-size: 13.5px !important;
+        font-weight: 500 !important;
+        border-radius: 0 24px 24px 0 !important;
+        padding: 9px 18px !important;
+        margin-right: 14px !important;
+        cursor: pointer !important;
+        transition: all 0.12s ease-in-out !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label:hover {
+        background-color: #f1f3f4 !important;
+        color: #202124 !important;
     }
     section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label[data-checked="true"] {
-        background: #e8f0fe !important;
+        background-color: #e8f0fe !important;
         color: #1a73e8 !important;
         font-weight: 600 !important;
+    }
+    /* Hide the radio bullet circle so it looks like authentic GSC menu tabs */
+    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label > div:first-child {
+        display: none !important;
+    }
+    
+    /* Property Card */
+    .gsc-prop-card {
+        background: #ffffff;
+        border: 1px solid #dadce0;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 2px rgba(60,64,67,0.08);
     }
     
     /* GSC Top Header */
@@ -226,8 +254,8 @@ st.markdown("""
 
     /* Streamlit dataframe & tabs */
     .stTabs [data-baseweb="tab-list"] {
-        border-bottom: 2px solid #dadce0;
-        gap: 20px;
+        border-bottom: 2px solid #dadce0 !important;
+        gap: 20px !important;
     }
     .stTabs [data-baseweb="tab"] {
         font-size: 13px !important;
@@ -241,16 +269,56 @@ st.markdown("""
     }
     
     .stButton > button {
-        background: #1a73e8;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        font-weight: 500;
-        font-size: 13px;
-        padding: 6px 16px;
+        background: #1a73e8 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 4px !important;
+        font-weight: 500 !important;
+        font-size: 13px !important;
+        padding: 6px 16px !important;
     }
     .stButton > button:hover {
-        background: #1765cc;
+        background: #1765cc !important;
+    }
+    
+    /* Section headers */
+    .section-header {
+        background: #f8f9fa;
+        border-left: 4px solid #1a73e8;
+        border-radius: 4px;
+        padding: 10px 14px;
+        margin: 15px 0 12px 0;
+        color: #202124;
+        font-size: 16px;
+        font-weight: 600;
+        border: 1px solid #dadce0;
+        border-left: 4px solid #1a73e8;
+    }
+    
+    /* Light Material alert boxes */
+    .alert-danger {
+        background: #fce8e6;
+        border: 1px solid #fad2cf;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin: 8px 0;
+        color: #c5221f;
+    }
+    .alert-warning {
+        background: #fef7e0;
+        border: 1px solid #feefc3;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin: 8px 0;
+        color: #b06000;
+    }
+    .alert-success {
+        background: #e6f4ea;
+        border: 1px solid #ceead6;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin: 8px 0;
+        color: #137333;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -326,221 +394,81 @@ if 'code' in query_params and st.session_state.service is None:
         st.error(f"Web OAuth Error: {e}")
 
 # ==============================
-# Sidebar
+# Sidebar - Authentic Google Search Console
 # ==============================
 with st.sidebar:
+    # 1. GSC Logo & Brand Header
     st.markdown("""
-    <div style='text-align:center; padding: 12px 0 8px 0;'>
-        <div style='font-size:32px'>🔍</div>
-        <div style='font-size:18px; font-weight:700; 
-             background: linear-gradient(135deg, #6366f1, #a855f7);
-             -webkit-background-clip: text;
-             -webkit-text-fill-color: transparent;'>
-             GSC Pro Enterprise
-        </div>
-        <div style='font-size:11px; color:#94a3b8;'>Multi-User Cloud & Local Ready</div>
+    <div style='display:flex; align-items:center; gap:8px; padding: 4px 6px 12px 6px;'>
+        <svg width="24" height="24" viewBox="0 0 48 48">
+            <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+            <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+            <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+            <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+        </svg>
+        <span style='font-size:16px; font-weight:500; color:#5f6368; letter-spacing:-0.2px;'>Search Console</span>
     </div>
     """, unsafe_allow_html=True)
-    st.divider()
 
-    # Connection Status
-    is_connected = (st.session_state.service and st.session_state.sites) or not st.session_state.df.empty
-    if is_connected:
-        status_label = f"Connected ({len(st.session_state.sites)} properties)" if st.session_state.sites else "Data Loaded (Demo/CSV)"
-        st.markdown(f"**Status:** <span style='color:#10b981; font-weight:600;'>● {status_label}</span>", unsafe_allow_html=True)
-        if st.button("🚪 Logout / Reset Data", use_container_width=True):
-            st.session_state.service = None
-            st.session_state.service_v1 = None
-            st.session_state.sites = []
-            st.session_state.df = pd.DataFrame()
-            st.session_state.current_site = None
-            st.session_state.user_creds = None
-            st.rerun()
-    else:
-        st.markdown("**🔐 Select Connection Mode:**")
-        auth_mode = st.radio(
-            "Connection Method",
-            [
-                "🌐 Google OAuth (Sign-In)",
-                "🚀 1-Click Demo (Instant View)",
-                "📁 Upload GSC CSV / Export",
-                "🔑 Service Account Key"
-            ],
-            index=0,
-            label_visibility="collapsed"
-        )
-
-        if auth_mode == "🌐 Google OAuth (Sign-In)":
-            cfg = load_client_config()
-            if cfg:
-                default_redirect = resolve_redirect_uri(cfg)
-                try:
-                    auth_url, _ = get_auth_url(default_redirect, config=cfg)
-                    st.link_button("🌐 Connect with Google (Cloud/Web)", auth_url, use_container_width=True, type="primary")
-                except Exception as ex:
-                    st.error(f"OAuth URL error: {ex}")
-                
-                with st.expander("📋 Alternative: Manual Code Paste"):
-                    manual_code = st.text_input("Paste redirect URL or ?code=...", key="manual_oauth_code")
-                    if st.button("🚀 Connect via Code", use_container_width=True):
-                        if manual_code.strip():
-                            try:
-                                raw_code = manual_code.strip()
-                                if 'code=' in raw_code:
-                                    raw_code = raw_code.split('code=')[1].split('&')[0]
-                                from urllib.parse import unquote
-                                raw_code = unquote(raw_code)
-                                creds = exchange_code(raw_code, default_redirect, config=cfg)
-                                svc = get_gsc_service(creds)
-                                svc_v1 = get_searchconsole_v1_service(creds)
-                                sites = get_sites(svc)
-                                st.session_state.user_creds = creds
-                                st.session_state.service = svc
-                                st.session_state.service_v1 = svc_v1
-                                st.session_state.sites = sites
-                                st.success("✅ Logged in successfully!")
-                                st.rerun()
-                            except Exception as ex:
-                                st.error(f"Exchange error: {ex}")
-            else:
-                st.warning("⚠️ Google Cloud credentials not configured.")
-                uploaded_creds = st.file_uploader("Upload credentials.json", type=['json'], key="sidebar_creds_uploader")
-                if uploaded_creds:
-                    try:
-                        loaded_cfg = json.load(uploaded_creds)
-                        st.session_state.client_config = loaded_cfg
-                        st.success("Credentials saved to session!")
-                        st.rerun()
-                    except Exception as ex:
-                        st.error(f"Invalid JSON: {ex}")
-
-            if os.path.exists(os.path.join(os.path.dirname(__file__), 'credentials.json')):
-                if st.button("💻 Local 1-Click Login (Desktop)", use_container_width=True):
-                    with st.spinner("Authorizing in browser..."):
-                        try:
-                            creds = authenticate_local(port=8080)
-                            svc = get_gsc_service(creds)
-                            svc_v1 = get_searchconsole_v1_service(creds)
-                            sites = get_sites(svc)
-                            st.session_state.user_creds = creds
-                            st.session_state.service = svc
-                            st.session_state.service_v1 = svc_v1
-                            st.session_state.sites = sites
-                            st.success(f"✅ Connected! Found {len(sites)} sites.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Auth failed: {e}")
-
-        elif auth_mode == "🚀 1-Click Demo (Instant View)":
-            st.caption("💡 **Instant Access:** Explore all engines with 1,000+ realistic SEO data points.")
-            if st.button("✨ Load Full Demo Data (90 Days)", use_container_width=True, type="primary"):
-                with st.spinner("Generating SEO data..."):
-                    mock_df = generate_mock_gsc_data(site_name="https://mybrand-store.com", days=90)
-                    st.session_state.df = mock_df
-                    st.session_state.sites = ["https://mybrand-store.com (Demo Property)"]
-                    st.session_state.current_site = "https://mybrand-store.com (Demo Property)"
-                    st.success("✅ Demo Data Loaded!")
-                    st.rerun()
-
-        elif auth_mode == "📁 Upload GSC CSV / Export":
-            st.caption("📂 Upload GSC Performance CSV or ZIP export without any API login.")
-            csv_file = st.file_uploader("Upload CSV or ZIP", type=['csv', 'zip'], key="gsc_csv_uploader")
-            if csv_file:
-                try:
-                    parsed_df = parse_gsc_csv(csv_file)
-                    if not parsed_df.empty:
-                        st.session_state.df = parsed_df
-                        st.session_state.sites = [f"{csv_file.name} (Uploaded Data)"]
-                        st.session_state.current_site = f"{csv_file.name} (Uploaded Data)"
-                        st.success(f"✅ Loaded {len(parsed_df):,} rows from export!")
-                        st.rerun()
-                    else:
-                        st.error("Could not parse rows from CSV.")
-                except Exception as e:
-                    st.error(f"CSV Parse Error: {e}")
-
-        elif auth_mode == "🔑 Service Account Key":
-            st.caption("🔒 **Industry Standard:** Direct JSON key authentication.")
-            sa_file = st.file_uploader("Upload service_account.json", type=['json'], key="sa_uploader")
-            sa_paste = st.text_area("Or Paste Service Account JSON:", height=90, placeholder='{"type": "service_account", ...}')
-            
-            local_sa_path = os.path.join(os.path.dirname(__file__), 'service_account.json')
-            if os.path.exists(local_sa_path):
-                if st.button("📁 Load Local service_account.json", use_container_width=True):
-                    try:
-                        creds, svc, svc_v1, sites = authenticate_service_account(local_sa_path)
-                        st.session_state.user_creds = creds
-                        st.session_state.service = svc
-                        st.session_state.service_v1 = svc_v1
-                        st.session_state.sites = sites if sites else ["Manual Property"]
-                        st.success("✅ Service Account connected!")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Failed: {e}")
-
-            if st.button("⚡ Connect Service Account", use_container_width=True):
-                target_sa = None
-                if sa_file:
-                    try:
-                        target_sa = json.load(sa_file)
-                    except Exception as ex:
-                        st.error(f"Invalid JSON file: {ex}")
-                elif sa_paste.strip():
-                    try:
-                        target_sa = json.loads(sa_paste.strip())
-                    except Exception as ex:
-                        st.error(f"Invalid JSON text: {ex}")
-                
-                if target_sa:
-                    with st.spinner("Authenticating Service Account..."):
-                        try:
-                            creds, svc, svc_v1, sites = authenticate_service_account(target_sa)
-                            st.session_state.user_creds = creds
-                            st.session_state.service = svc
-                            st.session_state.service_v1 = svc_v1
-                            st.session_state.sites = sites if sites else ["https://yourdomain.com/"]
-                            st.success("✅ Service Account Connected!")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Service Account Error: {e}")
-                else:
-                    st.warning("Please upload a file or paste your Service Account JSON.")
-
-    st.divider()
-
-    # Property & Date Selectors
-    selected_site = None
-    start_str = None
-    end_str = None
-
-    if st.session_state.sites or not st.session_state.df.empty:
-        site_options = list(st.session_state.sites) if st.session_state.sites else [st.session_state.current_site or "Active Property"]
+    # 2. Property Selector Pill (Top of Sidebar, matching GSC)
+    site_options = list(st.session_state.sites) if st.session_state.sites else ["https://centralec-electrical.co.uk/"]
+    if "https://centralec-electrical.co.uk/" not in site_options:
+        site_options.insert(0, "https://centralec-electrical.co.uk/")
+    if "➕ Enter Custom Property URL" not in site_options:
         site_options.append("➕ Enter Custom Property URL")
-        selected_choice = st.selectbox("🌐 GSC Property", site_options)
-        if selected_choice == "➕ Enter Custom Property URL":
-            selected_site = st.text_input("Enter Property URL:", value="https://")
-        else:
-            selected_site = selected_choice
-        if st.session_state.current_site != selected_site:
-            st.session_state.current_site = selected_site
-            if st.session_state.service:
-                st.session_state.df = pd.DataFrame()
 
+    selected_choice = st.selectbox("Property", site_options, label_visibility="collapsed")
+    if selected_choice == "➕ Enter Custom Property URL":
+        selected_site = st.text_input("Enter Property URL:", value="https://")
+    else:
+        selected_site = selected_choice
+
+    if st.session_state.current_site != selected_site:
+        st.session_state.current_site = selected_site
+        if selected_site == "https://centralec-electrical.co.uk/":
+            _df_curr, _df_daily_curr, _df_daily_comp, _metrics = generate_centralec_gsc_data()
+            st.session_state.df = _df_curr
+            st.session_state.df_daily_curr = _df_daily_curr
+            st.session_state.df_daily_comp = _df_daily_comp
+            st.session_state.gsc_metrics = _metrics
+        elif st.session_state.service:
+            st.session_state.df = pd.DataFrame()
+
+    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+
+    # 3. Authentic Google Search Console Navigation Menu
+    page = st.radio("Navigation", [
+        "📈 Performance",
+        "🔍 URL inspection",
+        "📄 Pages & Indexing",
+        "🗺️ Sitemaps",
+        "⚡ Core Web Vitals & Quick Wins",
+        "🎯 Top Keywords & Queries",
+        "📉 Algo Update Impact",
+        "📈 Custom CTR Curve",
+        "🤖 AI Features & AEO",
+        "⚙️ Settings & Connection"
+    ], index=0, label_visibility="collapsed")
+
+    st.divider()
+
+    # 4. Property Controls & Google API (Collapsible Expander)
+    with st.expander("⚙️ Fetch Data & Google Account", expanded=False):
         st.markdown("**📅 Date Range**")
         period = st.radio("Period", [
-            "Last 7 days", "Last 30 days", "Last 90 days", "Last 6 months", "Custom"
-        ], index=1, label_visibility="collapsed")
+            "Last 7 days", "Last 28 days", "Last 3 months", "Last 6 months", "Custom"
+        ], index=2, label_visibility="collapsed")
 
         if period == "Custom":
             c1, c2 = st.columns(2)
             with c1:
-                start_date = st.date_input("Start", datetime.now() - timedelta(days=30))
+                start_date = st.date_input("Start", datetime.now() - timedelta(days=90))
             with c2:
                 end_date = st.date_input("End", datetime.now())
             start_str = start_date.strftime('%Y-%m-%d')
             end_str = end_date.strftime('%Y-%m-%d')
         else:
-            days_map = {"Last 7 days": 7, "Last 30 days": 30, "Last 90 days": 90, "Last 6 months": 180}
+            days_map = {"Last 7 days": 7, "Last 28 days": 28, "Last 3 months": 90, "Last 6 months": 180}
             days = days_map[period]
             end_str = datetime.now().strftime('%Y-%m-%d')
             start_str = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
@@ -548,45 +476,54 @@ with st.sidebar:
         col_b1, col_b2 = st.columns(2)
         with col_b1:
             if st.button("🚀 Fetch Live", use_container_width=True):
-                with st.spinner("Fetching GSC API data..."):
-                    try:
-                        df = fetch_gsc_data(st.session_state.service, selected_site, start_str, end_str)
-                        if not df.empty:
-                            save_data(df, selected_site)
-                            st.session_state.df = df
-                            st.success(f"Fetched {len(df):,} rows!")
-                        else:
-                            st.warning("No data found.")
-                    except Exception as e:
-                        st.error(f"Error: {e}")
+                if st.session_state.service:
+                    with st.spinner("Fetching GSC API data..."):
+                        try:
+                            df = fetch_gsc_data(st.session_state.service, selected_site, start_str, end_str)
+                            if not df.empty:
+                                save_data(df, selected_site)
+                                st.session_state.df = df
+                                st.success(f"Fetched {len(df):,} rows!")
+                                st.rerun()
+                            else:
+                                st.warning("No data found for this period.")
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+                else:
+                    st.info("Please connect your Google Account below first.")
         with col_b2:
             if st.button("📂 Load Saved", use_container_width=True):
                 df = load_data(selected_site, start_str, end_str)
                 if not df.empty:
                     st.session_state.df = df
                     st.success(f"Loaded {len(df):,} rows!")
+                    st.rerun()
                 else:
                     st.info("No saved data.")
 
-    st.divider()
-
-    # Navigation Menu
-    page = st.radio("📌 Navigation", [
-        "📊 Overview",
-        "🔍 Keywords",
-        "📄 Pages",
-        "⚡ Quick Wins",
-        "🔬 URL & Canonical Inspector",
-        "📉 Algo Update Impact",
-        "📈 Custom CTR Curve",
-        "🗺️ Sitemaps Manager",
-        "🪵 Log Reconciliation",
-        "🎯 Intent & Regex",
-        "🤖 AEO & Preferred Sources",
-        "⚙️ 24/7 Automation",
-        "🚨 Alerts",
-        "📤 Reports & Export"
-    ])
+        st.divider()
+        # Connection Status & Logins
+        is_connected = bool(st.session_state.service and st.session_state.sites)
+        if is_connected:
+            st.markdown(f"**Google Account:** <span style='color:#10b981; font-weight:600;'>● Connected ({len(st.session_state.sites)} properties)</span>", unsafe_allow_html=True)
+            if st.button("🚪 Disconnect Google Account", use_container_width=True):
+                st.session_state.service = None
+                st.session_state.service_v1 = None
+                st.session_state.sites = ["https://centralec-electrical.co.uk/"]
+                st.session_state.user_creds = None
+                st.rerun()
+        else:
+            st.markdown("**🔐 Connect Google Account:**")
+            cfg = load_client_config()
+            if cfg:
+                default_redirect = resolve_redirect_uri(cfg)
+                try:
+                    auth_url, _ = get_auth_url(default_redirect, config=cfg)
+                    st.link_button("🌐 Connect with Google", auth_url, use_container_width=True, type="primary")
+                except Exception as ex:
+                    st.error(f"OAuth URL error: {ex}")
+            else:
+                st.caption("Credentials not configured in secrets.")
 
 # ==============================
 # Main Content
@@ -599,7 +536,7 @@ current_site = st.session_state.current_site
 # ----------------------------------------------------
 # 1. Performance Overview
 # ----------------------------------------------------
-if page == "📊 Overview":
+if page in ["📈 Performance", "📊 Overview"]:
     # 1. GSC Top Navigation Header
     st.markdown(f"""
     <div class="gsc-top-bar">
@@ -986,7 +923,7 @@ if page == "📊 Overview":
 # ----------------------------------------------------
 # 2. Keywords
 # ----------------------------------------------------
-elif page == "🔍 Keywords":
+elif page in ["🎯 Top Keywords & Queries", "🔍 Keywords"]:
     st.markdown("<div class='section-header'>🔍 Keyword Intelligence</div>", unsafe_allow_html=True)
     if df.empty:
         st.info("👈 Please fetch data first.")
@@ -1020,8 +957,8 @@ elif page == "🔍 Keywords":
                 c_b1, c_b2 = st.columns(2)
                 with c_b1:
                     b_pie = pd.DataFrame({'Type': ['Branded', 'Non-Branded'], 'Clicks': [b_metrics['branded_clicks'], b_metrics['non_branded_clicks']]})
-                    fig_b = px.pie(b_pie, values='Clicks', names='Type', color_discrete_sequence=['#10b981', '#6366f1'])
-                    fig_b.update_layout(paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e2e8f0'))
+                    fig_b = px.pie(b_pie, values='Clicks', names='Type', color_discrete_sequence=['#10b981', '#1a73e8'])
+                    fig_b.update_layout(paper_bgcolor='#ffffff', font=dict(color='#202124'))
                     st.plotly_chart(fig_b, use_container_width=True)
                 with c_b2:
                     st.write(f"**Branded Clicks:** {b_metrics['branded_clicks']:,}")
@@ -1030,7 +967,7 @@ elif page == "🔍 Keywords":
 # ----------------------------------------------------
 # 3. Pages
 # ----------------------------------------------------
-elif page == "📄 Pages":
+elif page in ["📄 Pages & Indexing", "📄 Pages"]:
     st.markdown("<div class='section-header'>📄 Page Level Performance</div>", unsafe_allow_html=True)
     if df.empty:
         st.info("👈 Please fetch data first.")
@@ -1054,7 +991,7 @@ elif page == "📄 Pages":
 # ----------------------------------------------------
 # 4. Quick Wins
 # ----------------------------------------------------
-elif page == "⚡ Quick Wins":
+elif page in ["⚡ Core Web Vitals & Quick Wins", "⚡ Quick Wins"]:
     st.markdown("<div class='section-header'>⚡ Quick Wins (Page 2 Striking Distance)</div>", unsafe_allow_html=True)
     if df.empty:
         st.info("👈 Please fetch data first.")
@@ -1062,8 +999,8 @@ elif page == "⚡ Quick Wins":
         qw = get_quick_wins(df)
         if not qw.empty:
             st.success(f"🎯 Found {len(qw)} keywords ranking on Page 2 (pos 11-20) with >100 impressions!")
-            fig_qw = px.scatter(qw.head(40), x='position', y='impressions', size='clicks', color='ctr', hover_data=['query'], color_continuous_scale=['#6366f1', '#a855f7', '#ec4899'])
-            fig_qw.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#e2e8f0'))
+            fig_qw = px.scatter(qw.head(40), x='position', y='impressions', size='clicks', color='ctr', hover_data=['query'], color_continuous_scale=['#1a73e8', '#5e35b1', '#e8710a'])
+            fig_qw.update_layout(paper_bgcolor='#ffffff', plot_bgcolor='#ffffff', font=dict(color='#202124'))
             st.plotly_chart(fig_qw, use_container_width=True)
             st.dataframe(qw[['query', 'clicks', 'impressions', 'ctr', 'position']], use_container_width=True, height=400)
         else:
@@ -1072,7 +1009,7 @@ elif page == "⚡ Quick Wins":
 # ----------------------------------------------------
 # 5. URL & Canonical Inspector (NEW)
 # ----------------------------------------------------
-elif page == "🔬 URL & Canonical Inspector":
+elif page in ["🔍 URL inspection", "🔬 URL & Canonical Inspector"]:
     st.markdown("<div class='section-header'>🔬 Live URL Inspection & Canonical Mismatch Checker</div>", unsafe_allow_html=True)
     if not service_v1 or not current_site:
         st.warning("⚠️ Please connect your Google account and select a site property from the sidebar.")
@@ -1184,9 +1121,9 @@ elif page == "📈 Custom CTR Curve":
             fig_curve = go.Figure()
             fig_curve.add_trace(go.Scatter(x=ctr_curve['serp_rank'], y=ctr_curve['actual_ctr'], name='Your Actual CTR %', line=dict(color='#10b981', width=3), mode='lines+markers'))
             fig_curve.add_trace(go.Scatter(x=ctr_curve['serp_rank'], y=ctr_curve['benchmark_ctr'], name='Industry Benchmark CTR %', line=dict(color='#94a3b8', width=2, dash='dash'), mode='lines'))
-            fig_curve.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#e2e8f0'),
-                                    xaxis=dict(title="SERP Rank (1 - 20)", gridcolor='rgba(255,255,255,0.06)', dtick=1),
-                                    yaxis=dict(title="Click-Through Rate (%)", gridcolor='rgba(255,255,255,0.06)'))
+            fig_curve.update_layout(paper_bgcolor='#ffffff', plot_bgcolor='#ffffff', font=dict(color='#202124'),
+                                    xaxis=dict(title="SERP Rank (1 - 20)", gridcolor='#f1f3f4', dtick=1),
+                                    yaxis=dict(title="Click-Through Rate (%)", gridcolor='#f1f3f4'))
             st.plotly_chart(fig_curve, use_container_width=True)
             st.dataframe(ctr_curve[['serp_rank', 'actual_ctr', 'benchmark_ctr', 'total_clicks', 'total_impressions', 'ctr_performance']], use_container_width=True)
 
@@ -1208,7 +1145,7 @@ elif page == "📈 Custom CTR Curve":
 # ----------------------------------------------------
 # 8. Sitemaps Manager (NEW)
 # ----------------------------------------------------
-elif page == "🗺️ Sitemaps Manager":
+elif page in ["🗺️ Sitemaps", "🗺️ Sitemaps Manager"]:
     st.markdown("<div class='section-header'>🗺️ GSC Sitemaps Manager & Health Inspector</div>", unsafe_allow_html=True)
     if not service or not current_site:
         st.warning("⚠️ Please connect your Google account and select a site property.")
@@ -1308,8 +1245,8 @@ elif page == "🎯 Intent & Regex":
                 with c1:
                     intent_counts = intent_df['intent'].value_counts().reset_index()
                     intent_counts.columns = ['Intent', 'Count']
-                    fig_i = px.pie(intent_counts, values='Count', names='Intent', color_discrete_sequence=['#6366f1', '#a855f7', '#ec4899', '#10b981'])
-                    fig_i.update_layout(paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e2e8f0'))
+                    fig_i = px.pie(intent_counts, values='Count', names='Intent', color_discrete_sequence=['#1a73e8', '#5e35b1', '#00897b', '#e8710a'])
+                    fig_i.update_layout(paper_bgcolor='#ffffff', font=dict(color='#202124'))
                     st.plotly_chart(fig_i, use_container_width=True)
                 with c2:
                     sel_intent = st.selectbox("Filter Intent", ['All'] + list(intent_df['intent'].unique()))
@@ -1344,7 +1281,7 @@ elif page == "🎯 Intent & Regex":
 # ----------------------------------------------------
 # 11. AEO & Preferred Sources
 # ----------------------------------------------------
-elif page == "🤖 AEO & Preferred Sources":
+elif page in ["🤖 AI Features & AEO", "🤖 AEO & Preferred Sources"]:
     st.markdown("<div class='section-header'>🤖 Generative Engine Optimization (GEO/AEO) & Preferred Sources</div>", unsafe_allow_html=True)
     current_domain = current_site or "yourdomain.com"
     clean_domain = current_domain.replace('sc-domain:', '').replace('https://', '').replace('http://', '').strip('/')
@@ -1362,7 +1299,7 @@ elif page == "🤖 AEO & Preferred Sources":
 # ----------------------------------------------------
 # 12. 24/7 Automation Generator (NEW)
 # ----------------------------------------------------
-elif page == "⚙️ 24/7 Automation":
+elif page in ["⚙️ Settings & Connection", "⚙️ 24/7 Automation"]:
     st.markdown("<div class='section-header'>⚙️ 24/7 Free Automated Monitoring via GitHub Actions</div>", unsafe_allow_html=True)
     st.markdown("""
     Run nightly GSC SEO audits completely free using **GitHub Actions**.
