@@ -182,6 +182,10 @@ st.markdown("""
         transition: all 0.15s ease-in-out;
         border-radius: 0px;
     }
+    .gsc-card-users-on {
+        background: #1e8e3e !important;
+        color: #ffffff !important;
+    }
     .gsc-card-clicks-on {
         background: #1a73e8 !important;
         color: #ffffff !important;
@@ -702,8 +706,36 @@ if page in ["📈 Performance", "📊 Overview"]:
     imps_disp = fmt_gsc_num(total_imps)
     comp_imps_disp = fmt_gsc_num(comp_imps)
 
-    # 3. Authentic 4-Scorecard Connected Container with Toggles
-    chk_c1, chk_c2, chk_c3, chk_c4 = st.columns(4)
+    # 2.5 Prominent Live Active Users Banner
+    st.markdown(f"""
+    <div style="background: linear-gradient(90deg, #edf7ee 0%, #ffffff 100%); border: 1.5px solid #34a853; border-radius: 8px; padding: 12px 18px; margin: 10px 0 16px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow: 0 1px 3px rgba(30,142,62,0.12);">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span class="gsc-pulse-dot" style="width:12px; height:12px;"></span>
+            <div>
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#188038; letter-spacing:0.5px;">🟢 LIVE ACTIVE USERS (সাইটে এখন সক্রিয় ইউজার)</div>
+                <div style="font-size:24px; font-weight:700; color:#137333; line-height:1.2;">
+                    {live_site_users} জন সক্রিয় ভিজিটর (Active Users)
+                    <span style="font-size:13px; font-weight:400; color:#5f6368; margin-left:8px;">— এই মুহূর্তে {current_site or 'centralec-electrical.co.uk'} ব্রাউজ করছেন</span>
+                </div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:#ffffff; border:1px solid #ceead6; border-radius:6px; padding:6px 12px; text-align:center;">
+                <div style="font-size:11px; color:#5f6368;">গত ৩০ মিনিটে মোট</div>
+                <div style="font-size:16px; font-weight:700; color:#1a73e8;">⏱️ {rt_metrics['users_last_30m']} জন</div>
+            </div>
+            <div style="background:#ffffff; border:1px solid #dadce0; border-radius:6px; padding:6px 12px; text-align:center;">
+                <div style="font-size:11px; color:#5f6368;">ড্যাশবোর্ড ব্যবহারকারী</div>
+                <div style="font-size:16px; font-weight:700; color:#5e35b1;">👥 {active_dash_users} জন</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 3. Authentic 5-Scorecard Connected Container with Toggles
+    chk_c0, chk_c1, chk_c2, chk_c3, chk_c4 = st.columns(5)
+    with chk_c0:
+        show_users = st.checkbox("Active users", value=True, key="gsc_chk_users")
     with chk_c1:
         show_clicks = st.checkbox("Total clicks", value=True, key="gsc_chk_clicks")
     with chk_c2:
@@ -714,8 +746,24 @@ if page in ["📈 Performance", "📊 Overview"]:
         show_position = st.checkbox("Average position", value=False, key="gsc_chk_position")
 
     # Render Connected Scorecards
-    sc_col1, sc_col2, sc_col3, sc_col4 = st.columns(4)
+    sc_col0, sc_col1, sc_col2, sc_col3, sc_col4 = st.columns(5)
     
+    with sc_col0:
+        card_class = "gsc-card-users-on" if show_users else "gsc-card-off"
+        check_icon = "☑" if show_users else "☐"
+        st.markdown(f"""
+        <div class="gsc-tile-wrapper">
+            <div class="gsc-card {card_class}">
+                <div class="gsc-card-title">{check_icon} Active users</div>
+                <div class="gsc-card-val-big">{live_site_users}</div>
+                <div class="gsc-card-sub"><span>Live on site right now</span><span style="font-weight:bold; font-size:14px;">🟢</span></div>
+                <div class="gsc-card-val-comp">{rt_metrics['users_last_30m']}</div>
+                <div class="gsc-card-sub"><span>Past 30 minutes</span><span>⏱️</span></div>
+                <div class="gsc-card-info-icon">?</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
     with sc_col1:
         card_class = "gsc-card-clicks-on" if show_clicks else "gsc-card-off"
         check_icon = "☑" if show_clicks else "☐"
