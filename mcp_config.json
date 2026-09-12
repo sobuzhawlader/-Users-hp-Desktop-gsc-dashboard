@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "gsc-seo-server": {
+      "command": "/Users/md.sobuj/.gemini/antigravity/scratch/gsc-dashboard/venv/bin/python",
+      "args": [
+        "/Users/md.sobuj/.gemini/antigravity/scratch/gsc-dashboard/mcp_server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Users/md.sobuj/.gemini/antigravity/scratch/gsc-dashboard"
+      }
+    }
+  }
+}
