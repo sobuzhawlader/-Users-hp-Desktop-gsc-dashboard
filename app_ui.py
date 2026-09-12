@@ -20,7 +20,7 @@ from seo_engine import (
     get_content_decay, get_zombie_pages, get_brand_vs_nonbrand,
     get_device_breakdown, get_country_breakdown, get_top_pages,
     get_winning_keywords, get_high_impression_low_ctr,
-    generate_mock_gsc_data, parse_gsc_csv
+    generate_mock_gsc_data, parse_gsc_csv, generate_centralec_gsc_data
 )
 from report_generator import generate_pdf_report
 from alerts import get_unread_alerts
@@ -44,97 +44,213 @@ st.set_page_config(
 )
 
 # ==============================
-# Custom CSS - Modern Dark UI
+# Custom CSS - Authentic Google Search Console Light UI
 # ==============================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    * { font-family: 'Inter', sans-serif; }
-    .main { background: #0f0f1a; }
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
+    * { font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
+    
+    .main { 
+        background: #ffffff !important; 
+    }
     .stApp {
-        background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+        background: #ffffff !important;
+        color: #202124 !important;
     }
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
-        border-right: 1px solid rgba(99, 102, 241, 0.3);
+        background: #f8f9fa !important;
+        border-right: 1px solid #dadce0 !important;
     }
     section[data-testid="stSidebar"] .stRadio label {
-        color: #e2e8f0 !important;
+        color: #3c4043 !important;
         font-size: 13px;
-        padding: 5px 8px;
-        border-radius: 6px;
+        padding: 6px 10px;
+        border-radius: 20px;
     }
-    .kpi-card {
-        background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.1));
-        border: 1px solid rgba(99, 102, 241, 0.3);
-        border-radius: 12px;
-        padding: 14px;
-        text-align: center;
-        backdrop-filter: blur(10px);
-        transition: transform 0.2s;
+    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label[data-checked="true"] {
+        background: #e8f0fe !important;
+        color: #1a73e8 !important;
+        font-weight: 600 !important;
     }
-    .kpi-card:hover { transform: translateY(-3px); }
-    .kpi-value {
-        font-size: 26px;
-        font-weight: 700;
-        background: linear-gradient(135deg, #6366f1, #a855f7);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    
+    /* GSC Top Header */
+    .gsc-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+        background: #ffffff;
+        border-bottom: 1px solid #dadce0;
+        margin: -4rem -3rem 1.5rem -3rem;
+        position: sticky;
+        top: 0;
+        z-index: 999;
     }
-    .kpi-label {
-        font-size: 11px;
-        color: #94a3b8;
-        margin-top: 4px;
+    .gsc-search-pill {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #e8f0fe;
+        border-radius: 24px;
+        padding: 8px 20px;
+        width: 48%;
+        max-width: 650px;
+        color: #3c4043;
+        font-size: 13px;
+    }
+    
+    /* GSC Filter Chips */
+    .gsc-chip-group {
+        display: inline-flex;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .gsc-chip {
+        padding: 5px 12px;
+        font-size: 12px;
+        color: #3c4043;
+        background: #ffffff;
+        border-right: 1px solid #dadce0;
+        cursor: pointer;
         font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
-    .section-header {
-        background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(168,85,247,0.1));
-        border-left: 4px solid #6366f1;
+    .gsc-chip:last-child {
+        border-right: none;
+    }
+    .gsc-chip-active {
+        background: #e8f0fe !important;
+        color: #1a73e8 !important;
+        font-weight: 600 !important;
+    }
+    .gsc-filter-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        border-radius: 16px;
+        border: 1px solid #dadce0;
+        font-size: 12px;
+        color: #3c4043;
+        background: #ffffff;
+        font-weight: 500;
+    }
+    
+    /* GSC Scorecard Cards */
+    .gsc-tile-wrapper {
+        border: 1px solid #dadce0;
         border-radius: 8px;
-        padding: 10px 14px;
-        margin: 15px 0 12px 0;
-        color: #e2e8f0;
-        font-size: 15px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        background: #ffffff;
+    }
+    .gsc-card {
+        padding: 14px 16px;
+        min-height: 155px;
+        position: relative;
+        transition: all 0.15s ease-in-out;
+        border-radius: 0px;
+    }
+    .gsc-card-clicks-on {
+        background: #1a73e8 !important;
+        color: #ffffff !important;
+    }
+    .gsc-card-imps-on {
+        background: #5e35b1 !important;
+        color: #ffffff !important;
+    }
+    .gsc-card-ctr-on {
+        background: #00897b !important;
+        color: #ffffff !important;
+    }
+    .gsc-card-pos-on {
+        background: #e8710a !important;
+        color: #ffffff !important;
+    }
+    .gsc-card-off {
+        background: #ffffff !important;
+        color: #3c4043 !important;
+        border-right: 1px solid #dadce0;
+    }
+    .gsc-card-off:last-child {
+        border-right: none;
+    }
+    
+    .gsc-card-title {
+        font-size: 12px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .gsc-card-val-big {
+        font-size: 30px;
         font-weight: 600;
+        line-height: 1.15;
+        margin-top: 6px;
     }
-    .alert-danger {
-        background: rgba(239, 68, 68, 0.12);
-        border: 1px solid rgba(239, 68, 68, 0.35);
-        border-radius: 10px;
-        padding: 12px;
-        margin: 8px 0;
-        color: #fca5a5;
+    .gsc-card-sub {
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 2px;
+        opacity: 0.9;
     }
-    .alert-warning {
-        background: rgba(245, 158, 11, 0.12);
-        border: 1px solid rgba(245, 158, 11, 0.35);
-        border-radius: 10px;
-        padding: 12px;
-        margin: 8px 0;
-        color: #fcd34d;
+    .gsc-card-val-comp {
+        font-size: 19px;
+        font-weight: 600;
+        line-height: 1.15;
+        margin-top: 8px;
     }
-    .alert-success {
-        background: rgba(16, 185, 129, 0.12);
-        border: 1px solid rgba(16, 185, 129, 0.35);
-        border-radius: 10px;
-        padding: 12px;
-        margin: 8px 0;
-        color: #6ee7b7;
+    .gsc-card-info-icon {
+        position: absolute;
+        bottom: 10px;
+        right: 12px;
+        font-size: 12px;
+        opacity: 0.7;
     }
+
+    /* AI Banner */
+    .gsc-ai-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border: 1px solid #dadce0;
+        border-radius: 8px;
+        padding: 12px 18px;
+        margin: 14px 0 20px 0;
+    }
+
+    /* Streamlit dataframe & tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        border-bottom: 2px solid #dadce0;
+        gap: 20px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        color: #5f6368 !important;
+        padding: 10px 16px !important;
+    }
+    .stTabs [aria-selected="true"] {
+        color: #1a73e8 !important;
+        border-bottom: 3px solid #1a73e8 !important;
+    }
+    
     .stButton > button {
-        background: linear-gradient(135deg, #6366f1, #a855f7);
+        background: #1a73e8;
         color: white;
         border: none;
-        border-radius: 8px;
-        padding: 7px 16px;
-        font-weight: 600;
-        transition: all 0.2s;
+        border-radius: 4px;
+        font-weight: 500;
+        font-size: 13px;
+        padding: 6px 16px;
     }
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        background: #1765cc;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -148,14 +264,19 @@ if 'service' not in st.session_state:
     st.session_state.service = None
 if 'service_v1' not in st.session_state:
     st.session_state.service_v1 = None
-if 'sites' not in st.session_state:
-    st.session_state.sites = []
-if 'df' not in st.session_state:
-    st.session_state.df = pd.DataFrame()
-if 'current_site' not in st.session_state:
-    st.session_state.current_site = None
+if 'sites' not in st.session_state or not st.session_state.sites:
+    st.session_state.sites = ["https://centralec-electrical.co.uk/"]
+if 'current_site' not in st.session_state or not st.session_state.current_site:
+    st.session_state.current_site = "https://centralec-electrical.co.uk/"
 if 'user_creds' not in st.session_state:
     st.session_state.user_creds = None
+
+if 'df' not in st.session_state or st.session_state.df.empty:
+    _df_curr, _df_daily_curr, _df_daily_comp, _metrics = generate_centralec_gsc_data()
+    st.session_state.df = _df_curr
+    st.session_state.df_daily_curr = _df_daily_curr
+    st.session_state.df_daily_comp = _df_daily_comp
+    st.session_state.gsc_metrics = _metrics
 
 def resolve_redirect_uri(cfg):
     """Picks the best redirect URI matching cloud or local environment."""
@@ -479,230 +600,387 @@ current_site = st.session_state.current_site
 # 1. Performance Overview
 # ----------------------------------------------------
 if page == "📊 Overview":
+    # 1. GSC Top Navigation Header
     st.markdown(f"""
-    <div style='display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; background:rgba(66, 133, 244, 0.08); border:1px solid rgba(66, 133, 244, 0.25); border-radius:10px; padding:10px 18px; margin-bottom:18px;'>
-        <div style='display:flex; align-items:center; gap:10px;'>
-            <span style='font-size:22px;'>🔍</span>
-            <div>
-                <div style='font-weight:700; font-size:16px; color:#e2e8f0;'>Performance on Search results</div>
-                <div style='font-size:12px; color:#94a3b8;'>Google Search Console • Web Search</div>
+    <div class="gsc-top-bar">
+        <div style="display:flex; align-items:center; gap:16px;">
+            <span style="font-size:20px; color:#5f6368; cursor:pointer;">☰</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <svg width="24" height="24" viewBox="0 0 48 48">
+                    <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                    <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                    <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                    <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                </svg>
+                <span style="font-size:18px; font-weight:500; color:#5f6368; letter-spacing:-0.2px;">Google Search Console</span>
             </div>
-            <span style='background:rgba(16, 185, 129, 0.2); color:#10b981; font-size:11px; padding:3px 10px; border-radius:12px; font-weight:600; border:1px solid rgba(16, 185, 129, 0.4);'>● Verified</span>
         </div>
-        <div style='display:flex; gap:8px; align-items:center;'>
-            <span style='background:rgba(255,255,255,0.06); padding:4px 12px; border-radius:16px; font-size:12px; color:#cbd5e1; border:1px solid rgba(255,255,255,0.1);'>Type: <strong>Web</strong></span>
-            <span style='background:rgba(255,255,255,0.06); padding:4px 12px; border-radius:16px; font-size:12px; color:#cbd5e1; border:1px solid rgba(255,255,255,0.1);'>Property: <strong style='color:#60a5fa;'>{current_site or 'Selected Site'}</strong></span>
+        <div class="gsc-search-pill">
+            <span style="color:#5f6368; font-size:15px;">🔍</span>
+            <span style="color:#3c4043; font-size:13px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Inspect any URL in "{current_site or 'https://centralec-electrical.co.uk/'}"</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:16px;">
+            <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Help">❔</span>
+            <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Feedback">💬</span>
+            <div style="position:relative; cursor:pointer;">
+                <span style="color:#5f6368; font-size:17px;">🔔</span>
+                <span style="position:absolute; top:-4px; right:-6px; background:#d93025; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:15px; height:15px; display:flex; align-items:center; justify-content:center;">0</span>
+            </div>
+            <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Google apps">⠿</span>
+            <div style="width:30px; height:30px; border-radius:50%; background:#5c6bc0; color:white; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;">S</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    if df.empty:
-        st.info("👈 Please select a property from the sidebar and click **🚀 Fetch Live** (or load demo data).")
-    else:
-        overview = get_overview(df)
-        
-        # GSC 4-Scorecard Row with Interactive Checkbox Toggles
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            show_clicks = st.checkbox("Total clicks", value=True, key="chk_clicks")
-            st.markdown(f"""
-            <div style='background: rgba(66, 133, 244, 0.08); border: 1px solid #4285F4; border-top: 4px solid #4285F4; border-radius: 8px; padding: 12px 14px;'>
-                <div style='font-size: 11px; color: #93c5fd; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;'>Total clicks</div>
-                <div style='font-size: 28px; font-weight: 700; color: #60a5fa; margin-top: 4px;'>{overview.get('total_clicks', 0):,}</div>
+    # 2. GSC Performance Header
+    st.markdown(f"""
+    <div style="margin-bottom: 14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+            <span style="font-size:22px; font-weight:400; color:#202124;">Performance</span>
+            <div style="display:flex; align-items:center; gap:6px; color:#1a73e8; font-size:13px; font-weight:500; cursor:pointer;">
+                <span>📥</span>
+                <span>EXPORT</span>
             </div>
-            """, unsafe_allow_html=True)
-            
-        with c2:
-            show_impressions = st.checkbox("Total impressions", value=True, key="chk_impressions")
-            st.markdown(f"""
-            <div style='background: rgba(126, 87, 194, 0.08); border: 1px solid #7E57C2; border-top: 4px solid #7E57C2; border-radius: 8px; padding: 12px 14px;'>
-                <div style='font-size: 11px; color: #d8b4fe; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;'>Total impressions</div>
-                <div style='font-size: 28px; font-weight: 700; color: #c084fc; margin-top: 4px;'>{overview.get('total_impressions', 0):,}</div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <div class="gsc-chip-group">
+                    <span class="gsc-chip">24 hours</span>
+                    <span class="gsc-chip">7 days</span>
+                    <span class="gsc-chip">28 days</span>
+                    <span class="gsc-chip">3 months</span>
+                    <span class="gsc-chip gsc-chip-active">Compare ▾</span>
+                </div>
+                <div class="gsc-filter-pill">Search type: Web ▾</div>
+                <div class="gsc-filter-pill">+ Add filter</div>
+                <span style="background:#1a73e8; color:white; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer;">⚙</span>
+                <span style="color:#1a73e8; font-size:12px; font-weight:500; cursor:pointer;">Reset filters</span>
             </div>
-            """, unsafe_allow_html=True)
-            
-        with c3:
-            show_ctr = st.checkbox("Average CTR", value=True, key="chk_ctr")
-            st.markdown(f"""
-            <div style='background: rgba(0, 137, 123, 0.08); border: 1px solid #00897B; border-top: 4px solid #00897B; border-radius: 8px; padding: 12px 14px;'>
-                <div style='font-size: 11px; color: #5eead4; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;'>Average CTR</div>
-                <div style='font-size: 28px; font-weight: 700; color: #2dd4bf; margin-top: 4px;'>{overview.get('avg_ctr', 0)}%</div>
+            <div style="color:#70757a; font-size:12px;">Last update: 12.5 hours ago</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Metrics calculation
+    metrics = st.session_state.get('gsc_metrics', {})
+    total_clicks = metrics.get('total_clicks', int(df['clicks'].sum()) if not df.empty and 'clicks' in df.columns else 83)
+    comp_clicks = metrics.get('total_clicks_comp', 20)
+    total_imps = metrics.get('total_impressions', int(df['impressions'].sum()) if not df.empty and 'impressions' in df.columns else 16600)
+    comp_imps = metrics.get('total_impressions_comp', 1020)
+    avg_ctr = metrics.get('avg_ctr', round(total_clicks / total_imps * 100, 1) if total_imps > 0 else 0.5)
+    comp_ctr = metrics.get('avg_ctr_comp', 2.0)
+    avg_pos = metrics.get('avg_position', 33.4)
+    comp_pos = metrics.get('avg_position_comp', 52.7)
+
+    # Format numbers (16.6K, 1.02K)
+    def fmt_gsc_num(val):
+        if val >= 1000000:
+            return f"{val/1000000:.1f}M"
+        elif val >= 1000:
+            return f"{val/1000:.2g}K" if val < 10000 else f"{val/1000:.1f}K"
+        return f"{val:,}"
+
+    imps_disp = fmt_gsc_num(total_imps)
+    comp_imps_disp = fmt_gsc_num(comp_imps)
+
+    # 3. Authentic 4-Scorecard Connected Container with Toggles
+    chk_c1, chk_c2, chk_c3, chk_c4 = st.columns(4)
+    with chk_c1:
+        show_clicks = st.checkbox("Total clicks", value=True, key="gsc_chk_clicks")
+    with chk_c2:
+        show_impressions = st.checkbox("Total impressions", value=True, key="gsc_chk_impressions")
+    with chk_c3:
+        show_ctr = st.checkbox("Average CTR", value=False, key="gsc_chk_ctr")
+    with chk_c4:
+        show_position = st.checkbox("Average position", value=False, key="gsc_chk_position")
+
+    # Render Connected Scorecards
+    sc_col1, sc_col2, sc_col3, sc_col4 = st.columns(4)
+    
+    with sc_col1:
+        card_class = "gsc-card-clicks-on" if show_clicks else "gsc-card-off"
+        check_icon = "☑" if show_clicks else "☐"
+        st.markdown(f"""
+        <div class="gsc-tile-wrapper">
+            <div class="gsc-card {card_class}">
+                <div class="gsc-card-title">{check_icon} Total clicks</div>
+                <div class="gsc-card-val-big">{total_clicks}</div>
+                <div class="gsc-card-sub"><span>Last 3 months</span><span style="font-weight:bold; font-size:14px;">—</span></div>
+                <div class="gsc-card-val-comp">{comp_clicks}</div>
+                <div class="gsc-card-sub"><span>Previous 3 months</span><span style="font-weight:bold; letter-spacing:2px;">- - -</span></div>
+                <div class="gsc-card-info-icon">?</div>
             </div>
-            """, unsafe_allow_html=True)
-            
-        with c4:
-            show_position = st.checkbox("Average position", value=True, key="chk_position")
-            st.markdown(f"""
-            <div style='background: rgba(251, 140, 0, 0.08); border: 1px solid #FB8C00; border-top: 4px solid #FB8C00; border-radius: 8px; padding: 12px 14px;'>
-                <div style='font-size: 11px; color: #fdba74; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;'>Average position</div>
-                <div style='font-size: 28px; font-weight: 700; color: #fb923c; margin-top: 4px;'>{overview.get('avg_position', 0)}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with sc_col2:
+        card_class = "gsc-card-imps-on" if show_impressions else "gsc-card-off"
+        check_icon = "☑" if show_impressions else "☐"
+        st.markdown(f"""
+        <div class="gsc-tile-wrapper">
+            <div class="gsc-card {card_class}">
+                <div class="gsc-card-title">{check_icon} Total impressions</div>
+                <div class="gsc-card-val-big">{imps_disp}</div>
+                <div class="gsc-card-sub"><span>Last 3 months</span><span style="font-weight:bold; font-size:14px;">—</span></div>
+                <div class="gsc-card-val-comp">{comp_imps_disp}</div>
+                <div class="gsc-card-sub"><span>Previous 3 months</span><span style="font-weight:bold; letter-spacing:2px;">- - -</span></div>
+                <div class="gsc-card-info-icon">?</div>
             </div>
-            """, unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
 
-        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+    with sc_col3:
+        card_class = "gsc-card-ctr-on" if show_ctr else "gsc-card-off"
+        check_icon = "☑" if show_ctr else "☐"
+        st.markdown(f"""
+        <div class="gsc-tile-wrapper">
+            <div class="gsc-card {card_class}">
+                <div class="gsc-card-title">{check_icon} Average CTR</div>
+                <div class="gsc-card-val-big">{avg_ctr}%</div>
+                <div class="gsc-card-sub"><span>Last 3 months</span></div>
+                <div class="gsc-card-val-comp">{comp_ctr}%</div>
+                <div class="gsc-card-sub"><span>Previous 3 months</span></div>
+                <div class="gsc-card-info-icon">?</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        # Interactive GSC Chart
-        if 'date' in df.columns and not df.empty:
-            daily = df.groupby('date').agg(
-                clicks=('clicks', 'sum'),
-                impressions=('impressions', 'sum'),
-                position=('position', 'mean')
-            ).reset_index().sort_values('date')
-            daily['ctr'] = np.where(daily['impressions'] > 0, (daily['clicks'] / daily['impressions'] * 100).round(2), 0.0)
-            daily['position'] = daily['position'].round(1)
+    with sc_col4:
+        card_class = "gsc-card-pos-on" if show_position else "gsc-card-off"
+        check_icon = "☑" if show_position else "☐"
+        st.markdown(f"""
+        <div class="gsc-tile-wrapper">
+            <div class="gsc-card {card_class}">
+                <div class="gsc-card-title">{check_icon} Average position</div>
+                <div class="gsc-card-val-big">{avg_pos}</div>
+                <div class="gsc-card-sub"><span>Last 3 months</span></div>
+                <div class="gsc-card-val-comp">{comp_pos}</div>
+                <div class="gsc-card-sub"><span>Previous 3 months</span></div>
+                <div class="gsc-card-info-icon">?</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-            fig = make_subplots(specs=[[{"secondary_y": True}]])
-            has_secondary = False
+    # Dropdown pill "Daily ▾"
+    st.markdown("""
+    <div style="display:flex; justify-content:flex-end; margin: 4px 0 2px 0;">
+        <span class="gsc-filter-pill" style="border-radius:18px; padding:4px 14px; font-size:12px;">Daily ▾</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-            if show_clicks and 'clicks' in daily.columns:
-                fig.add_trace(go.Scatter(
-                    x=daily['date'], y=daily['clicks'], name='Clicks',
-                    line=dict(color='#4285F4', width=2.8),
-                    fill='tozeroy', fillcolor='rgba(66, 133, 244, 0.08)'
-                ), secondary_y=False)
+    # 4. Authentic Multi-Axis Plotly Timeline Chart
+    df_daily_curr = st.session_state.get('df_daily_curr', pd.DataFrame())
+    df_daily_comp = st.session_state.get('df_daily_comp', pd.DataFrame())
 
-            if show_impressions and 'impressions' in daily.columns:
-                fig.add_trace(go.Scatter(
-                    x=daily['date'], y=daily['impressions'], name='Impressions',
-                    line=dict(color='#b388ff', width=2.8),
-                    fill='tozeroy', fillcolor='rgba(179, 136, 255, 0.08)'
-                ), secondary_y=False)
+    if df_daily_curr.empty and not df.empty and 'date' in df.columns:
+        df_daily_curr = df.groupby('date').agg(
+            clicks=('clicks', 'sum'),
+            impressions=('impressions', 'sum'),
+            position=('position', 'mean')
+        ).reset_index().sort_values('date')
+        df_daily_curr['ctr'] = np.where(df_daily_curr['impressions'] > 0, (df_daily_curr['clicks'] / df_daily_curr['impressions'] * 100).round(2), 0.0)
+        df_daily_curr['day_index'] = list(range(len(df_daily_curr)))
 
-            if show_ctr and 'ctr' in daily.columns:
-                fig.add_trace(go.Scatter(
-                    x=daily['date'], y=daily['ctr'], name='CTR (%)',
-                    line=dict(color='#2dd4bf', width=2.2, dash='dot')
-                ), secondary_y=False)
+    if not df_daily_curr.empty:
+        use_secondary = show_impressions or show_position
+        fig = make_subplots(specs=[[{"secondary_y": use_secondary}]])
 
-            if show_position and 'position' in daily.columns:
-                fig.add_trace(go.Scatter(
-                    x=daily['date'], y=daily['position'], name='Average Position',
-                    line=dict(color='#fb923c', width=2.5)
-                ), secondary_y=True)
-                has_secondary = True
+        # Trace 1: Current Clicks (Solid #1a73e8)
+        if show_clicks and 'clicks' in df_daily_curr.columns:
+            x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
+            fig.add_trace(go.Scatter(
+                x=x_vals, y=df_daily_curr['clicks'], name='Clicks',
+                line=dict(color='#1a73e8', width=2.4),
+                hoverinfo='y+name'
+            ), secondary_y=False)
 
-            fig.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='#cbd5e1', family='Inter, sans-serif'),
-                hovermode='x unified',
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor='rgba(0,0,0,0)'),
-                margin=dict(l=10, r=10, t=25, b=10)
-            )
-            fig.update_xaxes(showgrid=True, gridcolor='rgba(255,255,255,0.06)')
-            fig.update_yaxes(title_text="Clicks / Impressions / CTR", secondary_y=False, showgrid=True, gridcolor='rgba(255,255,255,0.06)')
-            if has_secondary:
-                fig.update_yaxes(title_text="Average Position (Inverted)", autorange="reversed", secondary_y=True, showgrid=False)
+        # Trace 2: Comp Clicks (Dashed #4285f4)
+        if show_clicks and not df_daily_comp.empty and 'clicks' in df_daily_comp.columns:
+            x_vals = df_daily_comp['day_index'] if 'day_index' in df_daily_comp.columns else df_daily_comp['date']
+            fig.add_trace(go.Scatter(
+                x=x_vals, y=df_daily_comp['clicks'], name='Clicks (Previous)',
+                line=dict(color='#4285f4', width=2.0, dash='dash'),
+                hoverinfo='y+name'
+            ), secondary_y=False)
 
-            st.plotly_chart(fig, use_container_width=True)
+        # Trace 3: Current Impressions (Solid #673ab7)
+        if show_impressions and 'impressions' in df_daily_curr.columns:
+            x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
+            fig.add_trace(go.Scatter(
+                x=x_vals, y=df_daily_curr['impressions'], name='Impressions',
+                line=dict(color='#673ab7', width=2.4),
+                hoverinfo='y+name'
+            ), secondary_y=True if use_secondary else False)
 
-        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+        # Trace 4: Comp Impressions (Dashed #9575cd)
+        if show_impressions and not df_daily_comp.empty and 'impressions' in df_daily_comp.columns:
+            x_vals = df_daily_comp['day_index'] if 'day_index' in df_daily_comp.columns else df_daily_comp['date']
+            fig.add_trace(go.Scatter(
+                x=x_vals, y=df_daily_comp['impressions'], name='Impressions (Previous)',
+                line=dict(color='#9575cd', width=2.0, dash='dash'),
+                hoverinfo='y+name'
+            ), secondary_y=True if use_secondary else False)
 
-        # Real Google Search Console Performance Tabs
-        gsc_t1, gsc_t2, gsc_t3, gsc_t4, gsc_t5 = st.tabs([
-            "📑 QUERIES", "📄 PAGES", "🌍 COUNTRIES", "📱 DEVICES", "📅 DATES"
-        ])
+        # Trace 5: CTR
+        if show_ctr and 'ctr' in df_daily_curr.columns:
+            x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
+            fig.add_trace(go.Scatter(
+                x=x_vals, y=df_daily_curr['ctr'], name='CTR (%)',
+                line=dict(color='#00897b', width=2.0),
+                hoverinfo='y+name'
+            ), secondary_y=False)
 
-        with gsc_t1:
-            q_col1, q_col2 = st.columns([3, 1])
-            with q_col1:
-                q_search = st.text_input("🔍 Filter queries...", key="gsc_q_filter", placeholder="Filter queries containing text...")
-            q_df = df.groupby('query').agg(
-                clicks=('clicks', 'sum'),
-                impressions=('impressions', 'sum'),
-                position=('position', 'mean')
-            ).reset_index()
-            q_df['ctr'] = np.where(q_df['impressions'] > 0, (q_df['clicks'] / q_df['impressions'] * 100).round(2), 0.0)
-            q_df['position'] = q_df['position'].round(1)
-            q_df = q_df.sort_values('clicks', ascending=False)
-            if q_search:
-                q_df = q_df[q_df['query'].str.contains(q_search, case=False, na=False)]
-            with q_col2:
-                q_csv = q_df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Export Queries (CSV)", q_csv, "gsc_queries.csv", "text/csv", use_container_width=True)
+        # Trace 6: Position (Inverted)
+        if show_position and 'position' in df_daily_curr.columns:
+            x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
+            fig.add_trace(go.Scatter(
+                x=x_vals, y=df_daily_curr['position'], name='Position',
+                line=dict(color='#e8710a', width=2.2),
+                hoverinfo='y+name'
+            ), secondary_y=True)
+
+        fig.update_layout(
+            paper_bgcolor='#ffffff',
+            plot_bgcolor='#ffffff',
+            font=dict(color='#70757a', family='Roboto, Arial, sans-serif', size=11),
+            hovermode='x unified',
+            showlegend=False,
+            margin=dict(l=35, r=35, t=10, b=25),
+            height=340
+        )
+        fig.update_xaxes(
+            showgrid=False, linecolor='#dadce0', tickmode='linear', dtick=8,
+            title_text=""
+        )
+        fig.update_yaxes(
+            title_text="Clicks" if show_clicks else "",
+            secondary_y=False, showgrid=True, gridcolor='#ebebeb',
+            linecolor='#dadce0', rangemode='tozero'
+        )
+        if use_secondary:
+            if show_position:
+                fig.update_yaxes(title_text="Position", secondary_y=True, autorange="reversed", showgrid=False)
+            elif show_impressions:
+                fig.update_yaxes(title_text="Impressions", secondary_y=True, showgrid=False, rangemode='tozero')
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    # 5. Generative AI Feature Banner
+    st.markdown("""
+    <div class="gsc-ai-banner">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span style="color:#1a73e8; font-size:18px;">ⓘ</span>
+            <span style="color:#3c4043; font-size:13px; font-weight:400;">Get more details on your site's performance in generative AI features on Google Search</span>
+        </div>
+        <span style="color:#1a73e8; font-size:13px; font-weight:500; cursor:pointer;">Open report &gt;</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 6. Authentic Google Search Console Tabs
+    gsc_t1, gsc_t2, gsc_t3, gsc_t4, gsc_t5 = st.tabs([
+        "QUERIES", "PAGES", "COUNTRIES", "DEVICES", "DATES"
+    ])
+
+    with gsc_t1:
+        q_col1, q_col2 = st.columns([3, 1])
+        with q_col1:
+            q_search = st.text_input("Filter queries...", key="gsc_q_filter", placeholder="Filter by query...", label_visibility="collapsed")
+        q_df = df.groupby('query').agg(
+            clicks=('clicks', 'sum'),
+            impressions=('impressions', 'sum'),
+            position=('position', 'mean')
+        ).reset_index()
+        q_df['ctr'] = np.where(q_df['impressions'] > 0, (q_df['clicks'] / q_df['impressions'] * 100).round(2), 0.0)
+        q_df['position'] = q_df['position'].round(1)
+        q_df = q_df.sort_values('clicks', ascending=False)
+        if q_search:
+            q_df = q_df[q_df['query'].str.contains(q_search, case=False, na=False)]
+        with q_col2:
+            q_csv = q_df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Export Queries (CSV)", q_csv, "gsc_queries.csv", "text/csv", use_container_width=True)
+        st.dataframe(
+            q_df[['query', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                'query': 'Top queries', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
+            }),
+            use_container_width=True, height=420
+        )
+
+    with gsc_t2:
+        p_col1, p_col2 = st.columns([3, 1])
+        with p_col1:
+            p_search = st.text_input("Filter pages...", key="gsc_p_filter", placeholder="Filter by URL...", label_visibility="collapsed")
+        p_df = df.groupby('page').agg(
+            clicks=('clicks', 'sum'),
+            impressions=('impressions', 'sum'),
+            position=('position', 'mean')
+        ).reset_index()
+        p_df['ctr'] = np.where(p_df['impressions'] > 0, (p_df['clicks'] / p_df['impressions'] * 100).round(2), 0.0)
+        p_df['position'] = p_df['position'].round(1)
+        p_df = p_df.sort_values('clicks', ascending=False)
+        if p_search:
+            p_df = p_df[p_df['page'].str.contains(p_search, case=False, na=False)]
+        with p_col2:
+            p_csv = p_df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Export Pages (CSV)", p_csv, "gsc_pages.csv", "text/csv", use_container_width=True)
+        st.dataframe(
+            p_df[['page', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                'page': 'Top pages', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
+            }),
+            use_container_width=True, height=420
+        )
+
+    with gsc_t3:
+        c_col1, c_col2 = st.columns([3, 1])
+        c_df = df.groupby('country').agg(
+            clicks=('clicks', 'sum'),
+            impressions=('impressions', 'sum'),
+            position=('position', 'mean')
+        ).reset_index()
+        c_df['ctr'] = np.where(c_df['impressions'] > 0, (c_df['clicks'] / c_df['impressions'] * 100).round(2), 0.0)
+        c_df['position'] = c_df['position'].round(1)
+        c_df = c_df.sort_values('clicks', ascending=False)
+        with c_col2:
+            c_csv = c_df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Export Countries (CSV)", c_csv, "gsc_countries.csv", "text/csv", use_container_width=True)
+        st.dataframe(
+            c_df[['country', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                'country': 'Country', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
+            }),
+            use_container_width=True, height=420
+        )
+
+    with gsc_t4:
+        d_col1, d_col2 = st.columns([3, 1])
+        d_df = df.groupby('device').agg(
+            clicks=('clicks', 'sum'),
+            impressions=('impressions', 'sum'),
+            position=('position', 'mean')
+        ).reset_index()
+        d_df['ctr'] = np.where(d_df['impressions'] > 0, (d_df['clicks'] / d_df['impressions'] * 100).round(2), 0.0)
+        d_df['position'] = d_df['position'].round(1)
+        d_df = d_df.sort_values('clicks', ascending=False)
+        with d_col2:
+            d_csv = d_df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Export Devices (CSV)", d_csv, "gsc_devices.csv", "text/csv", use_container_width=True)
+        st.dataframe(
+            d_df[['device', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                'device': 'Device', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
+            }),
+            use_container_width=True, height=250
+        )
+
+    with gsc_t5:
+        if not df_daily_curr.empty:
+            dt_col1, dt_col2 = st.columns([3, 1])
+            with dt_col2:
+                dt_csv = df_daily_curr.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Export Dates (CSV)", dt_csv, "gsc_dates.csv", "text/csv", use_container_width=True)
             st.dataframe(
-                q_df[['query', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                    'query': 'Top queries', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR (%)', 'position': 'Position'
+                df_daily_curr[['date', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                    'date': 'Date', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
                 }),
-                use_container_width=True, height=450
+                use_container_width=True, height=420
             )
-
-        with gsc_t2:
-            p_col1, p_col2 = st.columns([3, 1])
-            with p_col1:
-                p_search = st.text_input("🔍 Filter pages...", key="gsc_p_filter", placeholder="Filter URL containing text...")
-            p_df = df.groupby('page').agg(
-                clicks=('clicks', 'sum'),
-                impressions=('impressions', 'sum'),
-                position=('position', 'mean')
-            ).reset_index()
-            p_df['ctr'] = np.where(p_df['impressions'] > 0, (p_df['clicks'] / p_df['impressions'] * 100).round(2), 0.0)
-            p_df['position'] = p_df['position'].round(1)
-            p_df = p_df.sort_values('clicks', ascending=False)
-            if p_search:
-                p_df = p_df[p_df['page'].str.contains(p_search, case=False, na=False)]
-            with p_col2:
-                p_csv = p_df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Export Pages (CSV)", p_csv, "gsc_pages.csv", "text/csv", use_container_width=True)
-            st.dataframe(
-                p_df[['page', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                    'page': 'Top pages', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR (%)', 'position': 'Position'
-                }),
-                use_container_width=True, height=450
-            )
-
-        with gsc_t3:
-            c_col1, c_col2 = st.columns([3, 1])
-            c_df = df.groupby('country').agg(
-                clicks=('clicks', 'sum'),
-                impressions=('impressions', 'sum'),
-                position=('position', 'mean')
-            ).reset_index()
-            c_df['ctr'] = np.where(c_df['impressions'] > 0, (c_df['clicks'] / c_df['impressions'] * 100).round(2), 0.0)
-            c_df['position'] = c_df['position'].round(1)
-            c_df = c_df.sort_values('clicks', ascending=False)
-            with c_col2:
-                c_csv = c_df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Export Countries (CSV)", c_csv, "gsc_countries.csv", "text/csv", use_container_width=True)
-            st.dataframe(
-                c_df[['country', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                    'country': 'Country', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR (%)', 'position': 'Position'
-                }),
-                use_container_width=True, height=450
-            )
-
-        with gsc_t4:
-            d_col1, d_col2 = st.columns([3, 1])
-            d_df = df.groupby('device').agg(
-                clicks=('clicks', 'sum'),
-                impressions=('impressions', 'sum'),
-                position=('position', 'mean')
-            ).reset_index()
-            d_df['ctr'] = np.where(d_df['impressions'] > 0, (d_df['clicks'] / d_df['impressions'] * 100).round(2), 0.0)
-            d_df['position'] = d_df['position'].round(1)
-            d_df = d_df.sort_values('clicks', ascending=False)
-            with d_col2:
-                d_csv = d_df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Export Devices (CSV)", d_csv, "gsc_devices.csv", "text/csv", use_container_width=True)
-            st.dataframe(
-                d_df[['device', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                    'device': 'Device', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR (%)', 'position': 'Position'
-                }),
-                use_container_width=True, height=250
-            )
-
-        with gsc_t5:
-            if 'date' in df.columns:
-                dt_col1, dt_col2 = st.columns([3, 1])
-                with dt_col2:
-                    dt_csv = daily.to_csv(index=False).encode('utf-8')
-                    st.download_button("📥 Export Dates (CSV)", dt_csv, "gsc_dates.csv", "text/csv", use_container_width=True)
-                st.dataframe(
-                    daily[['date', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                        'date': 'Date', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR (%)', 'position': 'Position'
-                    }),
-                    use_container_width=True, height=450
-                )
 
 
 # ----------------------------------------------------
