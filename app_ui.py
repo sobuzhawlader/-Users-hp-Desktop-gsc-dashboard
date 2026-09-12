@@ -235,11 +235,110 @@ with st.sidebar:
             st.session_state.user_creds = None
             st.rerun()
     else:
-        st.info("👋 Choose how you want to access Search Console data:")
-        auth_tab1, auth_tab2, auth_tab3 = st.tabs(["🔑 Service Account", "🚀 1-Click Demo / CSV", "🌐 Google OAuth"])
+        st.markdown("**🔐 Select Connection Mode:**")
+        auth_mode = st.radio(
+            "Connection Method",
+            [
+                "🌐 Google OAuth (Sign-In)",
+                "🚀 1-Click Demo (Instant View)",
+                "📁 Upload GSC CSV / Export",
+                "🔑 Service Account Key"
+            ],
+            index=0,
+            label_visibility="collapsed"
+        )
 
-        with auth_tab1:
-            st.caption("🔒 **Industry Standard:** No OAuth popups, no redirect URIs, works 24/7.")
+        if auth_mode == "🌐 Google OAuth (Sign-In)":
+            cfg = load_client_config()
+            if cfg:
+                default_redirect = resolve_redirect_uri(cfg)
+                try:
+                    auth_url, _ = get_auth_url(default_redirect, config=cfg)
+                    st.link_button("🌐 Connect with Google (Cloud/Web)", auth_url, use_container_width=True, type="primary")
+                except Exception as ex:
+                    st.error(f"OAuth URL error: {ex}")
+                
+                with st.expander("📋 Alternative: Manual Code Paste"):
+                    manual_code = st.text_input("Paste redirect URL or ?code=...", key="manual_oauth_code")
+                    if st.button("🚀 Connect via Code", use_container_width=True):
+                        if manual_code.strip():
+                            try:
+                                raw_code = manual_code.strip()
+                                if 'code=' in raw_code:
+                                    raw_code = raw_code.split('code=')[1].split('&')[0]
+                                from urllib.parse import unquote
+                                raw_code = unquote(raw_code)
+                                creds = exchange_code(raw_code, default_redirect, config=cfg)
+                                svc = get_gsc_service(creds)
+                                svc_v1 = get_searchconsole_v1_service(creds)
+                                sites = get_sites(svc)
+                                st.session_state.user_creds = creds
+                                st.session_state.service = svc
+                                st.session_state.service_v1 = svc_v1
+                                st.session_state.sites = sites
+                                st.success("✅ Logged in successfully!")
+                                st.rerun()
+                            except Exception as ex:
+                                st.error(f"Exchange error: {ex}")
+            else:
+                st.warning("⚠️ Google Cloud credentials not configured.")
+                uploaded_creds = st.file_uploader("Upload credentials.json", type=['json'], key="sidebar_creds_uploader")
+                if uploaded_creds:
+                    try:
+                        loaded_cfg = json.load(uploaded_creds)
+                        st.session_state.client_config = loaded_cfg
+                        st.success("Credentials saved to session!")
+                        st.rerun()
+                    except Exception as ex:
+                        st.error(f"Invalid JSON: {ex}")
+
+            if os.path.exists(os.path.join(os.path.dirname(__file__), 'credentials.json')):
+                if st.button("💻 Local 1-Click Login (Desktop)", use_container_width=True):
+                    with st.spinner("Authorizing in browser..."):
+                        try:
+                            creds = authenticate_local(port=8080)
+                            svc = get_gsc_service(creds)
+                            svc_v1 = get_searchconsole_v1_service(creds)
+                            sites = get_sites(svc)
+                            st.session_state.user_creds = creds
+                            st.session_state.service = svc
+                            st.session_state.service_v1 = svc_v1
+                            st.session_state.sites = sites
+                            st.success(f"✅ Connected! Found {len(sites)} sites.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Auth failed: {e}")
+
+        elif auth_mode == "🚀 1-Click Demo (Instant View)":
+            st.caption("💡 **Instant Access:** Explore all engines with 1,000+ realistic SEO data points.")
+            if st.button("✨ Load Full Demo Data (90 Days)", use_container_width=True, type="primary"):
+                with st.spinner("Generating SEO data..."):
+                    mock_df = generate_mock_gsc_data(site_name="https://mybrand-store.com", days=90)
+                    st.session_state.df = mock_df
+                    st.session_state.sites = ["https://mybrand-store.com (Demo Property)"]
+                    st.session_state.current_site = "https://mybrand-store.com (Demo Property)"
+                    st.success("✅ Demo Data Loaded!")
+                    st.rerun()
+
+        elif auth_mode == "📁 Upload GSC CSV / Export":
+            st.caption("📂 Upload GSC Performance CSV or ZIP export without any API login.")
+            csv_file = st.file_uploader("Upload CSV or ZIP", type=['csv', 'zip'], key="gsc_csv_uploader")
+            if csv_file:
+                try:
+                    parsed_df = parse_gsc_csv(csv_file)
+                    if not parsed_df.empty:
+                        st.session_state.df = parsed_df
+                        st.session_state.sites = [f"{csv_file.name} (Uploaded Data)"]
+                        st.session_state.current_site = f"{csv_file.name} (Uploaded Data)"
+                        st.success(f"✅ Loaded {len(parsed_df):,} rows from export!")
+                        st.rerun()
+                    else:
+                        st.error("Could not parse rows from CSV.")
+                except Exception as e:
+                    st.error(f"CSV Parse Error: {e}")
+
+        elif auth_mode == "🔑 Service Account Key":
+            st.caption("🔒 **Industry Standard:** Direct JSON key authentication.")
             sa_file = st.file_uploader("Upload service_account.json", type=['json'], key="sa_uploader")
             sa_paste = st.text_area("Or Paste Service Account JSON:", height=90, placeholder='{"type": "service_account", ...}')
             
@@ -284,96 +383,6 @@ with st.sidebar:
                             st.error(f"Service Account Error: {e}")
                 else:
                     st.warning("Please upload a file or paste your Service Account JSON.")
-
-        with auth_tab2:
-            st.caption("💡 **No Google Cloud Setup Required:** Instant full platform access.")
-            if st.button("✨ Load Full Demo SEO Data (90 Days)", use_container_width=True, type="primary"):
-                with st.spinner("Generating 1,000+ realistic SEO data points..."):
-                    mock_df = generate_mock_gsc_data(site_name="https://mybrand-store.com", days=90)
-                    st.session_state.df = mock_df
-                    st.session_state.sites = ["https://mybrand-store.com (Demo Property)"]
-                    st.session_state.current_site = "https://mybrand-store.com (Demo Property)"
-                    st.success("✅ Demo SEO Data Loaded! Explore all engines below.")
-                    st.rerun()
-            
-            st.markdown("---")
-            st.markdown("**📂 Or Upload GSC Export (CSV/ZIP):**")
-            csv_file = st.file_uploader("Upload GSC Export", type=['csv', 'zip'], key="gsc_csv_uploader")
-            if csv_file:
-                try:
-                    parsed_df = parse_gsc_csv(csv_file)
-                    if not parsed_df.empty:
-                        st.session_state.df = parsed_df
-                        st.session_state.sites = [f"{csv_file.name} (Uploaded Data)"]
-                        st.session_state.current_site = f"{csv_file.name} (Uploaded Data)"
-                        st.success(f"✅ Loaded {len(parsed_df):,} rows from export!")
-                        st.rerun()
-                    else:
-                        st.error("Could not parse rows from CSV.")
-                except Exception as e:
-                    st.error(f"CSV Parse Error: {e}")
-
-        with auth_tab3:
-            st.caption("🌐 **Google OAuth Sign-In:**")
-            cfg = load_client_config()
-            if cfg:
-                default_redirect = resolve_redirect_uri(cfg)
-                try:
-                    auth_url, _ = get_auth_url(default_redirect, config=cfg)
-                    st.link_button("🔗 1. Open Google Login Window", auth_url, use_container_width=True)
-                except Exception as ex:
-                    st.error(f"OAuth config error: {ex}")
-                
-                st.markdown("**Manual Code Paste (Alternative):**")
-                manual_code = st.text_input("Paste authorization code or redirected URL:", key="manual_oauth_code")
-                if st.button("🚀 Connect via Code", use_container_width=True):
-                    if manual_code.strip():
-                        try:
-                            raw_code = manual_code.strip()
-                            if 'code=' in raw_code:
-                                raw_code = raw_code.split('code=')[1].split('&')[0]
-                            from urllib.parse import unquote
-                            raw_code = unquote(raw_code)
-                            creds = exchange_code(raw_code, default_redirect, config=cfg)
-                            svc = get_gsc_service(creds)
-                            svc_v1 = get_searchconsole_v1_service(creds)
-                            sites = get_sites(svc)
-                            st.session_state.user_creds = creds
-                            st.session_state.service = svc
-                            st.session_state.service_v1 = svc_v1
-                            st.session_state.sites = sites
-                            st.success("✅ Logged in successfully!")
-                            st.rerun()
-                        except Exception as ex:
-                            st.error(f"Exchange error: {ex}")
-            else:
-                st.warning("⚠️ Google Cloud credentials not configured.")
-                uploaded_creds = st.file_uploader("Upload credentials.json", type=['json'], key="sidebar_creds_uploader")
-                if uploaded_creds:
-                    try:
-                        loaded_cfg = json.load(uploaded_creds)
-                        st.session_state.client_config = loaded_cfg
-                        st.success("Credentials saved to session!")
-                        st.rerun()
-                    except Exception as ex:
-                        st.error(f"Invalid JSON: {ex}")
-
-            if os.path.exists(os.path.join(os.path.dirname(__file__), 'credentials.json')):
-                if st.button("💻 Local 1-Click Login (Desktop)", use_container_width=True):
-                    with st.spinner("Authorizing in browser..."):
-                        try:
-                            creds = authenticate_local(port=8080)
-                            svc = get_gsc_service(creds)
-                            svc_v1 = get_searchconsole_v1_service(creds)
-                            sites = get_sites(svc)
-                            st.session_state.user_creds = creds
-                            st.session_state.service = svc
-                            st.session_state.service_v1 = svc_v1
-                            st.session_state.sites = sites
-                            st.success(f"✅ Connected! Found {len(sites)} sites.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Auth failed: {e}")
 
     st.divider()
 
