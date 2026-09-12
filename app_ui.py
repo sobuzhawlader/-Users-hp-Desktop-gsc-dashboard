@@ -1,4 +1,5 @@
 import os
+import platform
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -156,19 +157,19 @@ if 'user_creds' not in st.session_state:
 def resolve_redirect_uri(cfg):
     """Picks the best redirect URI matching cloud or local environment."""
     if not cfg or 'web' not in cfg:
-        return 'http://localhost:8501'
-    uris = cfg.get('web', {}).get('redirect_uris', ['http://localhost:8501'])
+        return 'https://sobuz-gsc-dashboard.streamlit.app'
+    uris = cfg.get('web', {}).get('redirect_uris', ['https://sobuz-gsc-dashboard.streamlit.app'])
     if not uris:
-        return 'http://localhost:8501'
-    # Detect Streamlit Cloud (Linux OS or container)
-    is_cloud = (os.name != 'nt') or ('STREAMLIT_SHARING_MODE' in os.environ)
+        return 'https://sobuz-gsc-dashboard.streamlit.app'
+    # Detect Streamlit Cloud (Linux container or cloud environment variables)
+    is_cloud = (platform.system() == 'Linux') or ('STREAMLIT_SHARING_MODE' in os.environ)
     if is_cloud:
         for u in uris:
             if 'streamlit.app' in u:
                 return u.rstrip('/')
     else:
         for u in uris:
-            if 'localhost' in u:
+            if 'localhost' in u or '127.0.0.1' in u:
                 return u.rstrip('/')
     return uris[0].rstrip('/')
 
