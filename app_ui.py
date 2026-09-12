@@ -19,6 +19,7 @@ if BASE_DIR not in sys.path:
 try:
     from auth_gsc import (
         get_gsc_service, get_searchconsole_v1_service, get_sites, 
+        get_sites_detailed, get_user_email,
         authenticate_local, get_auth_url, exchange_code, load_client_config,
         authenticate_service_account
     )
@@ -27,6 +28,8 @@ except Exception:
     get_gsc_service = getattr(auth_gsc, 'get_gsc_service', None)
     get_searchconsole_v1_service = getattr(auth_gsc, 'get_searchconsole_v1_service', None)
     get_sites = getattr(auth_gsc, 'get_sites', None)
+    get_sites_detailed = getattr(auth_gsc, 'get_sites_detailed', None)
+    get_user_email = getattr(auth_gsc, 'get_user_email', None)
     authenticate_local = getattr(auth_gsc, 'authenticate_local', None)
     get_auth_url = getattr(auth_gsc, 'get_auth_url', None)
     exchange_code = getattr(auth_gsc, 'exchange_code', None)
@@ -461,6 +464,10 @@ if 'service_v1' not in st.session_state:
     st.session_state.service_v1 = None
 if 'sites' not in st.session_state or not st.session_state.sites:
     st.session_state.sites = ["https://centralec-electrical.co.uk/"]
+if 'sites_detailed' not in st.session_state:
+    st.session_state.sites_detailed = []
+if 'user_email' not in st.session_state:
+    st.session_state.user_email = None
 if 'current_site' not in st.session_state or not st.session_state.current_site:
     st.session_state.current_site = "https://centralec-electrical.co.uk/"
 if 'user_creds' not in st.session_state:
@@ -512,16 +519,41 @@ if 'code' in query_params and st.session_state.service is None:
         creds = exchange_code(code, redirect_uri, config=cfg)
         svc = get_gsc_service(creds)
         svc_v1 = get_searchconsole_v1_service(creds)
-        sites = get_sites(svc)
+        sites_detailed = get_sites_detailed(svc) if 'get_sites_detailed' in globals() and get_sites_detailed else []
+        sites = [s['siteUrl'] for s in sites_detailed if 'siteUrl' in s]
+        if not sites:
+            sites = get_sites(svc)
+        user_email = get_user_email(creds) if 'get_user_email' in globals() and get_user_email else None
         
         st.session_state.user_creds = creds
         st.session_state.service = svc
         st.session_state.service_v1 = svc_v1
-        st.session_state.sites = sites
+        st.session_state.sites = sites if sites else ["https://centralec-electrical.co.uk/"]
+        st.session_state.sites_detailed = sites_detailed
+        st.session_state.user_email = user_email
+        if sites:
+            st.session_state.current_site = sites[0]
+            st.session_state.df = pd.DataFrame()
         st.query_params.clear()
         st.rerun()
     except Exception as e:
         st.error(f"Web OAuth Error: {e}")
+
+# Runtime auto-sync if connected but detailed data missing
+if st.session_state.service:
+    if not st.session_state.sites_detailed:
+        try:
+            detailed = get_sites_detailed(st.session_state.service)
+            if detailed:
+                st.session_state.sites_detailed = detailed
+                st.session_state.sites = [x['siteUrl'] for x in detailed if 'siteUrl' in x]
+        except Exception:
+            pass
+    if not st.session_state.user_email and st.session_state.user_creds:
+        try:
+            st.session_state.user_email = get_user_email(st.session_state.user_creds)
+        except Exception:
+            pass
 
 # ==============================
 # Sidebar - Authentic Google Search Console
@@ -540,16 +572,35 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # 2. Property Selector Pill (Top of Sidebar, matching GSC)
-    site_options = list(st.session_state.sites) if st.session_state.sites else ["https://centralec-electrical.co.uk/"]
-    if "https://centralec-electrical.co.uk/" not in site_options:
-        site_options.insert(0, "https://centralec-electrical.co.uk/")
-    if "➕ Enter Custom Property URL" not in site_options:
-        site_options.append("➕ Enter Custom Property URL")
+    # 2. Property Selector Pill & Account Header (Matching GSC)
+    is_connected = bool(st.session_state.service and st.session_state.sites)
+    real_sites = [s for s in st.session_state.sites if s != "https://centralec-electrical.co.uk/"]
 
-    selected_choice = st.selectbox("Property", site_options, label_visibility="collapsed")
+    if is_connected:
+        user_mail_disp = st.session_state.get('user_email') or 'Connected Google Account'
+        total_p = len(real_sites) if real_sites else len(st.session_state.sites)
+        st.markdown(f"""
+        <div style="background:#e8f0fe; border:1.5px solid #1a73e8; border-radius:8px; padding:10px 12px; margin-bottom:8px;">
+            <div style="font-size:10px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">🟢 CONNECTED GOOGLE ACCOUNT</div>
+            <div style="font-size:13px; font-weight:600; color:#202124; margin-top:2px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
+            <div style="font-size:11px; color:#5f6368; margin-top:3px;">Search Console Sites: <b style="color:#1a73e8;">{total_p}</b> verified</div>
+        </div>
+        """, unsafe_allow_html=True)
+        site_options = (real_sites if real_sites else list(st.session_state.sites)) + ["➕ Enter Custom Property URL", "🧪 (Demo) centralec-electrical.co.uk"]
+    else:
+        site_options = ["https://centralec-electrical.co.uk/", "➕ Enter Custom Property URL"]
+
+    def_idx = 0
+    if st.session_state.current_site in site_options:
+        def_idx = site_options.index(st.session_state.current_site)
+    elif real_sites and real_sites[0] in site_options:
+        def_idx = site_options.index(real_sites[0])
+
+    selected_choice = st.selectbox("Property", site_options, index=def_idx, label_visibility="collapsed")
     if selected_choice == "➕ Enter Custom Property URL":
         selected_site = st.text_input("Enter Property URL:", value="https://")
+    elif selected_choice == "🧪 (Demo) centralec-electrical.co.uk":
+        selected_site = "https://centralec-electrical.co.uk/"
     else:
         selected_site = selected_choice
 
@@ -564,12 +615,41 @@ with st.sidebar:
         elif st.session_state.service:
             st.session_state.df = pd.DataFrame()
 
+    # Expandable interactive list of all account properties in sidebar
+    if is_connected and real_sites:
+        with st.expander(f"📋 All Verified Sites ({len(real_sites)})", expanded=False):
+            st.caption("Click any site to switch to it:")
+            for s in real_sites:
+                is_active = (s == st.session_state.current_site)
+                tag = "🌐 [Domain]" if s.startswith("sc-domain:") else "🔗 [URL]"
+                clean_name = s.replace("sc-domain:", "").replace("https://", "").replace("http://", "").strip("/")
+                if is_active:
+                    st.markdown(f"<div style='background:#e8f0fe; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600; color:#1a73e8; margin-bottom:4px;'>● {tag} {clean_name} (Active)</div>", unsafe_allow_html=True)
+                else:
+                    if st.button(f"{tag} {clean_name}", key=f"side_site_btn_{s}", use_container_width=True):
+                        st.session_state.current_site = s
+                        if st.session_state.service:
+                            st.session_state.df = pd.DataFrame()
+                        st.rerun()
+            
+            if st.button("🔄 Sync Sites from Google", use_container_width=True, key="side_sync_sites_btn"):
+                with st.spinner("Fetching latest sites..."):
+                    try:
+                        fresh_sites = get_sites_detailed(st.session_state.service)
+                        st.session_state.sites_detailed = fresh_sites
+                        st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
+                        st.success(f"Synced {len(st.session_state.sites)} properties!")
+                        st.rerun()
+                    except Exception as ex:
+                        st.error(f"Sync error: {ex}")
+
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
     # 3. Authentic Google Search Console Navigation Menu (100% GSC API Scope)
     page = st.radio("Navigation", [
         "📈 Performance",
         "🟢 Real-Time Active Users",
+        "🌐 All Sites & Properties",
         "🔍 URL inspection & Schema",
         "🚀 Instant Google Indexing API",
         "📄 Pages & Indexing",
@@ -1427,6 +1507,200 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         </script>
         ```
         """)
+
+
+# ----------------------------------------------------
+# 1.2 All Sites & Properties Manager (100% GSC API Sites Scope)
+# ----------------------------------------------------
+elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
+    st.markdown("<div class='section-header'>🌐 Search Console Sites & Properties Manager</div>", unsafe_allow_html=True)
+    st.markdown("View, audit, switch, and manage **all websites and properties** registered under your connected Google Search Console account.")
+
+    is_conn = bool(st.session_state.service)
+    detailed_sites = st.session_state.get('sites_detailed', [])
+    if not detailed_sites and st.session_state.get('sites'):
+        detailed_sites = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in st.session_state.sites if s]
+
+    user_email_disp = st.session_state.get('user_email') or ('Connected Google Account' if is_conn else 'Not Connected (Demo Mode)')
+
+    # Top Account Details Banner
+    conn_badge = "🟢 Live Connected" if is_conn else "🧪 Offline / Demo Mode"
+    badge_bg = "#e6f4ea" if is_conn else "#fef7e0"
+    badge_color = "#137333" if is_conn else "#b06000"
+
+    st.markdown(f"""
+    <div style="background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%); border: 1.5px solid #dadce0; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(60,64,67,0.08);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+                <div style="font-size:11px; font-weight:700; color:#5f6368; text-transform:uppercase; letter-spacing:0.5px;">AUTHENTICATED GOOGLE ACCOUNT</div>
+                <div style="font-size:20px; font-weight:600; color:#202124; margin-top:2px;">
+                    📧 {user_email_disp}
+                </div>
+                <div style="font-size:13px; color:#5f6368; margin-top:4px;">
+                    Currently Active Property in Dashboard: <b style="color:#1a73e8;">{st.session_state.current_site or 'None'}</b>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <span style="background:{badge_bg}; color:{badge_color}; border-radius:16px; padding:4px 14px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">{conn_badge}</span>
+                <div style="font-size:12px; color:#5f6368;">Total Verified Properties: <b>{len(detailed_sites)}</b></div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if not is_conn:
+        st.info("💡 **Google Login Tip**: Connect your Google Account via the sidebar to automatically pull and list 100% of all websites and properties verified under your email.")
+
+    # Refresh & Export Row
+    head_c1, head_c2, head_c3 = st.columns([3, 1.5, 1.5])
+    with head_c1:
+        st.markdown(f"### 📋 All Verified Properties ({len(detailed_sites)} sites)")
+    with head_c2:
+        if is_conn:
+            if st.button("🔄 Sync Sites from Google", use_container_width=True, key="sync_sites_top_btn"):
+                with st.spinner("Fetching latest verified properties from Search Console..."):
+                    try:
+                        fresh_sites = get_sites_detailed(st.session_state.service)
+                        st.session_state.sites_detailed = fresh_sites
+                        st.session_state.sites = [s['siteUrl'] for s in fresh_sites if 'siteUrl' in s]
+                        st.success(f"Synced {len(st.session_state.sites)} properties!")
+                        st.rerun()
+                    except Exception as ex:
+                        st.error(f"Error syncing sites: {ex}")
+    with head_c3:
+        if detailed_sites:
+            df_sites_exp = pd.DataFrame(detailed_sites)
+            st.download_button(
+                "📥 Export Sites (CSV)",
+                df_sites_exp.to_csv(index=False),
+                "gsc_verified_sites.csv",
+                "text/csv",
+                use_container_width=True
+            )
+
+    # Property KPI Counters
+    domain_count = sum(1 for s in detailed_sites if s.get('siteUrl', '').startswith('sc-domain:'))
+    url_count = len(detailed_sites) - domain_count
+    owner_count = sum(1 for s in detailed_sites if 'Owner' in s.get('permissionLevel', ''))
+
+    k1, k2, k3, k4 = st.columns(4)
+    with k1:
+        st.metric("Total Properties", len(detailed_sites))
+    with k2:
+        st.metric("Domain Properties", domain_count, help="Covers all subdomains (m., www.) and protocols (http/https)")
+    with k3:
+        st.metric("URL-Prefix Properties", url_count, help="Exact URL prefix match")
+    with k4:
+        st.metric("Owner Permissions", owner_count, help="Properties with siteOwner administrative control")
+
+    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+
+    # Search filter if user has multiple sites
+    search_site_q = ""
+    if len(detailed_sites) > 5:
+        search_site_q = st.text_input("🔍 Search property by domain or URL:", placeholder="Type to filter properties...", key="site_search_filter")
+
+    # Detailed Properties List Cards
+    displayed_sites = detailed_sites
+    if search_site_q:
+        displayed_sites = [s for s in detailed_sites if search_site_q.lower() in s.get('siteUrl', '').lower()]
+
+    if displayed_sites:
+        for idx, site_info in enumerate(displayed_sites):
+            s_url = site_info.get('siteUrl', '')
+            perm = site_info.get('permissionLevel', 'siteOwner')
+            is_domain = s_url.startswith('sc-domain:')
+            clean_display = s_url.replace('sc-domain:', '').replace('https://', '').replace('http://', '').strip('/')
+            is_active = (s_url == st.session_state.current_site)
+
+            type_badge = "<span style='background:#e8f0fe; color:#1a73e8; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600;'>🌐 Domain Property</span>" if is_domain else "<span style='background:#fce8e6; color:#c5221f; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600;'>🔗 URL Prefix</span>"
+            perm_badge = f"<span style='background:#e6f4ea; color:#137333; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600;'>👑 {perm}</span>" if 'Owner' in perm else f"<span style='background:#f1f3f4; color:#5f6368; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600;'>👤 {perm}</span>"
+            border_style = "2px solid #1a73e8" if is_active else "1px solid #dadce0"
+            bg_style = "#f8fafd" if is_active else "#ffffff"
+
+            c_card, c_act1, c_act2 = st.columns([5, 2.5, 2.5])
+            with c_card:
+                active_pill = "<span style='background:#1a73e8; color:white; font-size:10px; font-weight:700; padding:2px 7px; border-radius:4px; margin-right:6px;'>ACTIVE NOW</span>" if is_active else ""
+                st.markdown(f"""
+                <div style="background:{bg_style}; border:{border_style}; border-radius:8px; padding:12px 16px; margin-bottom:8px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        {active_pill}
+                        <span style="font-size:16px; font-weight:600; color:#202124;">{clean_display}</span>
+                    </div>
+                    <div style="font-size:12px; color:#5f6368; margin: 4px 0 6px 0; font-family:monospace; word-break:break-all;">{s_url}</div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        {type_badge}
+                        {perm_badge}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            with c_act1:
+                if not is_active:
+                    if st.button("👉 Switch to this Site", key=f"main_switch_{idx}", use_container_width=True):
+                        st.session_state.current_site = s_url
+                        if st.session_state.service:
+                            st.session_state.df = pd.DataFrame()
+                        st.rerun()
+                else:
+                    st.button("✅ Currently Active", key=f"main_act_{idx}", disabled=True, use_container_width=True)
+            with c_act2:
+                if st.button("📈 View Analytics", key=f"main_view_perf_{idx}", use_container_width=True):
+                    st.session_state.current_site = s_url
+                    if st.session_state.service:
+                        st.session_state.df = pd.DataFrame()
+                    st.rerun()
+    else:
+        st.info("No properties matched your search.")
+
+    st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
+
+    # Property Management Forms (Add / Delete via GSC Sites API)
+    st.markdown("### ⚙️ Search Console Property Management")
+    pm_t1, pm_t2 = st.tabs(["➕ Add New Property to Search Console", "🗑️ Remove Property"])
+    with pm_t1:
+        st.markdown("Google Search Console অ্যাকাউন্টে নতুন ডোমেইন বা URL প্রিফিক্স প্রপার্টি রেজিস্টার করুন:")
+        new_site_input = st.text_input("Property URL or Domain (e.g. `sc-domain:example.com` or `https://example.com/`):", key="new_site_mgmt_input")
+        if st.button("➕ Add Property via GSC Sites API", use_container_width=True, type="primary"):
+            if not new_site_input or not new_site_input.strip():
+                st.warning("Please enter a valid property URL or domain.")
+            else:
+                with st.spinner("Submitting to Google Search Console Sites API..."):
+                    res = add_site_property(st.session_state.service, new_site_input.strip())
+                    if res.get('success'):
+                        st.success(f"✅ {res.get('message')}")
+                        if is_conn:
+                            try:
+                                fresh_s = get_sites_detailed(st.session_state.service)
+                                st.session_state.sites_detailed = fresh_s
+                                st.session_state.sites = [s['siteUrl'] for s in fresh_s if 'siteUrl' in s]
+                            except Exception:
+                                pass
+                        else:
+                            if new_site_input not in st.session_state.sites:
+                                st.session_state.sites.append(new_site_input)
+                                st.session_state.sites_detailed.append({"siteUrl": new_site_input, "permissionLevel": "siteOwner"})
+                        st.rerun()
+                    else:
+                        st.error(f"Failed to add property: {res.get('message')}")
+
+    with pm_t2:
+        st.markdown("Google Search Console থেকে কোনো অপ্রয়োজনীয় প্রপার্টি রিমুভ করুন:")
+        if detailed_sites:
+            site_to_del = st.selectbox("Select Property to Remove:", [s.get('siteUrl') for s in detailed_sites], key="del_site_mgmt_select")
+            if st.button("⚠️ Delete Selected Property", type="secondary", use_container_width=True):
+                with st.spinner("Removing property via Google Search Console Sites API..."):
+                    res = delete_site_property(st.session_state.service, site_to_del)
+                    if res.get('success'):
+                        st.success(f"✅ {res.get('message')}")
+                        st.session_state.sites = [s for s in st.session_state.sites if s != site_to_del]
+                        st.session_state.sites_detailed = [s for s in st.session_state.sites_detailed if s.get('siteUrl') != site_to_del]
+                        if st.session_state.current_site == site_to_del:
+                            st.session_state.current_site = st.session_state.sites[0] if st.session_state.sites else "https://centralec-electrical.co.uk/"
+                        st.rerun()
+                    else:
+                        st.error(f"Failed to remove property: {res.get('message')}")
+        else:
+            st.info("No properties found.")
 
 
 # ----------------------------------------------------

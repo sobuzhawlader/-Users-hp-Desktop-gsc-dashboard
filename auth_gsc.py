@@ -6,7 +6,11 @@ from google.oauth2 import service_account
 from google_auth_oauthlib.flow import InstalledAppFlow, Flow
 from googleapiclient.discovery import build
 
-SCOPES = ['https://www.googleapis.com/auth/webmasters']
+SCOPES = [
+    'https://www.googleapis.com/auth/webmasters',
+    'openid',
+    'https://www.googleapis.com/auth/userinfo.email'
+]
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOKEN_FILE = os.path.join(BASE_DIR, 'token.pickle')
 CREDENTIALS_FILE = os.path.join(BASE_DIR, 'credentials.json')
@@ -162,13 +166,50 @@ def authenticate_service_account(sa_data):
     sites = get_sites(svc)
     return creds, svc, svc_v1, sites
 
-def get_sites(service):
-    """Fetches list of all verified properties in the connected Google account."""
+def get_sites_detailed(service):
+    """Fetches list of all verified properties in the connected Google account with permissions."""
     if not service:
         return []
     try:
         sites = service.sites().list().execute()
-        return [s['siteUrl'] for s in sites.get('siteEntry', [])]
+        return sites.get('siteEntry', [])
     except Exception as e:
         print(f"Error fetching GSC sites: {e}")
         return []
+
+def get_sites(service):
+    """Fetches list of all verified properties in the connected Google account."""
+    entries = get_sites_detailed(service)
+    return [s['siteUrl'] for s in entries if 'siteUrl' in s]
+
+def get_user_email(creds):
+    """Attempts to retrieve the email address of the authenticated Google user."""
+    if not creds:
+        return None
+    try:
+        # 1. Check id_token JWT payload if available
+        id_tok = getattr(creds, 'id_token', None)
+        if id_tok and isinstance(id_tok, str):
+            import base64
+            parts = id_tok.split('.')
+            if len(parts) >= 2:
+                padded = parts[1] + '=' * (-len(parts[1]) % 4)
+                payload = json.loads(base64.b64decode(padded).decode('utf-8'))
+                if 'email' in payload:
+                    return payload['email']
+    except Exception:
+        pass
+
+    # 2. Query Google tokeninfo endpoint
+    try:
+        import requests
+        tok = getattr(creds, 'token', None)
+        if tok:
+            resp = requests.get(f"https://oauth2.googleapis.com/tokeninfo?access_token={tok}", timeout=4)
+            if resp.status_code == 200:
+                data = resp.json()
+                if 'email' in data:
+                    return data['email']
+    except Exception:
+        pass
+    return None
