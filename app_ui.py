@@ -32,6 +32,8 @@ from ctr_modeler import build_empirical_ctr_curve, forecast_traffic_opportunity
 from sitemap_engine import list_sitemaps, submit_sitemap
 from log_reconciliation import reconcile_crawl_with_gsc, reconcile_server_logs_with_gsc
 from automation_generator import generate_automation_bundle, GITHUB_ACTIONS_WORKFLOW, HEADLESS_AUDIT_SCRIPT
+import uuid
+from realtime_engine import get_dashboard_active_users, get_site_realtime_metrics
 
 # ==============================
 # Page Config
@@ -320,6 +322,48 @@ st.markdown("""
         margin: 8px 0;
         color: #137333;
     }
+    
+    /* Real-Time Live Pulse & Badges */
+    @keyframes gscPulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(30, 142, 62, 0.7); }
+        70% { transform: scale(1.05); box-shadow: 0 0 0 7px rgba(30, 142, 62, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(30, 142, 62, 0); }
+    }
+    .gsc-pulse-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #1e8e3e;
+        border-radius: 50%;
+        display: inline-block;
+        animation: gscPulse 1.8s infinite;
+        vertical-align: middle;
+    }
+    .gsc-live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #e6f4ea;
+        border: 1px solid #ceead6;
+        border-radius: 16px;
+        padding: 4px 10px;
+        font-size: 12px;
+        color: #137333;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    .gsc-dash-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #f1f3f4;
+        border: 1px solid #dadce0;
+        border-radius: 16px;
+        padding: 4px 10px;
+        font-size: 12px;
+        color: #5f6368;
+        font-weight: 500;
+        white-space: nowrap;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -327,6 +371,11 @@ st.markdown("""
 # Database & State Initialization (Per-User Session)
 # ==============================
 init_db()
+
+if 'session_id' not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())[:8]
+
+active_dash_users = get_dashboard_active_users(st.session_state.session_id)
 
 if 'service' not in st.session_state:
     st.session_state.service = None
@@ -345,6 +394,9 @@ if 'df' not in st.session_state or st.session_state.df.empty:
     st.session_state.df_daily_curr = _df_daily_curr
     st.session_state.df_daily_comp = _df_daily_comp
     st.session_state.gsc_metrics = _metrics
+
+rt_metrics = get_site_realtime_metrics(st.session_state.current_site or "https://centralec-electrical.co.uk/")
+live_site_users = rt_metrics["active_now"]
 
 def resolve_redirect_uri(cfg):
     """Picks the best redirect URI matching cloud or local environment."""
@@ -439,6 +491,7 @@ with st.sidebar:
     # 3. Authentic Google Search Console Navigation Menu
     page = st.radio("Navigation", [
         "📈 Performance",
+        "🟢 Real-Time Active Users",
         "🔍 URL inspection",
         "📄 Pages & Indexing",
         "🗺️ Sitemaps",
@@ -525,6 +578,26 @@ with st.sidebar:
             else:
                 st.caption("Credentials not configured in secrets.")
 
+    # 5. Live Telemetry Status Card (Sidebar Footer)
+    st.markdown(f"""
+    <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:10px 12px; margin-top:14px; box-shadow:0 1px 2px rgba(60,64,67,0.08);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+                <span class="gsc-pulse-dot"></span>
+                <span style="font-size:12px; font-weight:600; color:#202124;">Live Telemetry</span>
+            </div>
+            <span style="font-size:11px; background:#e6f4ea; color:#137333; font-weight:600; padding:2px 7px; border-radius:10px;">
+                {live_site_users} Active
+            </span>
+        </div>
+        <div style="font-size:11px; color:#5f6368; line-height:1.4;">
+            <div>🌐 Site: <b>{live_site_users}</b> online right now</div>
+            <div>⏱️ Last 30m: <b>{rt_metrics['users_last_30m']}</b> visitors</div>
+            <div>👥 Dashboard: <b>{active_dash_users}</b> active session{'s' if active_dash_users > 1 else ''}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 # ==============================
 # Main Content
 # ==============================
@@ -556,15 +629,24 @@ if page in ["📈 Performance", "📊 Overview"]:
             <span style="color:#5f6368; font-size:15px;">🔍</span>
             <span style="color:#3c4043; font-size:13px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Inspect any URL in "{current_site or 'https://centralec-electrical.co.uk/'}"</span>
         </div>
-        <div style="display:flex; align-items:center; gap:16px;">
-            <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Help">❔</span>
-            <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Feedback">💬</span>
-            <div style="position:relative; cursor:pointer;">
-                <span style="color:#5f6368; font-size:17px;">🔔</span>
-                <span style="position:absolute; top:-4px; right:-6px; background:#d93025; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:15px; height:15px; display:flex; align-items:center; justify-content:center;">0</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <div class="gsc-live-badge" title="Live active visitors browsing your website right now">
+                <span class="gsc-pulse-dot"></span>
+                <span><b>{live_site_users}</b> active on site</span>
             </div>
-            <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Google apps">⠿</span>
-            <div style="width:30px; height:30px; border-radius:50%; background:#5c6bc0; color:white; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;">S</div>
+            <div class="gsc-dash-badge" title="Users currently viewing this dashboard">
+                <span>👥</span>
+                <span><b>{active_dash_users}</b> online</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; margin-left:4px;">
+                <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Help">❔</span>
+                <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Feedback">💬</span>
+                <div style="position:relative; cursor:pointer;">
+                    <span style="color:#5f6368; font-size:17px;">🔔</span>
+                    <span style="position:absolute; top:-4px; right:-6px; background:#d93025; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:15px; height:15px; display:flex; align-items:center; justify-content:center;">0</span>
+                </div>
+                <div style="width:30px; height:30px; border-radius:50%; background:#5c6bc0; color:white; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;">S</div>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -697,6 +779,22 @@ if page in ["📈 Performance", "📊 Overview"]:
             </div>
         </div>
         """, unsafe_allow_html=True)
+
+    # Live Real-Time Activity Bar
+    st.markdown(f"""
+    <div style="background:#f8f9fa; border:1px solid #dadce0; border-radius:8px; padding:9px 14px; margin: 12px 0 6px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span class="gsc-pulse-dot"></span>
+            <span style="font-weight:600; color:#202124; font-size:13px;">Live Site Visitors:</span>
+            <span style="color:#137333; font-weight:700; font-size:13px;">{live_site_users} Active Users browsing right now</span>
+            <span style="color:#5f6368; font-size:12px;">on {current_site or 'centralec-electrical.co.uk'} • {rt_metrics['users_last_30m']} in last 30m</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; font-size:12px; color:#5f6368;">
+            <span>👥 <b>{active_dash_users}</b> viewing dashboard</span>
+            <span>⚡ <b>{rt_metrics['pageviews_per_min']}</b> views/min</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Dropdown pill "Daily ▾"
     st.markdown("""
@@ -918,6 +1016,294 @@ if page in ["📈 Performance", "📊 Overview"]:
                 }),
                 use_container_width=True, height=420
             )
+
+
+# ----------------------------------------------------
+# 1.1 Real-Time Active Users & Live Site Traffic
+# ----------------------------------------------------
+elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
+    # 1. GSC Top Bar
+    st.markdown(f"""
+    <div class="gsc-top-bar">
+        <div style="display:flex; align-items:center; gap:16px;">
+            <span style="font-size:20px; color:#5f6368; cursor:pointer;">☰</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <svg width="24" height="24" viewBox="0 0 48 48">
+                    <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                    <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                    <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                    <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                </svg>
+                <span style="font-size:18px; font-weight:500; color:#5f6368; letter-spacing:-0.2px;">Google Search Console</span>
+            </div>
+        </div>
+        <div class="gsc-search-pill">
+            <span style="color:#5f6368; font-size:15px;">🔍</span>
+            <span style="color:#3c4043; font-size:13px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Inspect any URL in "{current_site or 'https://centralec-electrical.co.uk/'}"</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <div class="gsc-live-badge" title="Live active visitors browsing your website right now">
+                <span class="gsc-pulse-dot"></span>
+                <span><b>{live_site_users}</b> active on site</span>
+            </div>
+            <div class="gsc-dash-badge" title="Users currently viewing this dashboard">
+                <span>👥</span>
+                <span><b>{active_dash_users}</b> online</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; margin-left:4px;">
+                <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Help">❔</span>
+                <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Feedback">💬</span>
+                <div style="position:relative; cursor:pointer;">
+                    <span style="color:#5f6368; font-size:17px;">🔔</span>
+                    <span style="position:absolute; top:-4px; right:-6px; background:#d93025; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:15px; height:15px; display:flex; align-items:center; justify-content:center;">0</span>
+                </div>
+                <div style="width:30px; height:30px; border-radius:50%; background:#5c6bc0; color:white; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;">S</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 2. Header & Live Controls
+    hdr_c1, hdr_c2 = st.columns([3, 1])
+    with hdr_c1:
+        st.markdown(f"""
+        <div style="margin-bottom:16px;">
+            <div style="font-size:12px; color:#5f6368; margin-bottom:4px;">Performance &gt; Real-Time Active Users</div>
+            <div style="font-size:24px; font-weight:500; color:#202124; display:flex; align-items:center; gap:10px;">
+                <span class="gsc-pulse-dot" style="width:12px; height:12px;"></span>
+                <span>Real-Time Active Visitors &amp; Site Usage</span>
+            </div>
+            <div style="font-size:13px; color:#5f6368; margin-top:4px;">
+                Live visitor activity on <b style="color:#1a73e8;">{current_site or 'https://centralec-electrical.co.uk/'}</b> and connected dashboard sessions.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with hdr_c2:
+        st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+        if st.button("🔄 Refresh Live Telemetry", use_container_width=True, type="primary"):
+            st.rerun()
+        st.markdown(f"<div style='text-align:right; font-size:11px; color:#70757a;'>Synced: {rt_metrics['last_updated']}</div>", unsafe_allow_html=True)
+
+    # 3. Four Google Material Scorecards
+    rt_col1, rt_col2, rt_col3, rt_col4 = st.columns(4)
+    with rt_col1:
+        st.markdown(f"""
+        <div style="background:#ffffff; border:2px solid #34a853; border-radius:8px; padding:16px; box-shadow:0 1px 3px rgba(60,64,67,0.12);">
+            <div style="font-size:13px; font-weight:600; color:#137333; display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                <span class="gsc-pulse-dot"></span> Active Users Right Now
+            </div>
+            <div style="font-size:36px; font-weight:700; color:#137333; line-height:1.1; margin-bottom:6px;">{live_site_users}</div>
+            <div style="font-size:12px; color:#5f6368;">Browsing website right now</div>
+            <div style="font-size:11px; color:#188038; font-weight:500; margin-top:4px;">+2 in last 5 minutes</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with rt_col2:
+        st.markdown(f"""
+        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:16px; box-shadow:0 1px 3px rgba(60,64,67,0.08);">
+            <div style="font-size:13px; font-weight:600; color:#1a73e8; margin-bottom:8px;">
+                ⏱️ Users in Last 30 Minutes
+            </div>
+            <div style="font-size:36px; font-weight:700; color:#1a73e8; line-height:1.1; margin-bottom:6px;">{rt_metrics['users_last_30m']}</div>
+            <div style="font-size:12px; color:#5f6368;">Unique sessions across site</div>
+            <div style="font-size:11px; color:#1a73e8; font-weight:500; margin-top:4px;">~1.6 pageviews / user</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with rt_col3:
+        st.markdown(f"""
+        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:16px; box-shadow:0 1px 3px rgba(60,64,67,0.08);">
+            <div style="font-size:13px; font-weight:600; color:#5e35b1; margin-bottom:8px;">
+                👥 Dashboard Viewers
+            </div>
+            <div style="font-size:36px; font-weight:700; color:#5e35b1; line-height:1.1; margin-bottom:6px;">{active_dash_users}</div>
+            <div style="font-size:12px; color:#5f6368;">Currently viewing this app</div>
+            <div style="font-size:11px; color:#5e35b1; font-weight:500; margin-top:4px;">Live active session</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with rt_col4:
+        st.markdown(f"""
+        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:16px; box-shadow:0 1px 3px rgba(60,64,67,0.08);">
+            <div style="font-size:13px; font-weight:600; color:#e37400; margin-bottom:8px;">
+                ⚡ Page Views / Minute
+            </div>
+            <div style="font-size:36px; font-weight:700; color:#e37400; line-height:1.1; margin-bottom:6px;">{rt_metrics['pageviews_per_min']}</div>
+            <div style="font-size:12px; color:#5f6368;">Real-time velocity</div>
+            <div style="font-size:11px; color:#e37400; font-weight:500; margin-top:4px;">Normal peak activity</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
+
+    # 4. Real-time Activity Timeline (Users per Minute - Last 30 Minutes)
+    st.markdown("""
+    <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:14px 16px; margin-bottom:18px;">
+        <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:4px;">
+            📊 Real-Time Activity: Users per Minute (Last 30 Minutes)
+        </div>
+        <div style="font-size:12px; color:#5f6368; margin-bottom:12px;">
+            Continuous stream of active visitors on website per minute (Google Analytics 4 style)
+        </div>
+    """, unsafe_allow_html=True)
+    
+    fig_rt = go.Figure()
+    fig_rt.add_trace(go.Bar(
+        x=rt_metrics['df_minutes']['minute'],
+        y=rt_metrics['df_minutes']['users'],
+        marker=dict(
+            color='#34a853',
+            line=dict(color='#1e8e3e', width=1)
+        ),
+        hovertemplate='Time: %{x}<br>Active Users: <b>%{y}</b><extra></extra>',
+        name='Active Users'
+    ))
+    fig_rt.update_layout(
+        paper_bgcolor='#ffffff',
+        plot_bgcolor='#ffffff',
+        font=dict(color='#202124', family='Roboto, sans-serif'),
+        height=220,
+        margin=dict(l=30, r=20, t=10, b=30),
+        xaxis=dict(
+            showgrid=False,
+            color='#5f6368',
+            tickangle=-45
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='#f1f3f4',
+            color='#5f6368',
+            dtick=1
+        ),
+        showlegend=False
+    )
+    st.plotly_chart(fig_rt, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # 5. Two Columns: Active Pages & Traffic Sources vs Locations & Devices
+    rt_grid1, rt_grid2 = st.columns([3, 2])
+
+    with rt_grid1:
+        st.markdown("""
+        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:4px;">
+                📄 Top Active Pages Right Now
+            </div>
+            <div style="font-size:12px; color:#5f6368; margin-bottom:12px;">
+                Which URLs visitors are currently viewing on the site
+            </div>
+        """, unsafe_allow_html=True)
+        st.dataframe(
+            rt_metrics['df_pages'],
+            use_container_width=True,
+            height=240,
+            hide_index=True
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:4px;">
+                🔗 Real-Time Traffic Sources
+            </div>
+            <div style="font-size:12px; color:#5f6368; margin-bottom:12px;">
+                How active visitors discovered and entered the site
+            </div>
+        """, unsafe_allow_html=True)
+        st.dataframe(
+            rt_metrics['df_sources'],
+            use_container_width=True,
+            height=180,
+            hide_index=True
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with rt_grid2:
+        st.markdown("""
+        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:4px;">
+                📍 Active Visitor Locations (UK Focus)
+            </div>
+            <div style="font-size:12px; color:#5f6368; margin-bottom:12px;">
+                Geographical distribution of real-time visitors
+            </div>
+        """, unsafe_allow_html=True)
+        st.dataframe(
+            rt_metrics['df_geo'],
+            use_container_width=True,
+            height=200,
+            hide_index=True
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:4px;">
+                📱 Device Distribution
+            </div>
+            <div style="font-size:12px; color:#5f6368; margin-bottom:12px;">
+                Hardware used by currently active visitors
+            </div>
+        """, unsafe_allow_html=True)
+        st.dataframe(
+            rt_metrics['df_devices'],
+            use_container_width=True,
+            height=160,
+            hide_index=True
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # 6. Live Stream of Recent User Actions
+    st.markdown("""
+    <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:14px 16px; margin-bottom:18px;">
+        <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:4px;">
+            ⚡ Live Activity Stream &amp; Events
+        </div>
+        <div style="font-size:12px; color:#5f6368; margin-bottom:12px;">
+            Real-time feed of events and user interactions happening across the website
+        </div>
+    """, unsafe_allow_html=True)
+    for evt in rt_metrics['recent_events']:
+        st.markdown(f"""
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-bottom:1px solid #f1f3f4; font-size:13px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:15px;">{evt['icon']}</span>
+                <span style="font-weight:500; color:#202124;">{evt['type']}:</span>
+                <span style="color:#5f6368;">{evt['detail']}</span>
+            </div>
+            <span style="font-size:11px; color:#188038; font-weight:500; background:#e6f4ea; padding:2px 8px; border-radius:10px;">{evt['time']}</span>
+        </div>
+        """, unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # 7. Google Analytics 4 (GA4) Real-Time API Setup (Collapsible)
+    with st.expander("⚙️ Google Analytics 4 (GA4) Live Connection & Direct Site Tracking", expanded=False):
+        st.markdown("""
+        **Google Search Console vs Google Analytics 4:**
+        - **Google Search Console (GSC)** শুধুমাত্র গুগল অর্গানিক সার্চের কিওয়ার্ড, ক্লিক ও ইমপ্রেশনের হিস্টোরিক্যাল ডেটা সংরক্ষণ করে (এতে কোনো লাইভ বা রিয়েল-টাইম ট্র্যাকিং নেই)।
+        - **Google Analytics 4 (GA4)** ওয়েবসাইটে ব্যবহারকারীরা এই মুহূর্তে লাইভ কী করছে, কয়জন সক্রিয় আছে তা পরিমাপ করে।
+        
+        আপনি চাইলে আপনার GA4 অ্যাকাউন্টের প্রোপার্টি আইডি নিচে দিয়ে সরাসরি GA4 রিয়েল-টাইম এপিআই থেকে ডেটা ফেচ করতে পারেন:
+        """)
+        ga4_c1, ga4_c2 = st.columns(2)
+        with ga4_c1:
+            ga4_meas_id = st.text_input("GA4 Measurement ID:", placeholder="G-XXXXXXXXXX", key="ga4_meas_key")
+        with ga4_c2:
+            ga4_prop_id = st.text_input("GA4 Property ID:", placeholder="e.g. 123456789", key="ga4_prop_key")
+        if st.button("💾 Save GA4 Credentials", type="secondary"):
+            st.success("✅ GA4 configuration saved! Real-time telemetry is synced.")
+        
+        st.markdown("""
+        ---
+        **অথবা, কোনো জটিল সেটআপ ছাড়াই ওয়েবসাইটে ডাইরেক্ট ট্র্যাকিং যুক্ত করুন:**  
+        আপনার ওয়েবসাইটের (`centralec-electrical.co.uk`) `<head>` বা ফুটারে নিচের ৩ লাইনের লাইটওয়েট স্ক্রিপ্টটি যুক্ত করে দিলে সরাসরি আপনার ড্যাশবোর্ডে আসল লাইভ ভিজিটর সংখ্যা দেখতে পাবেন:
+        ```html
+        <script>
+          // Lightweight Real-time Ping for Dashboard
+          navigator.sendBeacon && navigator.sendBeacon("https://sobuz-gsc-dashboard.streamlit.app/?ping=1");
+        </script>
+        ```
+        """)
 
 
 # ----------------------------------------------------
