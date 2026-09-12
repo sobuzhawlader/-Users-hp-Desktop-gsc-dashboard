@@ -867,21 +867,21 @@ if page in ["📈 Performance", "📊 Overview"]:
         <div style="display:flex; align-items:center; gap:12px;">
             <span class="gsc-pulse-dot" style="width:12px; height:12px;"></span>
             <div>
-                <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#188038; letter-spacing:0.5px;">🟢 LIVE ACTIVE USERS (সাইটে এখন সক্রিয় ইউজার)</div>
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#188038; letter-spacing:0.5px;">🟢 LIVE ACTIVE USERS</div>
                 <div style="font-size:24px; font-weight:700; color:#137333; line-height:1.2;">
-                    {live_site_users} জন সক্রিয় ভিজিটর (Active Users)
-                    <span style="font-size:13px; font-weight:400; color:#5f6368; margin-left:8px;">— এই মুহূর্তে {current_site or 'centralec-electrical.co.uk'} ব্রাউজ করছেন</span>
+                    {live_site_users} Active Visitors
+                    <span style="font-size:13px; font-weight:400; color:#5f6368; margin-left:8px;">— Currently browsing {current_site or 'centralec-electrical.co.uk'}</span>
                 </div>
             </div>
         </div>
         <div style="display:flex; align-items:center; gap:12px;">
             <div style="background:#ffffff; border:1px solid #ceead6; border-radius:6px; padding:6px 12px; text-align:center;">
-                <div style="font-size:11px; color:#5f6368;">গত ৩০ মিনিটে মোট</div>
-                <div style="font-size:16px; font-weight:700; color:#1a73e8;">⏱️ {rt_metrics['users_last_30m']} জন</div>
+                <div style="font-size:11px; color:#5f6368;">Past 30 Minutes</div>
+                <div style="font-size:16px; font-weight:700; color:#1a73e8;">⏱️ {rt_metrics['users_last_30m']} users</div>
             </div>
             <div style="background:#ffffff; border:1px solid #dadce0; border-radius:6px; padding:6px 12px; text-align:center;">
-                <div style="font-size:11px; color:#5f6368;">ড্যাশবোর্ড ব্যবহারকারী</div>
-                <div style="font-size:16px; font-weight:700; color:#5e35b1;">👥 {active_dash_users} জন</div>
+                <div style="font-size:11px; color:#5f6368;">Dashboard Viewers</div>
+                <div style="font-size:16px; font-weight:700; color:#5e35b1;">👥 {active_dash_users} online</div>
             </div>
         </div>
     </div>
@@ -1483,10 +1483,10 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
     with st.expander("⚙️ Google Analytics 4 (GA4) Live Connection & Direct Site Tracking", expanded=False):
         st.markdown("""
         **Google Search Console vs Google Analytics 4:**
-        - **Google Search Console (GSC)** শুধুমাত্র গুগল অর্গানিক সার্চের কিওয়ার্ড, ক্লিক ও ইমপ্রেশনের হিস্টোরিক্যাল ডেটা সংরক্ষণ করে (এতে কোনো লাইভ বা রিয়েল-টাইম ট্র্যাকিং নেই)।
-        - **Google Analytics 4 (GA4)** ওয়েবসাইটে ব্যবহারকারীরা এই মুহূর্তে লাইভ কী করছে, কয়জন সক্রিয় আছে তা পরিমাপ করে।
+        - **Google Search Console (GSC)** tracks Google organic search keywords, clicks, impressions, and ranking positions (historical data).
+        - **Google Analytics 4 (GA4)** tracks live on-site visitor actions, pageviews, and real-time concurrent active users.
         
-        আপনি চাইলে আপনার GA4 অ্যাকাউন্টের প্রোপার্টি আইডি নিচে দিয়ে সরাসরি GA4 রিয়েল-টাইম এপিআই থেকে ডেটা ফেচ করতে পারেন:
+        You can connect your GA4 Property ID below to fetch live telemetry directly from the GA4 Realtime API:
         """)
         ga4_c1, ga4_c2 = st.columns(2)
         with ga4_c1:
@@ -1498,8 +1498,8 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         
         st.markdown("""
         ---
-        **অথবা, কোনো জটিল সেটআপ ছাড়াই ওয়েবসাইটে ডাইরেক্ট ট্র্যাকিং যুক্ত করুন:**  
-        আপনার ওয়েবসাইটের (`centralec-electrical.co.uk`) `<head>` বা ফুটারে নিচের ৩ লাইনের লাইটওয়েট স্ক্রিপ্টটি যুক্ত করে দিলে সরাসরি আপনার ড্যাশবোর্ডে আসল লাইভ ভিজিটর সংখ্যা দেখতে পাবেন:
+        **Or, enable direct site tracking without complex setup:**  
+        Add this 3-line lightweight script to the `<head>` or footer of your website (`centralec-electrical.co.uk`) to stream live visitors directly into this dashboard:
         ```html
         <script>
           // Lightweight Real-time Ping for Dashboard
@@ -1658,7 +1658,7 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
     st.markdown("### ⚙️ Search Console Property Management")
     pm_t1, pm_t2 = st.tabs(["➕ Add New Property to Search Console", "🗑️ Remove Property"])
     with pm_t1:
-        st.markdown("Google Search Console অ্যাকাউন্টে নতুন ডোমেইন বা URL প্রিফিক্স প্রপার্টি রেজিস্টার করুন:")
+        st.markdown("Register a new domain or URL-prefix property in your Google Search Console account:")
         new_site_input = st.text_input("Property URL or Domain (e.g. `sc-domain:example.com` or `https://example.com/`):", key="new_site_mgmt_input")
         if st.button("➕ Add Property via GSC Sites API", use_container_width=True, type="primary"):
             if not new_site_input or not new_site_input.strip():
@@ -1684,7 +1684,7 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
                         st.error(f"Failed to add property: {res.get('message')}")
 
     with pm_t2:
-        st.markdown("Google Search Console থেকে কোনো অপ্রয়োজনীয় প্রপার্টি রিমুভ করুন:")
+        st.markdown("Remove an unneeded property from Google Search Console:")
         if detailed_sites:
             site_to_del = st.selectbox("Select Property to Remove:", [s.get('siteUrl') for s in detailed_sites], key="del_site_mgmt_select")
             if st.button("⚠️ Delete Selected Property", type="secondary", use_container_width=True):

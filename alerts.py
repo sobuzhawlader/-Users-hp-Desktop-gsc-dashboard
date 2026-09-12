@@ -6,8 +6,8 @@ from database import save_alert, load_alerts
 # ==============================
 # Telegram Configuration
 # ==============================
-TELEGRAM_BOT_TOKEN = ""  # আপনার Telegram Bot Token এখানে দিন
-TELEGRAM_CHAT_ID = ""    # আপনার Chat ID এখানে দিন
+TELEGRAM_BOT_TOKEN = ""  # Enter your Telegram Bot Token here
+TELEGRAM_CHAT_ID = ""    # Enter your Chat ID here
 
 def send_telegram(message):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
