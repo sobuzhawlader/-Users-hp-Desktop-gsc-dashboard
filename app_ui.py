@@ -4,6 +4,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 
 from auth_gsc import (
@@ -478,33 +479,231 @@ current_site = st.session_state.current_site
 # 1. Performance Overview
 # ----------------------------------------------------
 if page == "📊 Overview":
-    st.markdown("<div class='section-header'>📊 Performance Overview</div>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style='display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; background:rgba(66, 133, 244, 0.08); border:1px solid rgba(66, 133, 244, 0.25); border-radius:10px; padding:10px 18px; margin-bottom:18px;'>
+        <div style='display:flex; align-items:center; gap:10px;'>
+            <span style='font-size:22px;'>🔍</span>
+            <div>
+                <div style='font-weight:700; font-size:16px; color:#e2e8f0;'>Performance on Search results</div>
+                <div style='font-size:12px; color:#94a3b8;'>Google Search Console • Web Search</div>
+            </div>
+            <span style='background:rgba(16, 185, 129, 0.2); color:#10b981; font-size:11px; padding:3px 10px; border-radius:12px; font-weight:600; border:1px solid rgba(16, 185, 129, 0.4);'>● Verified</span>
+        </div>
+        <div style='display:flex; gap:8px; align-items:center;'>
+            <span style='background:rgba(255,255,255,0.06); padding:4px 12px; border-radius:16px; font-size:12px; color:#cbd5e1; border:1px solid rgba(255,255,255,0.1);'>Type: <strong>Web</strong></span>
+            <span style='background:rgba(255,255,255,0.06); padding:4px 12px; border-radius:16px; font-size:12px; color:#cbd5e1; border:1px solid rgba(255,255,255,0.1);'>Property: <strong style='color:#60a5fa;'>{current_site or 'Selected Site'}</strong></span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     if df.empty:
-        st.info("👈 Connect your Google account and click **🚀 Fetch Live**.")
+        st.info("👈 Please select a property from the sidebar and click **🚀 Fetch Live** (or load demo data).")
     else:
         overview = get_overview(df)
+        
+        # GSC 4-Scorecard Row with Interactive Checkbox Toggles
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            st.markdown(f"<div class='kpi-card'><div class='kpi-value'>{overview.get('total_clicks', 0):,}</div><div class='kpi-label'>Clicks</div></div>", unsafe_allow_html=True)
+            show_clicks = st.checkbox("Total clicks", value=True, key="chk_clicks")
+            st.markdown(f"""
+            <div style='background: rgba(66, 133, 244, 0.08); border: 1px solid #4285F4; border-top: 4px solid #4285F4; border-radius: 8px; padding: 12px 14px;'>
+                <div style='font-size: 11px; color: #93c5fd; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;'>Total clicks</div>
+                <div style='font-size: 28px; font-weight: 700; color: #60a5fa; margin-top: 4px;'>{overview.get('total_clicks', 0):,}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
         with c2:
-            st.markdown(f"<div class='kpi-card'><div class='kpi-value'>{overview.get('total_impressions', 0):,}</div><div class='kpi-label'>Impressions</div></div>", unsafe_allow_html=True)
+            show_impressions = st.checkbox("Total impressions", value=True, key="chk_impressions")
+            st.markdown(f"""
+            <div style='background: rgba(126, 87, 194, 0.08); border: 1px solid #7E57C2; border-top: 4px solid #7E57C2; border-radius: 8px; padding: 12px 14px;'>
+                <div style='font-size: 11px; color: #d8b4fe; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;'>Total impressions</div>
+                <div style='font-size: 28px; font-weight: 700; color: #c084fc; margin-top: 4px;'>{overview.get('total_impressions', 0):,}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
         with c3:
-            st.markdown(f"<div class='kpi-card'><div class='kpi-value'>{overview.get('avg_ctr', 0)}%</div><div class='kpi-label'>Avg CTR</div></div>", unsafe_allow_html=True)
+            show_ctr = st.checkbox("Average CTR", value=True, key="chk_ctr")
+            st.markdown(f"""
+            <div style='background: rgba(0, 137, 123, 0.08); border: 1px solid #00897B; border-top: 4px solid #00897B; border-radius: 8px; padding: 12px 14px;'>
+                <div style='font-size: 11px; color: #5eead4; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;'>Average CTR</div>
+                <div style='font-size: 28px; font-weight: 700; color: #2dd4bf; margin-top: 4px;'>{overview.get('avg_ctr', 0)}%</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
         with c4:
-            st.markdown(f"<div class='kpi-card'><div class='kpi-value'>{overview.get('avg_position', 0)}</div><div class='kpi-label'>Avg Position</div></div>", unsafe_allow_html=True)
+            show_position = st.checkbox("Average position", value=True, key="chk_position")
+            st.markdown(f"""
+            <div style='background: rgba(251, 140, 0, 0.08); border: 1px solid #FB8C00; border-top: 4px solid #FB8C00; border-radius: 8px; padding: 12px 14px;'>
+                <div style='font-size: 11px; color: #fdba74; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;'>Average position</div>
+                <div style='font-size: 28px; font-weight: 700; color: #fb923c; margin-top: 4px;'>{overview.get('avg_position', 0)}</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-        if 'date' in df.columns:
-            st.markdown("<div class='section-header'>📈 Daily Performance Trend</div>", unsafe_allow_html=True)
-            daily = df.groupby('date').agg(clicks=('clicks', 'sum'), impressions=('impressions', 'sum')).reset_index().sort_values('date')
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=daily['date'], y=daily['clicks'], name='Clicks', line=dict(color='#6366f1', width=2.5), fill='tozeroy', fillcolor='rgba(99,102,241,0.12)'))
-            fig.add_trace(go.Scatter(x=daily['date'], y=daily['impressions'], name='Impressions', line=dict(color='#a855f7', width=2.5), fill='tozeroy', fillcolor='rgba(168,85,247,0.12)', yaxis='y2'))
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#e2e8f0'), legend=dict(bgcolor='rgba(0,0,0,0)'),
-                              yaxis2=dict(overlaying='y', side='right', gridcolor='rgba(255,255,255,0.06)', title="Impressions"),
-                              yaxis=dict(gridcolor='rgba(255,255,255,0.06)', title="Clicks"), xaxis=dict(gridcolor='rgba(255,255,255,0.06)'), hovermode='x unified', margin=dict(l=0, r=0, t=10, b=0))
+        # Interactive GSC Chart
+        if 'date' in df.columns and not df.empty:
+            daily = df.groupby('date').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                position=('position', 'mean')
+            ).reset_index().sort_values('date')
+            daily['ctr'] = np.where(daily['impressions'] > 0, (daily['clicks'] / daily['impressions'] * 100).round(2), 0.0)
+            daily['position'] = daily['position'].round(1)
+
+            fig = make_subplots(specs=[[{"secondary_y": True}]])
+            has_secondary = False
+
+            if show_clicks and 'clicks' in daily.columns:
+                fig.add_trace(go.Scatter(
+                    x=daily['date'], y=daily['clicks'], name='Clicks',
+                    line=dict(color='#4285F4', width=2.8),
+                    fill='tozeroy', fillcolor='rgba(66, 133, 244, 0.08)'
+                ), secondary_y=False)
+
+            if show_impressions and 'impressions' in daily.columns:
+                fig.add_trace(go.Scatter(
+                    x=daily['date'], y=daily['impressions'], name='Impressions',
+                    line=dict(color='#b388ff', width=2.8),
+                    fill='tozeroy', fillcolor='rgba(179, 136, 255, 0.08)'
+                ), secondary_y=False)
+
+            if show_ctr and 'ctr' in daily.columns:
+                fig.add_trace(go.Scatter(
+                    x=daily['date'], y=daily['ctr'], name='CTR (%)',
+                    line=dict(color='#2dd4bf', width=2.2, dash='dot')
+                ), secondary_y=False)
+
+            if show_position and 'position' in daily.columns:
+                fig.add_trace(go.Scatter(
+                    x=daily['date'], y=daily['position'], name='Average Position',
+                    line=dict(color='#fb923c', width=2.5)
+                ), secondary_y=True)
+                has_secondary = True
+
+            fig.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='#cbd5e1', family='Inter, sans-serif'),
+                hovermode='x unified',
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor='rgba(0,0,0,0)'),
+                margin=dict(l=10, r=10, t=25, b=10)
+            )
+            fig.update_xaxes(showgrid=True, gridcolor='rgba(255,255,255,0.06)')
+            fig.update_yaxes(title_text="Clicks / Impressions / CTR", secondary_y=False, showgrid=True, gridcolor='rgba(255,255,255,0.06)')
+            if has_secondary:
+                fig.update_yaxes(title_text="Average Position (Inverted)", autorange="reversed", secondary_y=True, showgrid=False)
+
             st.plotly_chart(fig, use_container_width=True)
+
+        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+
+        # Real Google Search Console Performance Tabs
+        gsc_t1, gsc_t2, gsc_t3, gsc_t4, gsc_t5 = st.tabs([
+            "📑 QUERIES", "📄 PAGES", "🌍 COUNTRIES", "📱 DEVICES", "📅 DATES"
+        ])
+
+        with gsc_t1:
+            q_col1, q_col2 = st.columns([3, 1])
+            with q_col1:
+                q_search = st.text_input("🔍 Filter queries...", key="gsc_q_filter", placeholder="Filter queries containing text...")
+            q_df = df.groupby('query').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                position=('position', 'mean')
+            ).reset_index()
+            q_df['ctr'] = np.where(q_df['impressions'] > 0, (q_df['clicks'] / q_df['impressions'] * 100).round(2), 0.0)
+            q_df['position'] = q_df['position'].round(1)
+            q_df = q_df.sort_values('clicks', ascending=False)
+            if q_search:
+                q_df = q_df[q_df['query'].str.contains(q_search, case=False, na=False)]
+            with q_col2:
+                q_csv = q_df.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Export Queries (CSV)", q_csv, "gsc_queries.csv", "text/csv", use_container_width=True)
+            st.dataframe(
+                q_df[['query', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                    'query': 'Top queries', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR (%)', 'position': 'Position'
+                }),
+                use_container_width=True, height=450
+            )
+
+        with gsc_t2:
+            p_col1, p_col2 = st.columns([3, 1])
+            with p_col1:
+                p_search = st.text_input("🔍 Filter pages...", key="gsc_p_filter", placeholder="Filter URL containing text...")
+            p_df = df.groupby('page').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                position=('position', 'mean')
+            ).reset_index()
+            p_df['ctr'] = np.where(p_df['impressions'] > 0, (p_df['clicks'] / p_df['impressions'] * 100).round(2), 0.0)
+            p_df['position'] = p_df['position'].round(1)
+            p_df = p_df.sort_values('clicks', ascending=False)
+            if p_search:
+                p_df = p_df[p_df['page'].str.contains(p_search, case=False, na=False)]
+            with p_col2:
+                p_csv = p_df.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Export Pages (CSV)", p_csv, "gsc_pages.csv", "text/csv", use_container_width=True)
+            st.dataframe(
+                p_df[['page', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                    'page': 'Top pages', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR (%)', 'position': 'Position'
+                }),
+                use_container_width=True, height=450
+            )
+
+        with gsc_t3:
+            c_col1, c_col2 = st.columns([3, 1])
+            c_df = df.groupby('country').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                position=('position', 'mean')
+            ).reset_index()
+            c_df['ctr'] = np.where(c_df['impressions'] > 0, (c_df['clicks'] / c_df['impressions'] * 100).round(2), 0.0)
+            c_df['position'] = c_df['position'].round(1)
+            c_df = c_df.sort_values('clicks', ascending=False)
+            with c_col2:
+                c_csv = c_df.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Export Countries (CSV)", c_csv, "gsc_countries.csv", "text/csv", use_container_width=True)
+            st.dataframe(
+                c_df[['country', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                    'country': 'Country', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR (%)', 'position': 'Position'
+                }),
+                use_container_width=True, height=450
+            )
+
+        with gsc_t4:
+            d_col1, d_col2 = st.columns([3, 1])
+            d_df = df.groupby('device').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                position=('position', 'mean')
+            ).reset_index()
+            d_df['ctr'] = np.where(d_df['impressions'] > 0, (d_df['clicks'] / d_df['impressions'] * 100).round(2), 0.0)
+            d_df['position'] = d_df['position'].round(1)
+            d_df = d_df.sort_values('clicks', ascending=False)
+            with d_col2:
+                d_csv = d_df.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Export Devices (CSV)", d_csv, "gsc_devices.csv", "text/csv", use_container_width=True)
+            st.dataframe(
+                d_df[['device', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                    'device': 'Device', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR (%)', 'position': 'Position'
+                }),
+                use_container_width=True, height=250
+            )
+
+        with gsc_t5:
+            if 'date' in df.columns:
+                dt_col1, dt_col2 = st.columns([3, 1])
+                with dt_col2:
+                    dt_csv = daily.to_csv(index=False).encode('utf-8')
+                    st.download_button("📥 Export Dates (CSV)", dt_csv, "gsc_dates.csv", "text/csv", use_container_width=True)
+                st.dataframe(
+                    daily[['date', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                        'date': 'Date', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR (%)', 'position': 'Position'
+                    }),
+                    use_container_width=True, height=450
+                )
+
 
 # ----------------------------------------------------
 # 2. Keywords
