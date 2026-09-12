@@ -157,21 +157,24 @@ if 'user_creds' not in st.session_state:
 def resolve_redirect_uri(cfg):
     """Picks the best redirect URI matching cloud or local environment."""
     if not cfg or 'web' not in cfg:
-        return 'https://sobuz-gsc-dashboard.streamlit.app'
-    uris = cfg.get('web', {}).get('redirect_uris', ['https://sobuz-gsc-dashboard.streamlit.app'])
+        return 'https://sobuz-gsc-dashboard.streamlit.app/'
+    uris = cfg.get('web', {}).get('redirect_uris', ['https://sobuz-gsc-dashboard.streamlit.app/'])
     if not uris:
-        return 'https://sobuz-gsc-dashboard.streamlit.app'
+        return 'https://sobuz-gsc-dashboard.streamlit.app/'
     # Detect Streamlit Cloud (Linux container or cloud environment variables)
     is_cloud = (platform.system() == 'Linux') or ('STREAMLIT_SHARING_MODE' in os.environ)
     if is_cloud:
         for u in uris:
+            if 'streamlit.app' in u and u.endswith('/'):
+                return u
+        for u in uris:
             if 'streamlit.app' in u:
-                return u.rstrip('/')
+                return u
     else:
         for u in uris:
             if 'localhost' in u or '127.0.0.1' in u:
-                return u.rstrip('/')
-    return uris[0].rstrip('/')
+                return u
+    return uris[0]
 
 
 # ==============================

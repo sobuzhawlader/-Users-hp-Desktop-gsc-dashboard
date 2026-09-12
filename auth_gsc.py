@@ -11,19 +11,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOKEN_FILE = os.path.join(BASE_DIR, 'token.pickle')
 CREDENTIALS_FILE = os.path.join(BASE_DIR, 'credentials.json')
 SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, 'service_account.json')
-DEFAULT_CLIENT_CONFIG = {
-    "web": {
-        "client_id": "1092944785943-op1s78m9cqji5ugnlphf9eai0990e3b6.apps.googleusercontent.com",
-        "client_secret": "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",
-        "redirect_uris": [
-            "https://sobuz-gsc-dashboard.streamlit.app",
-            "http://localhost:8501",
-            "http://localhost"
-        ],
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token"
-    }
-}
 
 def load_client_config():
     """Loads the OAuth client secrets from Streamlit secrets, session, file, or environment variable."""
@@ -65,8 +52,7 @@ def load_client_config():
         except Exception as e:
             pass
 
-    # 4. Fallback to default embedded configuration
-    return DEFAULT_CLIENT_CONFIG
+    return None
 
 
 def get_auth_url(redirect_uri: str, config: dict = None):
