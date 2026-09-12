@@ -8,7 +8,8 @@ from datetime import datetime, timedelta
 
 from auth_gsc import (
     get_gsc_service, get_searchconsole_v1_service, get_sites, 
-    authenticate_local, get_auth_url, exchange_code, load_client_config
+    authenticate_local, get_auth_url, exchange_code, load_client_config,
+    authenticate_service_account
 )
 from data_fetcher import fetch_gsc_data
 from database import init_db, save_data, load_data, load_alerts
@@ -17,7 +18,8 @@ from seo_engine import (
     get_search_intent, get_long_tail_keywords, get_zero_click_keywords,
     get_content_decay, get_zombie_pages, get_brand_vs_nonbrand,
     get_device_breakdown, get_country_breakdown, get_top_pages,
-    get_winning_keywords, get_high_impression_low_ctr
+    get_winning_keywords, get_high_impression_low_ctr,
+    generate_mock_gsc_data, parse_gsc_csv
 )
 from report_generator import generate_pdf_report
 from alerts import get_unread_alerts
@@ -220,9 +222,11 @@ with st.sidebar:
     st.divider()
 
     # Connection Status
-    if st.session_state.service and st.session_state.sites:
-        st.markdown(f"**Status:** <span style='color:#10b981; font-weight:600;'>● Connected</span> ({len(st.session_state.sites)} properties)", unsafe_allow_html=True)
-        if st.button("🚪 Logout / Switch Account", use_container_width=True):
+    is_connected = (st.session_state.service and st.session_state.sites) or not st.session_state.df.empty
+    if is_connected:
+        status_label = f"Connected ({len(st.session_state.sites)} properties)" if st.session_state.sites else "Data Loaded (Demo/CSV)"
+        st.markdown(f"**Status:** <span style='color:#10b981; font-weight:600;'>● {status_label}</span>", unsafe_allow_html=True)
+        if st.button("🚪 Logout / Reset Data", use_container_width=True):
             st.session_state.service = None
             st.session_state.service_v1 = None
             st.session_state.sites = []
@@ -231,48 +235,145 @@ with st.sidebar:
             st.session_state.user_creds = None
             st.rerun()
     else:
-        st.info("👋 Log in with your Google account to access your Search Console data.")
-        
-        # 1. Web OAuth (Cloud / Any Device)
-        cfg = load_client_config()
-        if cfg:
-            default_redirect = resolve_redirect_uri(cfg)
-            try:
-                auth_url, _ = get_auth_url(default_redirect, config=cfg)
-                st.link_button("🌐 Connect with Google (Cloud/Web)", auth_url, use_container_width=True)
-            except Exception as ex:
-                st.error(f"OAuth config error: {ex}")
-        else:
-            st.warning("⚠️ Google Cloud credentials not configured.")
-            st.caption("Paste `GSC_CREDENTIALS_JSON` into Streamlit Secrets, or upload `credentials.json` below:")
-            uploaded_creds = st.file_uploader("Upload credentials.json", type=['json'], key="sidebar_creds_uploader")
-            if uploaded_creds:
-                try:
-                    loaded_cfg = json.load(uploaded_creds)
-                    st.session_state.client_config = loaded_cfg
-                    st.success("Credentials saved to session!")
-                    st.rerun()
-                except Exception as ex:
-                    st.error(f"Invalid JSON: {ex}")
+        st.info("👋 Choose how you want to access Search Console data:")
+        auth_tab1, auth_tab2, auth_tab3 = st.tabs(["🔑 Service Account", "🚀 1-Click Demo / CSV", "🌐 Google OAuth"])
 
-        # 2. Local Desktop 1-Click Popup
-        if os.path.exists(os.path.join(os.path.dirname(__file__), 'credentials.json')):
-            if st.button("💻 Local 1-Click Login (Desktop)", use_container_width=True):
-                with st.spinner("Authorizing in browser..."):
+        with auth_tab1:
+            st.caption("🔒 **Industry Standard:** No OAuth popups, no redirect URIs, works 24/7.")
+            sa_file = st.file_uploader("Upload service_account.json", type=['json'], key="sa_uploader")
+            sa_paste = st.text_area("Or Paste Service Account JSON:", height=90, placeholder='{"type": "service_account", ...}')
+            
+            local_sa_path = os.path.join(os.path.dirname(__file__), 'service_account.json')
+            if os.path.exists(local_sa_path):
+                if st.button("📁 Load Local service_account.json", use_container_width=True):
                     try:
-                        creds = authenticate_local(port=8080)
-                        svc = get_gsc_service(creds)
-                        svc_v1 = get_searchconsole_v1_service(creds)
-                        sites = get_sites(svc)
+                        creds, svc, svc_v1, sites = authenticate_service_account(local_sa_path)
                         st.session_state.user_creds = creds
                         st.session_state.service = svc
                         st.session_state.service_v1 = svc_v1
-                        st.session_state.sites = sites
-                        st.success(f"✅ Connected! Found {len(sites)} sites.")
+                        st.session_state.sites = sites if sites else ["Manual Property"]
+                        st.success("✅ Service Account connected!")
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Auth failed: {e}")
+                        st.error(f"Failed: {e}")
 
+            if st.button("⚡ Connect Service Account", use_container_width=True):
+                target_sa = None
+                if sa_file:
+                    try:
+                        target_sa = json.load(sa_file)
+                    except Exception as ex:
+                        st.error(f"Invalid JSON file: {ex}")
+                elif sa_paste.strip():
+                    try:
+                        target_sa = json.loads(sa_paste.strip())
+                    except Exception as ex:
+                        st.error(f"Invalid JSON text: {ex}")
+                
+                if target_sa:
+                    with st.spinner("Authenticating Service Account..."):
+                        try:
+                            creds, svc, svc_v1, sites = authenticate_service_account(target_sa)
+                            st.session_state.user_creds = creds
+                            st.session_state.service = svc
+                            st.session_state.service_v1 = svc_v1
+                            st.session_state.sites = sites if sites else ["https://yourdomain.com/"]
+                            st.success("✅ Service Account Connected!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Service Account Error: {e}")
+                else:
+                    st.warning("Please upload a file or paste your Service Account JSON.")
+
+        with auth_tab2:
+            st.caption("💡 **No Google Cloud Setup Required:** Instant full platform access.")
+            if st.button("✨ Load Full Demo SEO Data (90 Days)", use_container_width=True, type="primary"):
+                with st.spinner("Generating 1,000+ realistic SEO data points..."):
+                    mock_df = generate_mock_gsc_data(site_name="https://mybrand-store.com", days=90)
+                    st.session_state.df = mock_df
+                    st.session_state.sites = ["https://mybrand-store.com (Demo Property)"]
+                    st.session_state.current_site = "https://mybrand-store.com (Demo Property)"
+                    st.success("✅ Demo SEO Data Loaded! Explore all engines below.")
+                    st.rerun()
+            
+            st.markdown("---")
+            st.markdown("**📂 Or Upload GSC Export (CSV/ZIP):**")
+            csv_file = st.file_uploader("Upload GSC Export", type=['csv', 'zip'], key="gsc_csv_uploader")
+            if csv_file:
+                try:
+                    parsed_df = parse_gsc_csv(csv_file)
+                    if not parsed_df.empty:
+                        st.session_state.df = parsed_df
+                        st.session_state.sites = [f"{csv_file.name} (Uploaded Data)"]
+                        st.session_state.current_site = f"{csv_file.name} (Uploaded Data)"
+                        st.success(f"✅ Loaded {len(parsed_df):,} rows from export!")
+                        st.rerun()
+                    else:
+                        st.error("Could not parse rows from CSV.")
+                except Exception as e:
+                    st.error(f"CSV Parse Error: {e}")
+
+        with auth_tab3:
+            st.caption("🌐 **Google OAuth Sign-In:**")
+            cfg = load_client_config()
+            if cfg:
+                default_redirect = resolve_redirect_uri(cfg)
+                try:
+                    auth_url, _ = get_auth_url(default_redirect, config=cfg)
+                    st.link_button("🔗 1. Open Google Login Window", auth_url, use_container_width=True)
+                except Exception as ex:
+                    st.error(f"OAuth config error: {ex}")
+                
+                st.markdown("**Manual Code Paste (Alternative):**")
+                manual_code = st.text_input("Paste authorization code or redirected URL:", key="manual_oauth_code")
+                if st.button("🚀 Connect via Code", use_container_width=True):
+                    if manual_code.strip():
+                        try:
+                            raw_code = manual_code.strip()
+                            if 'code=' in raw_code:
+                                raw_code = raw_code.split('code=')[1].split('&')[0]
+                            from urllib.parse import unquote
+                            raw_code = unquote(raw_code)
+                            creds = exchange_code(raw_code, default_redirect, config=cfg)
+                            svc = get_gsc_service(creds)
+                            svc_v1 = get_searchconsole_v1_service(creds)
+                            sites = get_sites(svc)
+                            st.session_state.user_creds = creds
+                            st.session_state.service = svc
+                            st.session_state.service_v1 = svc_v1
+                            st.session_state.sites = sites
+                            st.success("✅ Logged in successfully!")
+                            st.rerun()
+                        except Exception as ex:
+                            st.error(f"Exchange error: {ex}")
+            else:
+                st.warning("⚠️ Google Cloud credentials not configured.")
+                uploaded_creds = st.file_uploader("Upload credentials.json", type=['json'], key="sidebar_creds_uploader")
+                if uploaded_creds:
+                    try:
+                        loaded_cfg = json.load(uploaded_creds)
+                        st.session_state.client_config = loaded_cfg
+                        st.success("Credentials saved to session!")
+                        st.rerun()
+                    except Exception as ex:
+                        st.error(f"Invalid JSON: {ex}")
+
+            if os.path.exists(os.path.join(os.path.dirname(__file__), 'credentials.json')):
+                if st.button("💻 Local 1-Click Login (Desktop)", use_container_width=True):
+                    with st.spinner("Authorizing in browser..."):
+                        try:
+                            creds = authenticate_local(port=8080)
+                            svc = get_gsc_service(creds)
+                            svc_v1 = get_searchconsole_v1_service(creds)
+                            sites = get_sites(svc)
+                            st.session_state.user_creds = creds
+                            st.session_state.service = svc
+                            st.session_state.service_v1 = svc_v1
+                            st.session_state.sites = sites
+                            st.success(f"✅ Connected! Found {len(sites)} sites.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Auth failed: {e}")
 
     st.divider()
 
@@ -281,11 +382,18 @@ with st.sidebar:
     start_str = None
     end_str = None
 
-    if st.session_state.sites:
-        selected_site = st.selectbox("🌐 GSC Property", st.session_state.sites)
+    if st.session_state.sites or not st.session_state.df.empty:
+        site_options = list(st.session_state.sites) if st.session_state.sites else [st.session_state.current_site or "Active Property"]
+        site_options.append("➕ Enter Custom Property URL")
+        selected_choice = st.selectbox("🌐 GSC Property", site_options)
+        if selected_choice == "➕ Enter Custom Property URL":
+            selected_site = st.text_input("Enter Property URL:", value="https://")
+        else:
+            selected_site = selected_choice
         if st.session_state.current_site != selected_site:
             st.session_state.current_site = selected_site
-            st.session_state.df = pd.DataFrame()
+            if st.session_state.service:
+                st.session_state.df = pd.DataFrame()
 
         st.markdown("**📅 Date Range**")
         period = st.radio("Period", [

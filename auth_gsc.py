@@ -140,6 +140,27 @@ def get_searchconsole_v1_service(creds):
             return None
     return build('searchconsole', 'v1', credentials=creds)
 
+def authenticate_service_account(sa_data):
+    """
+    Authenticates using Google Cloud Service Account JSON (dict, json string, or filepath).
+    Returns (creds, service, service_v1, sites).
+    """
+    if isinstance(sa_data, str):
+        if os.path.exists(sa_data):
+            creds = service_account.Credentials.from_service_account_file(sa_data, scopes=SCOPES)
+        else:
+            info = json.loads(sa_data)
+            creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
+    elif isinstance(sa_data, dict):
+        creds = service_account.Credentials.from_service_account_info(sa_data, scopes=SCOPES)
+    else:
+        raise ValueError("Invalid service account data provided.")
+
+    svc = get_gsc_service(creds)
+    svc_v1 = get_searchconsole_v1_service(creds)
+    sites = get_sites(svc)
+    return creds, svc, svc_v1, sites
+
 def get_sites(service):
     """Fetches list of all verified properties in the connected Google account."""
     if not service:

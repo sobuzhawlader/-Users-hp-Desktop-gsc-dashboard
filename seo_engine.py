@@ -274,3 +274,119 @@ def get_high_impression_low_ctr(df):
         (grouped['impressions'] >= 200) & 
         (grouped['ctr'] < site_avg_ctr)
     ].sort_values('impressions', ascending=False).head(50)
+
+
+def generate_mock_gsc_data(site_name="https://example.com", days=90):
+    """Generates comprehensive, realistic 90-day mock GSC data for immediate testing and demo."""
+    np.random.seed(42)
+    end_date = datetime.now()
+    dates = [(end_date - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(days)]
+    
+    queries_data = [
+        ("seo audit checklist 2026", f"{site_name}/blog/seo-audit", 850, 68, 2.8),
+        ("seo audit checklist 2026", f"{site_name}/services/audit", 420, 12, 6.2),
+        ("technical seo guide", f"{site_name}/blog/technical-seo", 1200, 95, 3.1),
+        ("how to fix crawl errors", f"{site_name}/blog/crawl-errors", 450, 18, 5.4),
+        ("schema markup generator free", f"{site_name}/tools/schema", 1800, 140, 1.9),
+        ("e-commerce seo strategies", f"{site_name}/blog/ecommerce-seo", 920, 35, 7.8),
+        ("google search console insights", f"{site_name}/blog/gsc-insights", 640, 22, 6.5),
+        ("local seo ranking factors", f"{site_name}/blog/local-seo", 780, 15, 12.4),
+        ("best backlink monitoring tools", f"{site_name}/blog/backlink-tools", 1100, 18, 13.8),
+        ("core web vitals optimization guide", f"{site_name}/blog/cwv-guide", 1450, 24, 11.2),
+        ("xml sitemap best practices", f"{site_name}/blog/sitemaps", 560, 8, 14.5),
+        ("brand store online", f"{site_name}/", 2200, 480, 1.1),
+        ("brand customer support", f"{site_name}/contact", 650, 120, 1.2),
+        ("buy seo consultancy packages", f"{site_name}/pricing", 380, 25, 4.2),
+        ("hire technical seo expert", f"{site_name}/services/hire", 420, 32, 3.8),
+        ("free website speed test", f"{site_name}/tools/speed-test", 1950, 160, 2.1),
+        ("old legacy tutorial 2021", f"{site_name}/blog/legacy-post", 480, 0, 48.0),
+        ("deprecated url structure guide", f"{site_name}/archive/deprecated", 350, 0, 62.0),
+    ]
+    
+    countries = ['USA', 'GBR', 'BGD', 'IND', 'CAN', 'AUS']
+    devices = ['DESKTOP', 'MOBILE', 'TABLET']
+    
+    rows = []
+    for d_idx, d in enumerate(dates):
+        day_factor = 1.0 + (0.2 if (d_idx % 7) < 5 else -0.15)
+        for q, p, base_imp, base_clk, base_pos in queries_data:
+            if "legacy" in q or "deprecated" in q:
+                imp = max(0, int(base_imp * 0.1 * day_factor))
+                clk = 0
+                pos = base_pos
+            else:
+                imp = max(1, int(np.random.normal(base_imp / 30, max(1, (base_imp / 30) * 0.2)) * day_factor))
+                clk = max(0, int(np.random.normal(base_clk / 30, max(1, (base_clk / 30) * 0.2)) * day_factor))
+                if clk > imp:
+                    clk = imp
+                pos = max(1.0, round(float(np.random.normal(base_pos, 0.4)), 1))
+            
+            c = np.random.choice(countries, p=[0.45, 0.2, 0.15, 0.1, 0.05, 0.05])
+            dev = np.random.choice(devices, p=[0.55, 0.4, 0.05])
+            ctr = round((clk / imp * 100), 2) if imp > 0 else 0.0
+            
+            rows.append({
+                'date': d,
+                'query': q,
+                'page': p,
+                'country': c,
+                'device': dev,
+                'clicks': clk,
+                'impressions': imp,
+                'ctr': ctr,
+                'position': pos
+            })
+            
+    return pd.DataFrame(rows)
+
+
+def parse_gsc_csv(uploaded_file):
+    """Parses standard Google Search Console exported CSV or ZIP."""
+    import zipfile
+    
+    if uploaded_file.name.endswith('.zip'):
+        with zipfile.ZipFile(uploaded_file) as z:
+            dfs = []
+            for filename in z.namelist():
+                if filename.endswith('.csv'):
+                    with z.open(filename) as f:
+                        try:
+                            df_sub = pd.read_csv(f)
+                            df_sub['source_file'] = filename
+                            dfs.append(df_sub)
+                        except Exception:
+                            pass
+            if not dfs:
+                return pd.DataFrame()
+            for candidate in ['Queries.csv', 'Pages.csv', 'Performance.csv']:
+                for d in dfs:
+                    if candidate.lower() in str(d.get('source_file', '')).lower():
+                        return _normalize_gsc_columns(d)
+            return _normalize_gsc_columns(dfs[0])
+    else:
+        df = pd.read_csv(uploaded_file)
+        return _normalize_gsc_columns(df)
+
+
+def _normalize_gsc_columns(df):
+    """Normalizes various GSC export column names into standardized schema."""
+    col_map = {
+        'Top queries': 'query', 'Query': 'query', 'Search term': 'query',
+        'Top pages': 'page', 'Page': 'page', 'URL': 'page',
+        'Clicks': 'clicks', 'Click': 'clicks',
+        'Impressions': 'impressions', 'Impression': 'impressions',
+        'CTR': 'ctr', 'Ctr': 'ctr',
+        'Position': 'position', 'Avg position': 'position', 'Average Position': 'position',
+        'Date': 'date', 'Country': 'country', 'Device': 'device'
+    }
+    df = df.rename(columns=col_map)
+    for col in ['clicks', 'impressions', 'ctr', 'position']:
+        if col in df.columns:
+            if col == 'ctr' and df[col].dtype == object:
+                df[col] = df[col].astype(str).str.rstrip('%').astype(float)
+            else:
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+    for col in ['query', 'page', 'country', 'device', 'date']:
+        if col not in df.columns:
+            df[col] = ''
+    return df
