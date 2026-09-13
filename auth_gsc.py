@@ -76,7 +76,7 @@ def get_auth_url(redirect_uri: str, config: dict = None):
         autogenerate_code_verifier=False
     )
     auth_url, state = flow.authorization_url(
-        prompt='consent',
+        prompt='select_account consent',
         access_type='offline',
         include_granted_scopes='true'
     )
@@ -148,14 +148,14 @@ def authenticate_local(port=8080):
     try:
         creds = flow.run_local_server(
             port=port,
-            prompt='consent',
+            prompt='select_account consent',
             authorization_prompt_message='Please authorize GSC Pro Dashboard in your browser.',
             success_message='Authentication successful! You can close this tab and return to the dashboard.'
         )
     except Exception:
         creds = flow.run_local_server(
             port=0,
-            prompt='consent',
+            prompt='select_account consent',
             authorization_prompt_message='Please authorize GSC Pro Dashboard in your browser.',
             success_message='Authentication successful! You can close this tab and return to the dashboard.'
         )

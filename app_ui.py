@@ -462,41 +462,18 @@ if 'session_id' not in st.session_state:
 
 active_dash_users = get_dashboard_active_users(st.session_state.session_id)
 
-DEFAULT_ACCOUNT_20_SITES = [
-    "https://centralec-electrical.co.uk/",
-    "sc-domain:centralec-electrical.co.uk",
-    "https://centralec-commercial.co.uk/",
-    "https://emergency-electrician-london.co.uk/",
-    "https://ev-charger-installation-uk.co.uk/",
-    "https://smart-home-automation.co.uk/",
-    "https://industrial-power-solutions.co.uk/",
-    "https://solar-panel-installers-uk.co.uk/",
-    "https://cctv-security-systems-london.co.uk/",
-    "https://data-cabling-contractors.co.uk/",
-    "sc-domain:ec-renewables-group.com",
-    "https://ec-renewables-group.com/",
-    "https://led-lighting-upgrades.co.uk/",
-    "https://pat-testing-services-uk.co.uk/",
-    "https://electrical-safety-certificates.co.uk/",
-    "https://fire-alarm-installers.co.uk/",
-    "sc-domain:smart-grid-technologies.io",
-    "https://smart-grid-technologies.io/",
-    "https://green-energy-consulting.co.uk/",
-    "https://hvac-electrical-maintenance.co.uk/"
-]
-
 if 'service' not in st.session_state:
     st.session_state.service = None
 if 'service_v1' not in st.session_state:
     st.session_state.service_v1 = None
-if 'sites' not in st.session_state or not st.session_state.sites:
-    st.session_state.sites = list(DEFAULT_ACCOUNT_20_SITES)
-if 'sites_detailed' not in st.session_state or not st.session_state.sites_detailed:
-    st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in DEFAULT_ACCOUNT_20_SITES]
+if 'sites' not in st.session_state:
+    st.session_state.sites = []
+if 'sites_detailed' not in st.session_state:
+    st.session_state.sites_detailed = []
 if 'user_email' not in st.session_state:
     st.session_state.user_email = None
-if 'current_site' not in st.session_state or not st.session_state.current_site:
-    st.session_state.current_site = DEFAULT_ACCOUNT_20_SITES[0]
+if 'current_site' not in st.session_state:
+    st.session_state.current_site = None
 if 'user_creds' not in st.session_state:
     st.session_state.user_creds = None
 if 'portfolio_data' not in st.session_state:
@@ -518,24 +495,22 @@ if st.session_state.service is None:
             st.session_state.user_creds = saved_creds
             st.session_state.service = svc
             st.session_state.service_v1 = svc_v1
+            st.session_state.sites = s_list
+            st.session_state.sites_detailed = detailed
+            st.session_state.user_email = user_em
             if s_list:
-                st.session_state.sites = s_list
-                st.session_state.sites_detailed = detailed
                 if st.session_state.current_site not in s_list and not str(st.session_state.current_site).startswith("🌐"):
                     st.session_state.current_site = s_list[0]
-            st.session_state.user_email = user_em
+            else:
+                st.session_state.current_site = None
         except Exception as ex:
             print(f"Auto-restore saved credentials failed: {ex}")
 
-if 'df' not in st.session_state or st.session_state.df.empty:
-    _df_curr, _df_daily_curr, _df_daily_comp, _metrics = generate_centralec_gsc_data()
-    st.session_state.df = _df_curr
-    st.session_state.df_daily_curr = _df_daily_curr
-    st.session_state.df_daily_comp = _df_daily_comp
-    st.session_state.gsc_metrics = _metrics
+if 'df' not in st.session_state:
+    st.session_state.df = pd.DataFrame()
 
 rt_metrics = get_site_realtime_metrics(st.session_state.current_site or "https://centralec-electrical.co.uk/")
-live_site_users = rt_metrics["active_now"]
+live_site_users = rt_metrics["active_now"] if st.session_state.current_site else 0
 
 def resolve_redirect_uri(cfg):
     """Picks the best redirect URI matching cloud or local environment."""
@@ -582,12 +557,14 @@ if 'code' in query_params and st.session_state.service is None:
         st.session_state.user_creds = creds
         st.session_state.service = svc
         st.session_state.service_v1 = svc_v1
-        st.session_state.sites = sites if sites else list(DEFAULT_ACCOUNT_20_SITES)
-        st.session_state.sites_detailed = sites_detailed if sites_detailed else [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in st.session_state.sites]
+        st.session_state.sites = sites
+        st.session_state.sites_detailed = sites_detailed
         st.session_state.user_email = user_email
         if sites:
             st.session_state.current_site = sites[0]
-            st.session_state.df = pd.DataFrame()
+        else:
+            st.session_state.current_site = None
+        st.session_state.df = pd.DataFrame()
         st.session_state.portfolio_needs_refresh = True
         st.query_params.clear()
         st.rerun()
@@ -629,68 +606,101 @@ with st.sidebar:
 
     # 2. Property Selector Pill & Account Header (Matching GSC)
     is_connected = bool(st.session_state.service)
-    clean_active_sites = [s for s in st.session_state.sites if s and not str(s).startswith("🌐 [ALL SITES]") and "Custom Property" not in str(s)]
-    if not clean_active_sites:
-        clean_active_sites = list(DEFAULT_ACCOUNT_20_SITES)
-        st.session_state.sites = clean_active_sites
-
+    clean_active_sites = [s for s in st.session_state.sites if s and not str(s).startswith("🌐") and "Custom Property" not in str(s) and not str(s).startswith("🧪") and not str(s).startswith("⚠️") and not str(s).startswith("(")]
     total_p = len(clean_active_sites)
+
+    cfg = load_client_config()
+    auth_url = None
+    if cfg:
+        try:
+            default_redirect = resolve_redirect_uri(cfg)
+            auth_url, _ = get_auth_url(default_redirect, config=cfg)
+        except Exception:
+            pass
 
     # 2A. Google Account Status / One-Click Connect Card directly above Property Dropdown
     if is_connected:
         user_mail_disp = st.session_state.get('user_email') or 'Connected Google Account'
-        st.markdown(f"""
-        <div style="background:#e8f0fe; border:1.5px solid #1a73e8; border-radius:8px; padding:10px 12px; margin-bottom:8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-size:10px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">🟢 CONNECTED GOOGLE ACCOUNT</div>
-                <span style="font-size:10px; background:#1a73e8; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:600;">{total_p} SITES</span>
+        if total_p > 0:
+            st.markdown(f"""
+            <div style="background:#e8f0fe; border:1.5px solid #1a73e8; border-radius:8px; padding:10px 12px; margin-bottom:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:10px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">🟢 CONNECTED GOOGLE ACCOUNT</div>
+                    <span style="font-size:10px; background:#1a73e8; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:600;">{total_p} SITES</span>
+                </div>
+                <div style="font-size:13px; font-weight:600; color:#202124; margin-top:3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
+                <div style="font-size:11px; color:#5f6368; margin-top:2px;">Showing all <b style="color:#1a73e8;">{total_p}</b> verified properties from your Google Search Console ▾</div>
             </div>
-            <div style="font-size:13px; font-weight:600; color:#202124; margin-top:3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
-            <div style="font-size:11px; color:#5f6368; margin-top:2px;">Showing all <b style="color:#1a73e8;">{total_p}</b> verified properties from your Gmail ▾</div>
-        </div>
-        """, unsafe_allow_html=True)
-        col_acc1, col_acc2 = st.columns(2)
-        with col_acc1:
-            if st.button("🔄 Sync Sites", use_container_width=True, key="top_btn_sync_gsc_sites", help="Re-sync all 20+ verified properties directly from Google Search Console API"):
-                with st.spinner("Fetching latest properties from Google..."):
-                    try:
-                        fresh_sites = get_sites_detailed(st.session_state.service)
-                        if fresh_sites:
+            """, unsafe_allow_html=True)
+            col_acc1, col_acc2 = st.columns(2)
+            with col_acc1:
+                if st.button("🔄 Sync Sites", use_container_width=True, key="top_btn_sync_gsc_sites", help="Re-sync all verified properties directly from Google Search Console API"):
+                    with st.spinner("Fetching latest properties from Google..."):
+                        try:
+                            fresh_sites = get_sites_detailed(st.session_state.service)
                             st.session_state.sites_detailed = fresh_sites
                             st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
-                        st.session_state.portfolio_needs_refresh = True
-                        st.success(f"Synced {len(st.session_state.sites)} properties!")
+                            st.session_state.portfolio_needs_refresh = True
+                            st.success(f"Synced {len(st.session_state.sites)} properties!")
+                            st.rerun()
+                        except Exception as ex:
+                            st.error(f"Sync error: {ex}")
+            with col_acc2:
+                if st.button("🔄 Switch Account", use_container_width=True, key="top_btn_switch_acc", help="Switch to another Google Account"):
+                    delete_saved_credentials()
+                    st.session_state.service = None
+                    st.session_state.service_v1 = None
+                    st.session_state.sites = []
+                    st.session_state.sites_detailed = []
+                    st.session_state.user_creds = None
+                    st.session_state.user_email = None
+                    st.session_state.current_site = None
+                    st.session_state.portfolio_needs_refresh = True
+                    st.rerun()
+        else:
+            # Connected, but 0 sites found in this Gmail!
+            st.markdown(f"""
+            <div style="background:#fff3cd; border:1.5px solid #ffeeba; border-radius:8px; padding:10px 12px; margin-bottom:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:10px; font-weight:700; color:#856404; text-transform:uppercase; letter-spacing:0.5px;">🟢 LOGGED IN</div>
+                    <span style="font-size:10px; background:#e0a800; color:#202124; padding:1px 6px; border-radius:10px; font-weight:700;">0 SITES</span>
+                </div>
+                <div style="font-size:13px; font-weight:600; color:#202124; margin-top:3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
+                <div style="font-size:11px; color:#856404; margin-top:4px; line-height:1.4;">
+                    ⚠️ <b>0 properties found in Search Console.</b><br>
+                    If your 20+ sites are in another Gmail, switch accounts below:
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            if auth_url:
+                st.link_button("🔄 Switch Google Account (Choose Other Gmail)", auth_url, type="primary", use_container_width=True)
+            col_acc1, col_acc2 = st.columns(2)
+            with col_acc1:
+                if st.button("🔄 Re-Check Sites", use_container_width=True, key="top_btn_recheck_sites"):
+                    try:
+                        fresh_sites = get_sites_detailed(st.session_state.service)
+                        st.session_state.sites_detailed = fresh_sites
+                        st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
                         st.rerun()
                     except Exception as ex:
-                        st.error(f"Sync error: {ex}")
-        with col_acc2:
-            if st.button("🚪 Logout", use_container_width=True, key="top_btn_logout_gsc"):
-                delete_saved_credentials()
-                st.session_state.service = None
-                st.session_state.service_v1 = None
-                st.session_state.sites = list(DEFAULT_ACCOUNT_20_SITES)
-                st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in DEFAULT_ACCOUNT_20_SITES]
-                st.session_state.user_creds = None
-                st.session_state.user_email = None
-                st.session_state.current_site = DEFAULT_ACCOUNT_20_SITES[0]
-                st.session_state.portfolio_needs_refresh = True
-                st.rerun()
-    else:
-        cfg = load_client_config()
-        auth_url = None
-        if cfg:
-            try:
-                default_redirect = resolve_redirect_uri(cfg)
-                auth_url, _ = get_auth_url(default_redirect, config=cfg)
-            except Exception:
-                pass
+                        st.error(f"Check error: {ex}")
+            with col_acc2:
+                if st.button("🚪 Logout", use_container_width=True, key="top_btn_logout_empty"):
+                    delete_saved_credentials()
+                    st.session_state.service = None
+                    st.session_state.service_v1 = None
+                    st.session_state.sites = []
+                    st.session_state.sites_detailed = []
+                    st.session_state.user_creds = None
+                    st.session_state.user_email = None
+                    st.session_state.current_site = None
+                    st.rerun()
 
-        st.markdown(f"""
-        <div style="background:#fef7e0; border:1.5px solid #f9ab00; border-radius:8px; padding:10px 12px; margin-bottom:8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-size:10px; font-weight:700; color:#b06000; text-transform:uppercase; letter-spacing:0.5px;">🔐 CONNECT GMAIL SEARCH CONSOLE</div>
-                <span style="font-size:10px; background:#f9ab00; color:#202124; padding:1px 6px; border-radius:10px; font-weight:700;">{total_p} SITES</span>
-            </div>
+    else:
+        # Not connected yet
+        st.markdown("""
+        <div style="background:#f8fafd; border:1.5px solid #4285f4; border-radius:8px; padding:10px 12px; margin-bottom:8px;">
+            <div style="font-size:10px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">🔐 CONNECT GMAIL SEARCH CONSOLE</div>
             <div style="font-size:11px; color:#3c4043; margin-top:2px; line-height:1.35;">Sign in to load all <b>20+ Search Console properties</b> from your Gmail account.</div>
         </div>
         """, unsafe_allow_html=True)
@@ -734,47 +744,62 @@ with st.sidebar:
                     except Exception as ex:
                         st.error(f"Code exchange error: {ex}")
 
-    # 2B. The Red-Marked Property Dropdown (Now Containing ALL 20+ Sites)
-    portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
-    site_options = [portfolio_label] + clean_active_sites + ["➕ Enter Custom Property URL"]
+    # 2B. The Red-Marked Property Dropdown (Containing user's real sites)
+    if is_connected:
+        if total_p > 0:
+            portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
+            site_options = [portfolio_label] + clean_active_sites + ["➕ Enter Custom Property URL"]
+        else:
+            site_options = ["(No Search Console properties in this Gmail)", "➕ Enter Custom Property URL"]
+    else:
+        if clean_active_sites:
+            portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
+            site_options = [portfolio_label] + clean_active_sites + ["➕ Enter Custom Property URL"]
+        else:
+            site_options = ["⚠️ Sign In with Google to Load Your Sites", "🧪 Demo Sample (centralec-electrical.co.uk)", "➕ Enter Custom Property URL"]
 
     def_idx = 0
     if st.session_state.current_site in site_options:
         def_idx = site_options.index(st.session_state.current_site)
-    elif st.session_state.current_site and str(st.session_state.current_site).startswith("🌐 [ALL SITES]"):
+    elif st.session_state.current_site and str(st.session_state.current_site).startswith("🌐 [ALL SITES]") and len(site_options) > 0 and site_options[0].startswith("🌐"):
         def_idx = 0
     elif clean_active_sites and clean_active_sites[0] in site_options:
         def_idx = site_options.index(clean_active_sites[0])
 
-    st.markdown(f"<div style='font-size:11px; font-weight:700; color:#5f6368; text-transform:uppercase; margin-top:6px; margin-bottom:4px; letter-spacing:0.3px;'>Select Property ({total_p} Sites Available ▾):</div>", unsafe_allow_html=True)
+    dropdown_label = f"Select Property ({total_p} Sites Loaded ▾):" if total_p > 0 else "Select Property (Sign In ▾):"
+    st.markdown(f"<div style='font-size:11px; font-weight:700; color:#5f6368; text-transform:uppercase; margin-top:6px; margin-bottom:4px; letter-spacing:0.3px;'>{dropdown_label}</div>", unsafe_allow_html=True)
     selected_choice = st.selectbox("Property", site_options, index=def_idx, label_visibility="collapsed", key="sidebar_property_selector")
 
     if selected_choice == "➕ Enter Custom Property URL":
         selected_site = st.text_input("Enter Property URL:", value="https://", key="txt_custom_property_url")
     elif selected_choice.startswith("🌐 [ALL SITES]"):
         selected_site = selected_choice
+    elif selected_choice.startswith("🧪 Demo Sample"):
+        selected_site = "https://centralec-electrical.co.uk/"
+    elif selected_choice.startswith("⚠️") or selected_choice.startswith("("):
+        selected_site = None
     else:
         selected_site = selected_choice
 
-    if st.session_state.current_site != selected_site:
+    if selected_site and st.session_state.current_site != selected_site:
         st.session_state.current_site = selected_site
         if selected_site.startswith("🌐 [ALL SITES]"):
             st.session_state.portfolio_needs_refresh = True
         elif st.session_state.service:
             st.session_state.df = pd.DataFrame()
-        else:
-            _df_curr, _df_daily_curr, _df_daily_comp, _metrics = generate_centralec_gsc_data(site_name=selected_site)
+        elif selected_site == "https://centralec-electrical.co.uk/":
+            _df_curr, _df_daily_curr, _df_daily_comp, _metrics = generate_centralec_gsc_data()
             st.session_state.df = _df_curr
             st.session_state.df_daily_curr = _df_daily_curr
             st.session_state.df_daily_comp = _df_daily_comp
             st.session_state.gsc_metrics = _metrics
 
-    # 2C. Bulk Paste / Import 20+ Sites Tool
-    with st.expander(f"📋 Bulk Paste / Import 20+ Sites ({total_p})", expanded=False):
-        st.caption("Paste all 20 of your Search Console domain/URL properties (one per line):")
+    # 2C. Bulk Paste / Import Sites Tool
+    with st.expander(f"📋 Bulk Paste / Import Sites ({total_p})", expanded=False):
+        st.caption("Paste your Search Console domain/URL properties (one per line):")
         pasted_text = st.text_area(
             "Website URLs / sc-domains", 
-            value="\n".join(clean_active_sites), 
+            value="\n".join(clean_active_sites) if clean_active_sites else "", 
             height=140, 
             key="txt_bulk_sites_import"
         )
@@ -790,39 +815,37 @@ with st.sidebar:
                     st.success(f"Loaded {len(new_list)} sites into dropdown!")
                     st.rerun()
         with col_imp2:
-            if st.button("🔄 Reset to 20 Sites", use_container_width=True, key="btn_reset_default_20_sites"):
-                st.session_state.sites = list(DEFAULT_ACCOUNT_20_SITES)
-                st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in DEFAULT_ACCOUNT_20_SITES]
-                st.session_state.current_site = DEFAULT_ACCOUNT_20_SITES[0]
+            if st.button("🗑️ Clear Sites", use_container_width=True, key="btn_clear_sites"):
+                st.session_state.sites = []
+                st.session_state.sites_detailed = []
+                st.session_state.current_site = None
                 st.session_state.portfolio_needs_refresh = True
                 st.rerun()
 
-    # 2D. Expandable interactive list of all account properties in sidebar
-    with st.expander(f"📋 Quick Switch — All {total_p} Sites", expanded=False):
-        st.caption("Click any site to instantly switch the dashboard:")
-        is_port_active = bool(st.session_state.current_site and str(st.session_state.current_site).startswith("🌐 [ALL SITES]"))
-        if is_port_active:
-            st.markdown(f"<div style='background:#e8f0fe; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600; color:#1a73e8; margin-bottom:6px;'>● 🌐 Consolidated Portfolio (Active)</div>", unsafe_allow_html=True)
-        else:
-            if st.button(f"🌐 [ALL SITES] Consolidated Portfolio ({total_p})", key="side_btn_portfolio_toggle", use_container_width=True):
-                st.session_state.current_site = portfolio_label
-                st.session_state.portfolio_needs_refresh = True
-                st.rerun()
-        for idx, s in enumerate(clean_active_sites):
-            is_active = (s == st.session_state.current_site)
-            tag = "🌐 [Domain]" if s.startswith("sc-domain:") else "🔗 [URL]"
-            clean_name = s.replace("sc-domain:", "").replace("https://", "").replace("http://", "").strip("/")
-            if is_active:
-                st.markdown(f"<div style='background:#e8f0fe; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600; color:#1a73e8; margin-bottom:4px;'>● {tag} {clean_name} (Active)</div>", unsafe_allow_html=True)
+    # 2D. Expandable interactive list of all account properties in sidebar (only if sites exist!)
+    if total_p > 0:
+        with st.expander(f"📋 Quick Switch — All {total_p} Sites", expanded=False):
+            st.caption("Click any site to instantly switch the dashboard:")
+            is_port_active = bool(st.session_state.current_site and str(st.session_state.current_site).startswith("🌐 [ALL SITES]"))
+            if is_port_active:
+                st.markdown(f"<div style='background:#e8f0fe; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600; color:#1a73e8; margin-bottom:6px;'>● 🌐 Consolidated Portfolio (Active)</div>", unsafe_allow_html=True)
             else:
-                if st.button(f"{tag} {clean_name}", key=f"side_site_btn_{idx}_{abs(hash(s))%100000}", use_container_width=True):
-                    st.session_state.current_site = s
-                    if st.session_state.service:
-                        st.session_state.df = pd.DataFrame()
-                    else:
-                        _df_curr, _df_daily_curr, _df_daily_comp, _metrics = generate_centralec_gsc_data(site_name=s)
-                        st.session_state.df = _df_curr
-                        st.session_state.df_daily_curr = _df_daily_curr
+                if st.button(f"🌐 [ALL SITES] Consolidated Portfolio ({total_p})", key="side_btn_portfolio_toggle", use_container_width=True):
+                    st.session_state.current_site = portfolio_label
+                    st.session_state.portfolio_needs_refresh = True
+                    st.rerun()
+            for idx, s in enumerate(clean_active_sites):
+                is_active = (s == st.session_state.current_site)
+                tag = "🌐 [Domain]" if s.startswith("sc-domain:") else "🔗 [URL]"
+                clean_name = s.replace("sc-domain:", "").replace("https://", "").replace("http://", "").strip("/")
+                if is_active:
+                    st.markdown(f"<div style='background:#e8f0fe; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600; color:#1a73e8; margin-bottom:4px;'>● {tag} {clean_name} (Active)</div>", unsafe_allow_html=True)
+                else:
+                    if st.button(f"{tag} {clean_name}", key=f"side_site_btn_{idx}_{abs(hash(s))%100000}", use_container_width=True):
+                        st.session_state.current_site = s
+                        if st.session_state.service:
+                            st.session_state.df = pd.DataFrame()
+                        st.rerun()
                         st.session_state.df_daily_comp = _df_daily_comp
                         st.session_state.gsc_metrics = _metrics
                     st.rerun()
@@ -908,11 +931,11 @@ with st.sidebar:
                 delete_saved_credentials()
                 st.session_state.service = None
                 st.session_state.service_v1 = None
-                st.session_state.sites = list(DEFAULT_ACCOUNT_20_SITES)
-                st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in DEFAULT_ACCOUNT_20_SITES]
+                st.session_state.sites = []
+                st.session_state.sites_detailed = []
                 st.session_state.user_creds = None
                 st.session_state.user_email = None
-                st.session_state.current_site = DEFAULT_ACCOUNT_20_SITES[0]
+                st.session_state.current_site = None
                 st.session_state.portfolio_needs_refresh = True
                 st.rerun()
         else:
@@ -1015,6 +1038,39 @@ if page in ["📈 Performance", "📊 Overview"]:
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+    if is_connected and not real_active_sites:
+        user_e = st.session_state.get('user_email') or 'your Google Account'
+        st.markdown(f"""
+        <div style="background:#fff3cd; border:1.5px solid #ffeeba; border-radius:10px; padding:32px 24px; margin:20px 0; text-align:center;">
+            <div style="font-size:40px; margin-bottom:10px;">⚠️</div>
+            <div style="font-size:20px; font-weight:700; color:#856404;">No Search Console Properties Found in 📧 {user_e}</div>
+            <div style="font-size:14px; color:#664d03; max-width:620px; margin:10px auto 20px auto; line-height:1.5;">
+                Google Search Console reported <b>0 verified properties</b> under this Gmail address.<br>
+                If your <b>20+ websites</b> are registered under a different Gmail account, click the button below to switch accounts and select the correct email:
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if auth_url:
+            c1, c2, c3 = st.columns([1, 2, 1])
+            with c2:
+                st.link_button("🔄 Switch Google Account (Sign In with Another Gmail)", auth_url, type="primary", use_container_width=True)
+        st.stop()
+    elif not is_connected and not real_active_sites and not (current_site and current_site.startswith("https://centralec")):
+        st.markdown("""
+        <div style="background:#e8f0fe; border:1.5px solid #1a73e8; border-radius:10px; padding:32px 24px; margin:20px 0; text-align:center;">
+            <div style="font-size:40px; margin-bottom:10px;">🔐</div>
+            <div style="font-size:20px; font-weight:700; color:#1a73e8;">Connect Your Google Search Console Account</div>
+            <div style="font-size:14px; color:#3c4043; max-width:620px; margin:10px auto 20px auto; line-height:1.5;">
+                Please sign in with the Gmail account where your <b>20+ Search Console properties</b> are registered to view live data, or choose <b>🧪 Demo Sample</b> from the sidebar to preview the dashboard.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if auth_url:
+            c1, c2, c3 = st.columns([1, 2, 1])
+            with c2:
+                st.link_button("🌐 Sign in with Google (Load All 20+ Sites)", auth_url, type="primary", use_container_width=True)
+        st.stop()
 
     # 2. GSC Performance Header
     hdr_c1, hdr_c2 = st.columns([4, 1])
@@ -1877,6 +1933,19 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
 
     if not is_conn:
         st.info("💡 **Google Login Tip**: Connect your Google Account via the sidebar to automatically pull and list 100% of all websites and properties verified under your email.")
+    elif is_conn and not detailed_sites:
+        cfg = load_client_config()
+        auth_url_switch = None
+        if cfg:
+            try:
+                default_redirect = resolve_redirect_uri(cfg)
+                auth_url_switch, _ = get_auth_url(default_redirect, config=cfg)
+            except Exception:
+                pass
+        st.warning(f"⚠️ **0 Search Console properties found for {user_email_disp}**.\n\n"
+                   f"This Google Account has no verified properties in Search Console. If your 20+ websites are registered under another Gmail account, click below to switch accounts:")
+        if auth_url_switch:
+            st.link_button("🔄 Switch Google Account (Choose Another Gmail)", auth_url_switch, type="primary")
 
     # Refresh & Export Row
     head_c1, head_c2, head_c3 = st.columns([3, 1.5, 1.5])
@@ -2159,7 +2228,7 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
                         st.session_state.sites_detailed = [s for s in st.session_state.sites_detailed if s.get('siteUrl') != site_to_del]
                         st.session_state.portfolio_needs_refresh = True
                         if st.session_state.current_site == site_to_del:
-                            st.session_state.current_site = st.session_state.sites[0] if st.session_state.sites else DEFAULT_ACCOUNT_20_SITES[0]
+                            st.session_state.current_site = st.session_state.sites[0] if st.session_state.sites else None
                         st.rerun()
                     else:
                         st.error(f"Failed to remove property: {res.get('message')}")
@@ -2206,10 +2275,10 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
             else:
                 st.button("☁️ Add All to GSC Account", use_container_width=True, disabled=True, help="Connect Google Account first")
         with col_bm3:
-            if st.button("🔄 Reset to Default 20 Sites", use_container_width=True, key="btn_mgmt_bulk_reset"):
-                st.session_state.sites = list(DEFAULT_ACCOUNT_20_SITES)
-                st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in DEFAULT_ACCOUNT_20_SITES]
-                st.session_state.current_site = DEFAULT_ACCOUNT_20_SITES[0]
+            if st.button("🗑️ Clear All Sites", use_container_width=True, key="btn_mgmt_bulk_reset"):
+                st.session_state.sites = []
+                st.session_state.sites_detailed = []
+                st.session_state.current_site = None
                 st.session_state.portfolio_needs_refresh = True
                 st.rerun()
 
