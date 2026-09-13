@@ -53,17 +53,28 @@ def delete_site_property(service, site_url: str) -> Dict[str, Any]:
     return {'success': True, 'message': f"Property removed: {site_url}"}
 
 
+import time
+
+_PORTFOLIO_CACHE = {}
+
+def clear_portfolio_cache():
+    """Clears the multi-site portfolio in-memory cache."""
+    global _PORTFOLIO_CACHE
+    _PORTFOLIO_CACHE.clear()
+
 def fetch_all_sites_performance(
     service,
     sites_list: List[Any],
     days: int = 28,
     search_type: str = 'web',
     start_date_str: str = None,
-    end_date_str: str = None
+    end_date_str: str = None,
+    force_refresh: bool = False
 ) -> Dict[str, Any]:
     """
     Fetches aggregated and comparative Search Console performance data
     across ALL websites/properties in the connected Google Account.
+    Runs API queries concurrently via ThreadPoolExecutor for high-speed parallel loading.
     Returns:
     - summary: aggregated clicks, impressions, avg CTR, avg position
     - df_sites: comparative table ranking each site by clicks
@@ -93,10 +104,35 @@ def fetch_all_sites_performance(
             clean_sites.append(site_str)
 
     if not clean_sites:
-        clean_sites = ["https://centralec-electrical.co.uk/", "sc-domain:centralec-electrical.co.uk"]
+        if not service:
+            clean_sites = ["https://centralec-electrical.co.uk/", "sc-domain:centralec-electrical.co.uk"]
+        else:
+            return {
+                'summary': {
+                    'total_clicks': 0,
+                    'total_impressions': 0,
+                    'avg_ctr': 0.0,
+                    'avg_position': 0.0,
+                    'total_sites': 0
+                },
+                'df_sites': pd.DataFrame(),
+                'df_daily': pd.DataFrame()
+            }
+
+    # Check In-Memory TTL Cache (15 min)
+    creds = getattr(service, '_credentials', None) if service else None
+    cache_token = getattr(creds, 'token', '') or (str(id(service)) if service else 'offline')
+    cache_key = f"{cache_token}_{tuple(sorted(clean_sites))}_{start_str}_{end_str}_{search_type}"
+
+    if not force_refresh and cache_key in _PORTFOLIO_CACHE:
+        cached_ts, cached_res = _PORTFOLIO_CACHE[cache_key]
+        if time.time() - cached_ts < 900:  # 15 minutes TTL
+            return cached_res
 
     if service:
-        for site in clean_sites:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def _fetch_site_worker(site):
             clean_name = site.replace('sc-domain:', '').replace('https://', '').replace('http://', '').strip('/')
             is_domain = site.startswith('sc-domain:')
             prop_type = "Domain Property" if is_domain else "URL Prefix"
@@ -104,6 +140,7 @@ def fetch_all_sites_performance(
             site_c = 0
             site_imp = 0
             site_pos_sum = 0.0
+            worker_daily = []
 
             try:
                 body = {
@@ -113,9 +150,20 @@ def fetch_all_sites_performance(
                     'type': search_type if search_type in ['web', 'image', 'video', 'news', 'discover'] else 'web',
                     'rowLimit': 1000
                 }
-                resp = service.searchanalytics().query(siteUrl=site, body=body).execute()
-                rows = resp.get('rows', [])
                 
+                # Use thread-isolated transport to avoid httplib2 socket collisions in concurrent execution
+                if creds:
+                    try:
+                        import httplib2
+                        from google_auth_httplib2 import AuthorizedHttp
+                        thread_http = AuthorizedHttp(creds, http=httplib2.Http())
+                        resp = service.searchanalytics().query(siteUrl=site, body=body).execute(http=thread_http)
+                    except Exception:
+                        resp = service.searchanalytics().query(siteUrl=site, body=body).execute()
+                else:
+                    resp = service.searchanalytics().query(siteUrl=site, body=body).execute()
+
+                rows = resp.get('rows', [])
                 for r in rows:
                     d_clicks = r.get('clicks', 0)
                     d_imp = r.get('impressions', 0)
@@ -126,7 +174,7 @@ def fetch_all_sites_performance(
                     site_imp += d_imp
                     site_pos_sum += (d_pos * d_imp)
                     
-                    daily_records.append({
+                    worker_daily.append({
                         'date': d_date,
                         'site': clean_name,
                         'site_url': site,
@@ -137,7 +185,7 @@ def fetch_all_sites_performance(
                 avg_ctr = round((site_c / site_imp * 100), 2) if site_imp > 0 else 0.0
                 avg_pos = round((site_pos_sum / site_imp), 1) if site_imp > 0 else 0.0
 
-                site_records.append({
+                record = {
                     'site_url': site,
                     'domain': clean_name,
                     'property_type': prop_type,
@@ -146,10 +194,11 @@ def fetch_all_sites_performance(
                     'ctr': avg_ctr,
                     'position': avg_pos,
                     'status': 'Connected' if (site_c > 0 or site_imp > 0) else 'No Traffic Yet'
-                })
+                }
+                return record, worker_daily
 
             except Exception as ex:
-                site_records.append({
+                record = {
                     'site_url': site,
                     'domain': clean_name,
                     'property_type': prop_type,
@@ -158,7 +207,19 @@ def fetch_all_sites_performance(
                     'ctr': 0.0,
                     'position': 0.0,
                     'status': 'Restricted / Check Access'
-                })
+                }
+                return record, []
+
+        max_workers = min(15, max(1, len(clean_sites)))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_site = {executor.submit(_fetch_site_worker, s): s for s in clean_sites}
+            for future in as_completed(future_to_site):
+                try:
+                    s_rec, s_daily = future.result()
+                    site_records.append(s_rec)
+                    daily_records.extend(s_daily)
+                except Exception as ex:
+                    print(f"Error fetching site performance worker: {ex}")
     else:
         # Realistic Demo Data for sample properties
         sample_stats = [
@@ -220,7 +281,7 @@ def fetch_all_sites_performance(
 
     df_daily = pd.DataFrame(daily_records)
 
-    return {
+    res = {
         'summary': {
             'total_clicks': total_p_clicks,
             'total_impressions': total_p_imps,
@@ -231,3 +292,7 @@ def fetch_all_sites_performance(
         'df_sites': df_sites,
         'df_daily': df_daily
     }
+
+    # Save to memory cache
+    _PORTFOLIO_CACHE[cache_key] = (time.time(), res)
+    return res

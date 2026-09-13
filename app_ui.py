@@ -109,12 +109,13 @@ except Exception:
     def get_indexing_status(*args, **kwargs): return {"status": "unknown"}
 
 try:
-    from sites_manager import list_all_sites, add_site_property, delete_site_property, fetch_all_sites_performance
+    from sites_manager import list_all_sites, add_site_property, delete_site_property, fetch_all_sites_performance, clear_portfolio_cache
 except Exception:
     def list_all_sites(*args, **kwargs): return []
     def add_site_property(*args, **kwargs): return False
     def delete_site_property(*args, **kwargs): return False
     def fetch_all_sites_performance(*args, **kwargs): return {'summary': {}, 'df_sites': pd.DataFrame(), 'df_daily': pd.DataFrame()}
+    def clear_portfolio_cache(): pass
 
 # ==============================
 # Page Config
@@ -637,10 +638,12 @@ with st.sidebar:
                 if st.button("🔄 Sync Sites", use_container_width=True, key="top_btn_sync_gsc_sites", help="Re-sync all verified properties directly from Google Search Console API"):
                     with st.spinner("Fetching latest properties from Google..."):
                         try:
-                            fresh_sites = get_sites_detailed(st.session_state.service)
+                            fresh_sites = get_sites_detailed(st.session_state.service, force_refresh=True)
                             st.session_state.sites_detailed = fresh_sites
                             st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
                             st.session_state.portfolio_needs_refresh = True
+                            if 'clear_portfolio_cache' in globals():
+                                clear_portfolio_cache()
                             st.success(f"Synced {len(st.session_state.sites)} properties!")
                             st.rerun()
                         except Exception as ex:
@@ -761,10 +764,10 @@ with st.sidebar:
     def_idx = 0
     if st.session_state.current_site in site_options:
         def_idx = site_options.index(st.session_state.current_site)
-    elif st.session_state.current_site and str(st.session_state.current_site).startswith("🌐 [ALL SITES]") and len(site_options) > 0 and site_options[0].startswith("🌐"):
-        def_idx = 0
     elif clean_active_sites and clean_active_sites[0] in site_options:
         def_idx = site_options.index(clean_active_sites[0])
+    elif st.session_state.current_site and str(st.session_state.current_site).startswith("🌐 [ALL SITES]") and len(site_options) > 0 and site_options[0].startswith("🌐"):
+        def_idx = 0
 
     dropdown_label = f"Select Property ({total_p} Sites Loaded ▾):" if total_p > 0 else "Select Property (Sign In ▾):"
     st.markdown(f"<div style='font-size:11px; font-weight:700; color:#5f6368; text-transform:uppercase; margin-top:6px; margin-bottom:4px; letter-spacing:0.3px;'>{dropdown_label}</div>", unsafe_allow_html=True)
@@ -784,7 +787,8 @@ with st.sidebar:
     if selected_site and st.session_state.current_site != selected_site:
         st.session_state.current_site = selected_site
         if selected_site.startswith("🌐 [ALL SITES]"):
-            st.session_state.portfolio_needs_refresh = True
+            if st.session_state.get('portfolio_data') is None:
+                st.session_state.portfolio_needs_refresh = True
         elif st.session_state.service:
             st.session_state.df = pd.DataFrame()
         elif selected_site == "https://centralec-electrical.co.uk/":
@@ -832,7 +836,8 @@ with st.sidebar:
             else:
                 if st.button(f"🌐 [ALL SITES] Consolidated Portfolio ({total_p})", key="side_btn_portfolio_toggle", use_container_width=True):
                     st.session_state.current_site = portfolio_label
-                    st.session_state.portfolio_needs_refresh = True
+                    if st.session_state.get('portfolio_data') is None:
+                        st.session_state.portfolio_needs_refresh = True
                     st.rerun()
             for idx, s in enumerate(clean_active_sites):
                 is_active = (s == st.session_state.current_site)
@@ -846,9 +851,6 @@ with st.sidebar:
                         if st.session_state.service:
                             st.session_state.df = pd.DataFrame()
                         st.rerun()
-                        st.session_state.df_daily_comp = _df_daily_comp
-                        st.session_state.gsc_metrics = _metrics
-                    st.rerun()
 
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
@@ -985,11 +987,13 @@ effective_site = real_active_sites[0] if (is_portfolio_mode and real_active_site
 
 if is_portfolio_mode or page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
     if st.session_state.get('portfolio_data') is None or st.session_state.get('portfolio_needs_refresh', False):
-        with st.spinner("Fetching Search Console performance across all verified properties..."):
+        n_sites = len(real_active_sites)
+        with st.spinner(f"⚡ Loading Search Console performance across all {n_sites} properties in parallel..."):
             st.session_state.portfolio_data = fetch_all_sites_performance(
                 service=service,
                 sites_list=st.session_state.sites,
-                days=28
+                days=28,
+                force_refresh=st.session_state.get('portfolio_needs_refresh', False)
             )
             st.session_state.portfolio_needs_refresh = False
 
@@ -1897,8 +1901,14 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
     # Load/Ensure Portfolio Data
     portfolio_data = st.session_state.get('portfolio_data')
     if portfolio_data is None or st.session_state.get('portfolio_needs_refresh', False):
-        with st.spinner("Fetching Search Console performance across all verified properties..."):
-            portfolio_data = fetch_all_sites_performance(st.session_state.service, st.session_state.sites, days=28)
+        n_p = len(detailed_sites)
+        with st.spinner(f"⚡ Loading Search Console performance across all {n_p} properties in parallel..."):
+            portfolio_data = fetch_all_sites_performance(
+                st.session_state.service, 
+                st.session_state.sites, 
+                days=28,
+                force_refresh=st.session_state.get('portfolio_needs_refresh', False)
+            )
             st.session_state.portfolio_data = portfolio_data
             st.session_state.portfolio_needs_refresh = False
 
@@ -1953,8 +1963,14 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
         st.markdown(f"### 📊 Account-Wide Search Performance Summary ({len(detailed_sites)} Properties)")
     with head_c2:
         if st.button("🔄 Sync Live Performance", use_container_width=True, key="sync_portfolio_perf_btn"):
-            with st.spinner("Re-syncing search analytics across all sites..."):
-                st.session_state.portfolio_data = fetch_all_sites_performance(st.session_state.service, st.session_state.sites, days=28)
+            n_p = len(detailed_sites)
+            with st.spinner(f"⚡ Re-syncing search analytics across all {n_p} sites in parallel..."):
+                st.session_state.portfolio_data = fetch_all_sites_performance(
+                    st.session_state.service, 
+                    st.session_state.sites, 
+                    days=28,
+                    force_refresh=True
+                )
                 st.session_state.portfolio_needs_refresh = False
                 st.success("Synced latest multi-site performance!")
                 st.rerun()

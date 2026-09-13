@@ -206,20 +206,38 @@ def authenticate_service_account(sa_data):
     sites = get_sites(svc)
     return creds, svc, svc_v1, sites
 
-def get_sites_detailed(service):
+import time
+
+_SITES_CACHE = {}
+
+def get_sites_detailed(service, force_refresh: bool = False):
     """Fetches list of all verified properties in the connected Google account with permissions."""
     if not service:
         return []
+
+    creds = getattr(service, '_credentials', None)
+    cache_token = getattr(creds, 'token', '') or (str(id(service)) if service else 'anon')
+    now = time.time()
+
+    if not force_refresh and cache_token in _SITES_CACHE:
+        cached_time, cached_entries = _SITES_CACHE[cache_token]
+        if now - cached_time < 600:  # 10 minutes cache
+            return cached_entries
+
     try:
         sites = service.sites().list().execute()
-        return sites.get('siteEntry', [])
+        entries = sites.get('siteEntry', [])
+        _SITES_CACHE[cache_token] = (now, entries)
+        return entries
     except Exception as e:
         print(f"Error fetching GSC sites: {e}")
+        if cache_token in _SITES_CACHE:
+            return _SITES_CACHE[cache_token][1]
         return []
 
-def get_sites(service):
+def get_sites(service, force_refresh: bool = False):
     """Fetches list of all verified properties in the connected Google account."""
-    entries = get_sites_detailed(service)
+    entries = get_sites_detailed(service, force_refresh=force_refresh)
     return [s['siteUrl'] for s in entries if 'siteUrl' in s]
 
 def get_user_email(creds):
