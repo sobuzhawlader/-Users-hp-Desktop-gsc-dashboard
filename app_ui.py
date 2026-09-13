@@ -21,7 +21,8 @@ try:
         get_gsc_service, get_searchconsole_v1_service, get_sites, 
         get_sites_detailed, get_user_email,
         authenticate_local, get_auth_url, exchange_code, load_client_config,
-        authenticate_service_account, load_saved_credentials, save_credentials, delete_saved_credentials
+        authenticate_service_account, load_saved_credentials, save_credentials, delete_saved_credentials,
+        clear_sites_cache
     )
 except Exception:
     import auth_gsc
@@ -38,6 +39,7 @@ except Exception:
     load_saved_credentials = getattr(auth_gsc, 'load_saved_credentials', None)
     save_credentials = getattr(auth_gsc, 'save_credentials', None)
     delete_saved_credentials = getattr(auth_gsc, 'delete_saved_credentials', None)
+    clear_sites_cache = getattr(auth_gsc, 'clear_sites_cache', lambda: None)
 
 try:
     from data_fetcher import (
@@ -458,6 +460,16 @@ st.markdown("""
 # ==============================
 init_db()
 
+# On Cloud/Multi-user server, permanently remove any shared disk token to prevent account leaking
+_is_cloud_server = (platform.system() == 'Linux') or ('STREAMLIT_SHARING_MODE' in os.environ) or ('STREAMLIT_SERVER_PORT' in os.environ)
+if _is_cloud_server:
+    _tok_f = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'token.pickle')
+    if os.path.exists(_tok_f):
+        try:
+            os.remove(_tok_f)
+        except Exception:
+            pass
+
 if 'session_id' not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())[:8]
 
@@ -480,8 +492,75 @@ if 'user_creds' not in st.session_state:
 if 'portfolio_data' not in st.session_state:
     st.session_state.portfolio_data = None
 
-# Auto-restore saved credentials from token.pickle if available
-if st.session_state.service is None:
+def resolve_redirect_uri(cfg):
+    """Picks the best redirect URI matching cloud or local environment."""
+    if not cfg or 'web' not in cfg:
+        return 'https://sobuz-gsc-dashboard.streamlit.app/'
+    uris = cfg.get('web', {}).get('redirect_uris', ['https://sobuz-gsc-dashboard.streamlit.app/'])
+    if not uris:
+        return 'https://sobuz-gsc-dashboard.streamlit.app/'
+    # Detect Streamlit Cloud (Linux container or cloud environment variables)
+    is_cloud = (platform.system() == 'Linux') or ('STREAMLIT_SHARING_MODE' in os.environ) or ('STREAMLIT_SERVER_PORT' in os.environ)
+    if is_cloud:
+        for u in uris:
+            if 'streamlit.app' in u and u.endswith('/'):
+                return u
+        for u in uris:
+            if 'streamlit.app' in u:
+                return u
+    else:
+        for u in uris:
+            if 'localhost' in u or '127.0.0.1' in u:
+                return u
+    return uris[0]
+
+# ==============================
+# Multi-User Web OAuth Callback Handler (MUST RUN FIRST!)
+# ==============================
+query_params = st.query_params
+if 'code' in query_params:
+    code = query_params['code']
+    try:
+        cfg = load_client_config()
+        redirect_uri = resolve_redirect_uri(cfg)
+        
+        creds = exchange_code(code, redirect_uri, config=cfg)
+        svc = get_gsc_service(creds)
+        svc_v1 = get_searchconsole_v1_service(creds)
+        sites_detailed = get_sites_detailed(svc, force_refresh=True) if 'get_sites_detailed' in globals() and get_sites_detailed else []
+        sites = [s['siteUrl'] for s in sites_detailed if 'siteUrl' in s]
+        if not sites:
+            sites = get_sites(svc, force_refresh=True) if 'get_sites' in globals() and get_sites else []
+        user_email = get_user_email(creds) if 'get_user_email' in globals() and get_user_email else None
+        
+        # Reset entire session state to this freshly authenticated user
+        st.session_state.user_creds = creds
+        st.session_state.service = svc
+        st.session_state.service_v1 = svc_v1
+        st.session_state.sites = sites
+        st.session_state.sites_detailed = sites_detailed
+        st.session_state.user_email = user_email
+        st.session_state.portfolio_data = None
+        st.session_state.portfolio_needs_refresh = True
+        st.session_state.df = pd.DataFrame()
+        if sites:
+            st.session_state.current_site = sites[0]
+        else:
+            st.session_state.current_site = None
+
+        if 'clear_portfolio_cache' in globals():
+            clear_portfolio_cache()
+        if 'clear_sites_cache' in globals():
+            clear_sites_cache()
+
+        st.query_params.clear()
+        st.rerun()
+    except Exception as e:
+        st.error(f"Web OAuth Error: {e}")
+
+# Auto-restore saved credentials ONLY for local desktop single-user usage (NEVER ON CLOUD!)
+is_cloud_app = (platform.system() == 'Linux') or ('STREAMLIT_SHARING_MODE' in os.environ) or ('STREAMLIT_SERVER_PORT' in os.environ)
+if not is_cloud_app and st.session_state.service is None:
     saved_creds = load_saved_credentials() if 'load_saved_credentials' in globals() and load_saved_credentials else None
     if saved_creds:
         try:
@@ -512,65 +591,6 @@ if 'df' not in st.session_state:
 
 rt_metrics = get_site_realtime_metrics(st.session_state.current_site or "https://centralec-electrical.co.uk/")
 live_site_users = rt_metrics["active_now"] if st.session_state.current_site else 0
-
-def resolve_redirect_uri(cfg):
-    """Picks the best redirect URI matching cloud or local environment."""
-    if not cfg or 'web' not in cfg:
-        return 'https://sobuz-gsc-dashboard.streamlit.app/'
-    uris = cfg.get('web', {}).get('redirect_uris', ['https://sobuz-gsc-dashboard.streamlit.app/'])
-    if not uris:
-        return 'https://sobuz-gsc-dashboard.streamlit.app/'
-    # Detect Streamlit Cloud (Linux container or cloud environment variables)
-    is_cloud = (platform.system() == 'Linux') or ('STREAMLIT_SHARING_MODE' in os.environ)
-    if is_cloud:
-        for u in uris:
-            if 'streamlit.app' in u and u.endswith('/'):
-                return u
-        for u in uris:
-            if 'streamlit.app' in u:
-                return u
-    else:
-        for u in uris:
-            if 'localhost' in u or '127.0.0.1' in u:
-                return u
-    return uris[0]
-
-
-# ==============================
-# Multi-User Web OAuth Callback Handler
-# ==============================
-query_params = st.query_params
-if 'code' in query_params and st.session_state.service is None:
-    code = query_params['code']
-    try:
-        cfg = load_client_config()
-        redirect_uri = resolve_redirect_uri(cfg)
-        
-        creds = exchange_code(code, redirect_uri, config=cfg)
-        svc = get_gsc_service(creds)
-        svc_v1 = get_searchconsole_v1_service(creds)
-        sites_detailed = get_sites_detailed(svc) if 'get_sites_detailed' in globals() and get_sites_detailed else []
-        sites = [s['siteUrl'] for s in sites_detailed if 'siteUrl' in s]
-        if not sites:
-            sites = get_sites(svc)
-        user_email = get_user_email(creds) if 'get_user_email' in globals() and get_user_email else None
-        
-        st.session_state.user_creds = creds
-        st.session_state.service = svc
-        st.session_state.service_v1 = svc_v1
-        st.session_state.sites = sites
-        st.session_state.sites_detailed = sites_detailed
-        st.session_state.user_email = user_email
-        if sites:
-            st.session_state.current_site = sites[0]
-        else:
-            st.session_state.current_site = None
-        st.session_state.df = pd.DataFrame()
-        st.session_state.portfolio_needs_refresh = True
-        st.query_params.clear()
-        st.rerun()
-    except Exception as e:
-        st.error(f"Web OAuth Error: {e}")
 
 # Runtime auto-sync if connected but detailed data missing
 if st.session_state.service:
@@ -651,6 +671,10 @@ with st.sidebar:
             with col_acc2:
                 if st.button("🔄 Switch Account", use_container_width=True, key="top_btn_switch_acc", help="Switch to another Google Account"):
                     delete_saved_credentials()
+                    if 'clear_portfolio_cache' in globals():
+                        clear_portfolio_cache()
+                    if 'clear_sites_cache' in globals():
+                        clear_sites_cache()
                     st.session_state.service = None
                     st.session_state.service_v1 = None
                     st.session_state.sites = []
@@ -658,7 +682,9 @@ with st.sidebar:
                     st.session_state.user_creds = None
                     st.session_state.user_email = None
                     st.session_state.current_site = None
+                    st.session_state.portfolio_data = None
                     st.session_state.portfolio_needs_refresh = True
+                    st.session_state.df = pd.DataFrame()
                     st.rerun()
         else:
             # Connected, but 0 sites found in this Gmail!
@@ -681,15 +707,20 @@ with st.sidebar:
             with col_acc1:
                 if st.button("🔄 Re-Check Sites", use_container_width=True, key="top_btn_recheck_sites"):
                     try:
-                        fresh_sites = get_sites_detailed(st.session_state.service)
+                        fresh_sites = get_sites_detailed(st.session_state.service, force_refresh=True)
                         st.session_state.sites_detailed = fresh_sites
                         st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
+                        st.session_state.portfolio_needs_refresh = True
                         st.rerun()
                     except Exception as ex:
                         st.error(f"Check error: {ex}")
             with col_acc2:
                 if st.button("🚪 Logout", use_container_width=True, key="top_btn_logout_empty"):
                     delete_saved_credentials()
+                    if 'clear_portfolio_cache' in globals():
+                        clear_portfolio_cache()
+                    if 'clear_sites_cache' in globals():
+                        clear_sites_cache()
                     st.session_state.service = None
                     st.session_state.service_v1 = None
                     st.session_state.sites = []
@@ -697,6 +728,9 @@ with st.sidebar:
                     st.session_state.user_creds = None
                     st.session_state.user_email = None
                     st.session_state.current_site = None
+                    st.session_state.portfolio_data = None
+                    st.session_state.portfolio_needs_refresh = True
+                    st.session_state.df = pd.DataFrame()
                     st.rerun()
 
     else:
@@ -931,6 +965,10 @@ with st.sidebar:
             st.markdown(f"**Google Account:** <span style='color:#10b981; font-weight:600;'>● Connected ({len(st.session_state.sites)} properties)</span>", unsafe_allow_html=True)
             if st.button("🚪 Disconnect Google Account", use_container_width=True, key="btn_disconnect_bottom_expander"):
                 delete_saved_credentials()
+                if 'clear_portfolio_cache' in globals():
+                    clear_portfolio_cache()
+                if 'clear_sites_cache' in globals():
+                    clear_sites_cache()
                 st.session_state.service = None
                 st.session_state.service_v1 = None
                 st.session_state.sites = []
@@ -938,7 +976,9 @@ with st.sidebar:
                 st.session_state.user_creds = None
                 st.session_state.user_email = None
                 st.session_state.current_site = None
+                st.session_state.portfolio_data = None
                 st.session_state.portfolio_needs_refresh = True
+                st.session_state.df = pd.DataFrame()
                 st.rerun()
         else:
             st.markdown("**🔐 Connect Google Account:**")

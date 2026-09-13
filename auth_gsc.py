@@ -99,11 +99,34 @@ def exchange_code(code: str, redirect_uri: str, config: dict = None):
     )
     flow.fetch_token(code=code)
     creds = flow.credentials
-    save_credentials(creds)
+    # In cloud multi-user environment, NEVER persist token to disk, keep in session state only!
+    if not is_cloud_environment():
+        save_credentials(creds)
     return creds
 
+import platform
+
+def is_cloud_environment() -> bool:
+    """Detects whether the app is running in a multi-user cloud environment (like Streamlit Cloud)."""
+    return (
+        platform.system() == 'Linux' or 
+        'STREAMLIT_SHARING_MODE' in os.environ or 
+        'STREAMLIT_SERVER_PORT' in os.environ or
+        'STREAMLIT_SERVER_ADDRESS' in os.environ or
+        ('HOSTNAME' in os.environ and 'streamlit' in os.environ.get('HOSTNAME', '').lower())
+    )
+
 def load_saved_credentials():
-    """Loads cached OAuth credentials from token.pickle if valid or refreshable."""
+    """Loads cached OAuth credentials only for local single-user desktop. Never on cloud!"""
+    if is_cloud_environment():
+        # Remove any stale shared token from cloud container disk immediately
+        if os.path.exists(TOKEN_FILE):
+            try:
+                os.remove(TOKEN_FILE)
+            except Exception:
+                pass
+        return None
+
     if os.path.exists(TOKEN_FILE):
         try:
             with open(TOKEN_FILE, 'rb') as f:
@@ -121,9 +144,18 @@ def load_saved_credentials():
     return None
 
 def save_credentials(creds):
-    """Saves OAuth credentials to token.pickle for persistence across sessions."""
+    """Saves OAuth credentials to token.pickle only for local single-user machine. Never on cloud!"""
     if not creds:
         return
+    if is_cloud_environment():
+        # Ensure any stale token on cloud disk is removed
+        if os.path.exists(TOKEN_FILE):
+            try:
+                os.remove(TOKEN_FILE)
+            except Exception:
+                pass
+        return
+
     try:
         with open(TOKEN_FILE, 'wb') as f:
             pickle.dump(creds, f)
@@ -209,6 +241,11 @@ def authenticate_service_account(sa_data):
 import time
 
 _SITES_CACHE = {}
+
+def clear_sites_cache():
+    """Clears the properties in-memory cache."""
+    global _SITES_CACHE
+    _SITES_CACHE.clear()
 
 def get_sites_detailed(service, force_refresh: bool = False):
     """Fetches list of all verified properties in the connected Google account with permissions."""
