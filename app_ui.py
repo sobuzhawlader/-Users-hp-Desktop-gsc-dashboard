@@ -3028,7 +3028,7 @@ elif page in ["🚨 24/7 Anomaly & Telegram Bot", "🚨 Alerts"]:
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(239, 68, 68, 0.3); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #ef4444, #f59e0b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">🚨 24/7 SEARCH ANOMALY DETECTION & TELEGRAM BOT</div>
+                <div style="font-size:20px; font-weight:800; color:#ef4444; letter-spacing:-0.3px;">🚨 24/7 SEARCH ANOMALY DETECTION & TELEGRAM BOT</div>
                 <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">Autonomous search anomaly monitoring & instant alerts for traffic drops, position slumps, and CTR opportunities via official free Telegram Bot API.</div>
             </div>
             <div style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#ef4444; font-weight:700;">● ZERO-COST TELEMETRY</div>
@@ -3121,7 +3121,7 @@ elif page == "⚔️ Keyword Cannibalization":
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(244, 63, 94, 0.3); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #f43f5e, #fbbf24); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">⚔️ KEYWORD CANNIBALIZATION MATRIX & RESOLUTION ENGINE</div>
+                <div style="font-size:20px; font-weight:800; color:#f43f5e; letter-spacing:-0.3px;">⚔️ KEYWORD CANNIBALIZATION MATRIX & RESOLUTION ENGINE</div>
                 <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">Detect multi-page ranking conflicts where 2 or more of your URLs compete for the exact same Google query, splitting clicks and authority.</div>
             </div>
             <div style="background:rgba(244,63,94,0.15); border:1px solid rgba(244,63,94,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#f43f5e; font-weight:700;">● RANK RECOVERY</div>
@@ -3212,7 +3212,7 @@ elif page == "🧩 Semantic Keyword Clusters":
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(139, 92, 246, 0.35); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #8b5cf6, #38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">🧩 SEMANTIC KEYWORD CLUSTERING & TOPIC SILOS</div>
+                <div style="font-size:20px; font-weight:800; color:#a78bfa; letter-spacing:-0.3px;">🧩 SEMANTIC KEYWORD CLUSTERING & TOPIC SILOS</div>
                 <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">NLP-driven semantic topic clustering. Groups search queries into topical silos, calculates aggregate cluster impressions, and pinpoints unranked content gaps.</div>
             </div>
             <div style="background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#a78bfa; font-weight:700;">● NLP TOPIC SILOS</div>
@@ -3294,7 +3294,7 @@ elif page == "🕷️ Technical On-Page Crawler":
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(16, 185, 129, 0.3); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #10b981, #38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">🕷️ TECHNICAL ON-PAGE CRAWLER & CORE WEB VITALS AUDITOR</div>
+                <div style="font-size:20px; font-weight:800; color:#34d399; letter-spacing:-0.3px;">🕷️ TECHNICAL ON-PAGE CRAWLER & CORE WEB VITALS AUDITOR</div>
                 <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">Screaming Frog-style multi-threaded internal site crawler and Google PageSpeed Insights auditor (100% free, 0 subscription cost).</div>
             </div>
             <div style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#34d399; font-weight:700;">● ZERO SUBSCRIPTION</div>
@@ -3461,7 +3461,7 @@ elif page == "✨ AI Meta & Schema Studio":
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(245, 158, 11, 0.35); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #f59e0b, #ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">✨ AI HIGH-CTR META & JSON-LD SCHEMA STUDIO</div>
+                <div style="font-size:20px; font-weight:800; color:#fbbf24; letter-spacing:-0.3px;">✨ AI HIGH-CTR META & JSON-LD SCHEMA STUDIO</div>
                 <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">Craft click-generating Meta Titles and Descriptions using proven CTR formulas or free Gemini AI, plus generate Google-validated JSON-LD Schema markups.</div>
             </div>
             <div style="background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#fbbf24; font-weight:700;">● CTR OPTIMIZER</div>
@@ -3544,7 +3544,7 @@ elif page == "🔌 WordPress 1-Click Sync":
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(2, 132, 199, 0.35); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #0284c7, #38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">🔌 WORDPRESS REST API 1-CLICK SYNC & PUBLISHER</div>
+                <div style="font-size:20px; font-weight:800; color:#38bdf8; letter-spacing:-0.3px;">🔌 WORDPRESS REST API 1-CLICK SYNC & PUBLISHER</div>
                 <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">Connect directly to your WordPress website using native Application Passwords (100% free, zero paid plugins). 1-click update meta titles & descriptions and publish SEO drafts.</div>
             </div>
             <div style="background:rgba(2,132,199,0.15); border:1px solid rgba(2,132,199,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#38bdf8; font-weight:700;">● WP NATIVE REST</div>
@@ -3637,7 +3637,7 @@ elif page == "💼 White-Label Client Portal":
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(56, 189, 248, 0.35); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">💼 WHITE-LABEL CLIENT PORTAL & EXECUTIVE REPORTING</div>
+                <div style="font-size:20px; font-weight:800; color:#38bdf8; letter-spacing:-0.3px;">💼 WHITE-LABEL CLIENT PORTAL & EXECUTIVE REPORTING</div>
                 <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">Presentation-ready executive client interface. Brand with your agency name, customize reporting domain, and download multi-page executive client PDF audits.</div>
             </div>
             <div style="background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#38bdf8; font-weight:700;">● WHITE-LABEL AGENCY</div>
