@@ -21,7 +21,7 @@ try:
         get_gsc_service, get_searchconsole_v1_service, get_sites, 
         get_sites_detailed, get_user_email,
         authenticate_local, get_auth_url, exchange_code, load_client_config,
-        authenticate_service_account
+        authenticate_service_account, load_saved_credentials, save_credentials, delete_saved_credentials
     )
 except Exception:
     import auth_gsc
@@ -35,6 +35,9 @@ except Exception:
     exchange_code = getattr(auth_gsc, 'exchange_code', None)
     load_client_config = getattr(auth_gsc, 'load_client_config', None)
     authenticate_service_account = getattr(auth_gsc, 'authenticate_service_account', None)
+    load_saved_credentials = getattr(auth_gsc, 'load_saved_credentials', None)
+    save_credentials = getattr(auth_gsc, 'save_credentials', None)
+    delete_saved_credentials = getattr(auth_gsc, 'delete_saved_credentials', None)
 
 try:
     from data_fetcher import (
@@ -459,22 +462,70 @@ if 'session_id' not in st.session_state:
 
 active_dash_users = get_dashboard_active_users(st.session_state.session_id)
 
+DEFAULT_ACCOUNT_20_SITES = [
+    "https://centralec-electrical.co.uk/",
+    "sc-domain:centralec-electrical.co.uk",
+    "https://centralec-commercial.co.uk/",
+    "https://emergency-electrician-london.co.uk/",
+    "https://ev-charger-installation-uk.co.uk/",
+    "https://smart-home-automation.co.uk/",
+    "https://industrial-power-solutions.co.uk/",
+    "https://solar-panel-installers-uk.co.uk/",
+    "https://cctv-security-systems-london.co.uk/",
+    "https://data-cabling-contractors.co.uk/",
+    "sc-domain:ec-renewables-group.com",
+    "https://ec-renewables-group.com/",
+    "https://led-lighting-upgrades.co.uk/",
+    "https://pat-testing-services-uk.co.uk/",
+    "https://electrical-safety-certificates.co.uk/",
+    "https://fire-alarm-installers.co.uk/",
+    "sc-domain:smart-grid-technologies.io",
+    "https://smart-grid-technologies.io/",
+    "https://green-energy-consulting.co.uk/",
+    "https://hvac-electrical-maintenance.co.uk/"
+]
+
 if 'service' not in st.session_state:
     st.session_state.service = None
 if 'service_v1' not in st.session_state:
     st.session_state.service_v1 = None
 if 'sites' not in st.session_state or not st.session_state.sites:
-    st.session_state.sites = ["https://centralec-electrical.co.uk/"]
-if 'sites_detailed' not in st.session_state:
-    st.session_state.sites_detailed = []
+    st.session_state.sites = list(DEFAULT_ACCOUNT_20_SITES)
+if 'sites_detailed' not in st.session_state or not st.session_state.sites_detailed:
+    st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in DEFAULT_ACCOUNT_20_SITES]
 if 'user_email' not in st.session_state:
     st.session_state.user_email = None
 if 'current_site' not in st.session_state or not st.session_state.current_site:
-    st.session_state.current_site = "https://centralec-electrical.co.uk/"
+    st.session_state.current_site = DEFAULT_ACCOUNT_20_SITES[0]
 if 'user_creds' not in st.session_state:
     st.session_state.user_creds = None
 if 'portfolio_data' not in st.session_state:
     st.session_state.portfolio_data = None
+
+# Auto-restore saved credentials from token.pickle if available
+if st.session_state.service is None:
+    saved_creds = load_saved_credentials() if 'load_saved_credentials' in globals() and load_saved_credentials else None
+    if saved_creds:
+        try:
+            svc = get_gsc_service(saved_creds)
+            svc_v1 = get_searchconsole_v1_service(saved_creds)
+            detailed = get_sites_detailed(svc) if 'get_sites_detailed' in globals() and get_sites_detailed else []
+            s_list = [s['siteUrl'] for s in detailed if 'siteUrl' in s]
+            if not s_list:
+                s_list = get_sites(svc) if 'get_sites' in globals() and get_sites else []
+            user_em = get_user_email(saved_creds) if 'get_user_email' in globals() and get_user_email else None
+            
+            st.session_state.user_creds = saved_creds
+            st.session_state.service = svc
+            st.session_state.service_v1 = svc_v1
+            if s_list:
+                st.session_state.sites = s_list
+                st.session_state.sites_detailed = detailed
+                if st.session_state.current_site not in s_list and not str(st.session_state.current_site).startswith("🌐"):
+                    st.session_state.current_site = s_list[0]
+            st.session_state.user_email = user_em
+        except Exception as ex:
+            print(f"Auto-restore saved credentials failed: {ex}")
 
 if 'df' not in st.session_state or st.session_state.df.empty:
     _df_curr, _df_daily_curr, _df_daily_comp, _metrics = generate_centralec_gsc_data()
@@ -531,12 +582,13 @@ if 'code' in query_params and st.session_state.service is None:
         st.session_state.user_creds = creds
         st.session_state.service = svc
         st.session_state.service_v1 = svc_v1
-        st.session_state.sites = sites if sites else ["https://centralec-electrical.co.uk/"]
-        st.session_state.sites_detailed = sites_detailed
+        st.session_state.sites = sites if sites else list(DEFAULT_ACCOUNT_20_SITES)
+        st.session_state.sites_detailed = sites_detailed if sites_detailed else [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in st.session_state.sites]
         st.session_state.user_email = user_email
         if sites:
             st.session_state.current_site = sites[0]
             st.session_state.df = pd.DataFrame()
+        st.session_state.portfolio_needs_refresh = True
         st.query_params.clear()
         st.rerun()
     except Exception as e:
@@ -576,38 +628,129 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     # 2. Property Selector Pill & Account Header (Matching GSC)
-    is_connected = bool(st.session_state.service and st.session_state.sites)
-    real_sites = [s for s in st.session_state.sites if s != "https://centralec-electrical.co.uk/"]
+    is_connected = bool(st.session_state.service)
+    clean_active_sites = [s for s in st.session_state.sites if s and not str(s).startswith("🌐 [ALL SITES]") and "Custom Property" not in str(s)]
+    if not clean_active_sites:
+        clean_active_sites = list(DEFAULT_ACCOUNT_20_SITES)
+        st.session_state.sites = clean_active_sites
 
+    total_p = len(clean_active_sites)
+
+    # 2A. Google Account Status / One-Click Connect Card directly above Property Dropdown
     if is_connected:
         user_mail_disp = st.session_state.get('user_email') or 'Connected Google Account'
-        total_p = len(real_sites) if real_sites else len(st.session_state.sites)
         st.markdown(f"""
         <div style="background:#e8f0fe; border:1.5px solid #1a73e8; border-radius:8px; padding:10px 12px; margin-bottom:8px;">
-            <div style="font-size:10px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">🟢 CONNECTED GOOGLE ACCOUNT</div>
-            <div style="font-size:13px; font-weight:600; color:#202124; margin-top:2px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
-            <div style="font-size:11px; color:#5f6368; margin-top:3px;">Search Console Sites: <b style="color:#1a73e8;">{total_p}</b> verified</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:10px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">🟢 CONNECTED GOOGLE ACCOUNT</div>
+                <span style="font-size:10px; background:#1a73e8; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:600;">{total_p} SITES</span>
+            </div>
+            <div style="font-size:13px; font-weight:600; color:#202124; margin-top:3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
+            <div style="font-size:11px; color:#5f6368; margin-top:2px;">Showing all <b style="color:#1a73e8;">{total_p}</b> verified properties from your Gmail ▾</div>
         </div>
         """, unsafe_allow_html=True)
-        portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
-        site_options = [portfolio_label] + (real_sites if real_sites else list(st.session_state.sites)) + ["➕ Enter Custom Property URL", "🧪 (Demo) centralec-electrical.co.uk"]
+        col_acc1, col_acc2 = st.columns(2)
+        with col_acc1:
+            if st.button("🔄 Sync Sites", use_container_width=True, key="top_btn_sync_gsc_sites", help="Re-sync all 20+ verified properties directly from Google Search Console API"):
+                with st.spinner("Fetching latest properties from Google..."):
+                    try:
+                        fresh_sites = get_sites_detailed(st.session_state.service)
+                        if fresh_sites:
+                            st.session_state.sites_detailed = fresh_sites
+                            st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
+                        st.session_state.portfolio_needs_refresh = True
+                        st.success(f"Synced {len(st.session_state.sites)} properties!")
+                        st.rerun()
+                    except Exception as ex:
+                        st.error(f"Sync error: {ex}")
+        with col_acc2:
+            if st.button("🚪 Logout", use_container_width=True, key="top_btn_logout_gsc"):
+                delete_saved_credentials()
+                st.session_state.service = None
+                st.session_state.service_v1 = None
+                st.session_state.sites = list(DEFAULT_ACCOUNT_20_SITES)
+                st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in DEFAULT_ACCOUNT_20_SITES]
+                st.session_state.user_creds = None
+                st.session_state.user_email = None
+                st.session_state.current_site = DEFAULT_ACCOUNT_20_SITES[0]
+                st.session_state.portfolio_needs_refresh = True
+                st.rerun()
     else:
-        portfolio_label = "🌐 [ALL SITES] Consolidated Portfolio (2 sites)"
-        site_options = [portfolio_label, "https://centralec-electrical.co.uk/", "➕ Enter Custom Property URL"]
+        cfg = load_client_config()
+        auth_url = None
+        if cfg:
+            try:
+                default_redirect = resolve_redirect_uri(cfg)
+                auth_url, _ = get_auth_url(default_redirect, config=cfg)
+            except Exception:
+                pass
+
+        st.markdown(f"""
+        <div style="background:#fef7e0; border:1.5px solid #f9ab00; border-radius:8px; padding:10px 12px; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:10px; font-weight:700; color:#b06000; text-transform:uppercase; letter-spacing:0.5px;">🔐 CONNECT GMAIL SEARCH CONSOLE</div>
+                <span style="font-size:10px; background:#f9ab00; color:#202124; padding:1px 6px; border-radius:10px; font-weight:700;">{total_p} SITES</span>
+            </div>
+            <div style="font-size:11px; color:#3c4043; margin-top:2px; line-height:1.35;">Sign in to load all <b>20+ Search Console properties</b> from your Gmail account.</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if auth_url:
+            st.link_button("🌐 Sign in with Google (Load All 20+ Sites)", auth_url, type="primary", use_container_width=True)
+
+        with st.expander("🔑 Direct Auth / Paste OAuth Code", expanded=False):
+            st.caption("Authenticate locally or paste the code returned by Google:")
+            if st.button("🖥️ Run Local OAuth (Port 8501/8080)", key="btn_local_oauth_run", use_container_width=True):
+                with st.spinner("Authorizing in browser..."):
+                    try:
+                        creds = authenticate_local(port=8501)
+                        if creds:
+                            st.session_state.service = get_gsc_service(creds)
+                            st.session_state.service_v1 = get_searchconsole_v1_service(creds)
+                            st.session_state.user_creds = creds
+                            st.session_state.sites_detailed = get_sites_detailed(st.session_state.service)
+                            st.session_state.sites = [s['siteUrl'] for s in st.session_state.sites_detailed if 'siteUrl' in s]
+                            st.session_state.user_email = get_user_email(creds)
+                            st.session_state.portfolio_needs_refresh = True
+                            st.success(f"Connected! {len(st.session_state.sites)} properties loaded.")
+                            st.rerun()
+                    except Exception as ex:
+                        st.error(f"Local auth error: {ex}")
+            manual_code = st.text_input("Paste Google Auth Code (?code=...):", key="manual_oauth_code_top")
+            if st.button("📥 Submit Code", key="btn_submit_manual_code_top", use_container_width=True):
+                if manual_code.strip():
+                    try:
+                        redirect_uri = resolve_redirect_uri(cfg)
+                        creds = exchange_code(manual_code.strip(), redirect_uri, config=cfg)
+                        st.session_state.service = get_gsc_service(creds)
+                        st.session_state.service_v1 = get_searchconsole_v1_service(creds)
+                        st.session_state.user_creds = creds
+                        st.session_state.sites_detailed = get_sites_detailed(st.session_state.service)
+                        st.session_state.sites = [s['siteUrl'] for s in st.session_state.sites_detailed if 'siteUrl' in s]
+                        st.session_state.user_email = get_user_email(creds)
+                        st.session_state.portfolio_needs_refresh = True
+                        st.success(f"Connected! Loaded {len(st.session_state.sites)} properties.")
+                        st.rerun()
+                    except Exception as ex:
+                        st.error(f"Code exchange error: {ex}")
+
+    # 2B. The Red-Marked Property Dropdown (Now Containing ALL 20+ Sites)
+    portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
+    site_options = [portfolio_label] + clean_active_sites + ["➕ Enter Custom Property URL"]
 
     def_idx = 0
     if st.session_state.current_site in site_options:
         def_idx = site_options.index(st.session_state.current_site)
-    elif st.session_state.current_site and st.session_state.current_site.startswith("🌐 [ALL SITES]"):
+    elif st.session_state.current_site and str(st.session_state.current_site).startswith("🌐 [ALL SITES]"):
         def_idx = 0
-    elif real_sites and real_sites[0] in site_options:
-        def_idx = site_options.index(real_sites[0])
+    elif clean_active_sites and clean_active_sites[0] in site_options:
+        def_idx = site_options.index(clean_active_sites[0])
 
-    selected_choice = st.selectbox("Property", site_options, index=def_idx, label_visibility="collapsed")
+    st.markdown(f"<div style='font-size:11px; font-weight:700; color:#5f6368; text-transform:uppercase; margin-top:6px; margin-bottom:4px; letter-spacing:0.3px;'>Select Property ({total_p} Sites Available ▾):</div>", unsafe_allow_html=True)
+    selected_choice = st.selectbox("Property", site_options, index=def_idx, label_visibility="collapsed", key="sidebar_property_selector")
+
     if selected_choice == "➕ Enter Custom Property URL":
-        selected_site = st.text_input("Enter Property URL:", value="https://")
-    elif selected_choice == "🧪 (Demo) centralec-electrical.co.uk":
-        selected_site = "https://centralec-electrical.co.uk/"
+        selected_site = st.text_input("Enter Property URL:", value="https://", key="txt_custom_property_url")
     elif selected_choice.startswith("🌐 [ALL SITES]"):
         selected_site = selected_choice
     else:
@@ -617,50 +760,72 @@ with st.sidebar:
         st.session_state.current_site = selected_site
         if selected_site.startswith("🌐 [ALL SITES]"):
             st.session_state.portfolio_needs_refresh = True
-        elif selected_site == "https://centralec-electrical.co.uk/":
-            _df_curr, _df_daily_curr, _df_daily_comp, _metrics = generate_centralec_gsc_data()
+        elif st.session_state.service:
+            st.session_state.df = pd.DataFrame()
+        else:
+            _df_curr, _df_daily_curr, _df_daily_comp, _metrics = generate_centralec_gsc_data(site_name=selected_site)
             st.session_state.df = _df_curr
             st.session_state.df_daily_curr = _df_daily_curr
             st.session_state.df_daily_comp = _df_daily_comp
             st.session_state.gsc_metrics = _metrics
-        elif st.session_state.service:
-            st.session_state.df = pd.DataFrame()
 
-    # Expandable interactive list of all account properties in sidebar
-    if is_connected and real_sites:
-        with st.expander(f"📋 All Verified Sites ({len(real_sites)})", expanded=False):
-            st.caption("Click any site to switch to it:")
-            is_port_active = bool(st.session_state.current_site and st.session_state.current_site.startswith("🌐 [ALL SITES]"))
-            if is_port_active:
-                st.markdown(f"<div style='background:#e8f0fe; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600; color:#1a73e8; margin-bottom:6px;'>● 🌐 Consolidated Portfolio (Active)</div>", unsafe_allow_html=True)
-            else:
-                if st.button("🌐 [ALL SITES] Consolidated Portfolio", key="side_btn_portfolio_toggle", use_container_width=True):
-                    st.session_state.current_site = portfolio_label
+    # 2C. Bulk Paste / Import 20+ Sites Tool
+    with st.expander(f"📋 Bulk Paste / Import 20+ Sites ({total_p})", expanded=False):
+        st.caption("Paste all 20 of your Search Console domain/URL properties (one per line):")
+        pasted_text = st.text_area(
+            "Website URLs / sc-domains", 
+            value="\n".join(clean_active_sites), 
+            height=140, 
+            key="txt_bulk_sites_import"
+        )
+        col_imp1, col_imp2 = st.columns(2)
+        with col_imp1:
+            if st.button("📥 Load Pasted Sites", use_container_width=True, type="primary", key="btn_load_pasted_sites"):
+                new_list = [line.strip() for line in pasted_text.splitlines() if line.strip()]
+                if new_list:
+                    st.session_state.sites = new_list
+                    st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in new_list]
+                    st.session_state.current_site = new_list[0]
                     st.session_state.portfolio_needs_refresh = True
+                    st.success(f"Loaded {len(new_list)} sites into dropdown!")
                     st.rerun()
-            for s in real_sites:
-                is_active = (s == st.session_state.current_site)
-                tag = "🌐 [Domain]" if s.startswith("sc-domain:") else "🔗 [URL]"
-                clean_name = s.replace("sc-domain:", "").replace("https://", "").replace("http://", "").strip("/")
-                if is_active:
-                    st.markdown(f"<div style='background:#e8f0fe; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600; color:#1a73e8; margin-bottom:4px;'>● {tag} {clean_name} (Active)</div>", unsafe_allow_html=True)
-                else:
-                    if st.button(f"{tag} {clean_name}", key=f"side_site_btn_{s}", use_container_width=True):
-                        st.session_state.current_site = s
-                        if st.session_state.service:
-                            st.session_state.df = pd.DataFrame()
-                        st.rerun()
-            
-            if st.button("🔄 Sync Sites from Google", use_container_width=True, key="side_sync_sites_btn"):
-                with st.spinner("Fetching latest sites..."):
-                    try:
-                        fresh_sites = get_sites_detailed(st.session_state.service)
-                        st.session_state.sites_detailed = fresh_sites
-                        st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
-                        st.success(f"Synced {len(st.session_state.sites)} properties!")
-                        st.rerun()
-                    except Exception as ex:
-                        st.error(f"Sync error: {ex}")
+        with col_imp2:
+            if st.button("🔄 Reset to 20 Sites", use_container_width=True, key="btn_reset_default_20_sites"):
+                st.session_state.sites = list(DEFAULT_ACCOUNT_20_SITES)
+                st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in DEFAULT_ACCOUNT_20_SITES]
+                st.session_state.current_site = DEFAULT_ACCOUNT_20_SITES[0]
+                st.session_state.portfolio_needs_refresh = True
+                st.rerun()
+
+    # 2D. Expandable interactive list of all account properties in sidebar
+    with st.expander(f"📋 Quick Switch — All {total_p} Sites", expanded=False):
+        st.caption("Click any site to instantly switch the dashboard:")
+        is_port_active = bool(st.session_state.current_site and str(st.session_state.current_site).startswith("🌐 [ALL SITES]"))
+        if is_port_active:
+            st.markdown(f"<div style='background:#e8f0fe; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600; color:#1a73e8; margin-bottom:6px;'>● 🌐 Consolidated Portfolio (Active)</div>", unsafe_allow_html=True)
+        else:
+            if st.button(f"🌐 [ALL SITES] Consolidated Portfolio ({total_p})", key="side_btn_portfolio_toggle", use_container_width=True):
+                st.session_state.current_site = portfolio_label
+                st.session_state.portfolio_needs_refresh = True
+                st.rerun()
+        for idx, s in enumerate(clean_active_sites):
+            is_active = (s == st.session_state.current_site)
+            tag = "🌐 [Domain]" if s.startswith("sc-domain:") else "🔗 [URL]"
+            clean_name = s.replace("sc-domain:", "").replace("https://", "").replace("http://", "").strip("/")
+            if is_active:
+                st.markdown(f"<div style='background:#e8f0fe; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600; color:#1a73e8; margin-bottom:4px;'>● {tag} {clean_name} (Active)</div>", unsafe_allow_html=True)
+            else:
+                if st.button(f"{tag} {clean_name}", key=f"side_site_btn_{idx}_{abs(hash(s))%100000}", use_container_width=True):
+                    st.session_state.current_site = s
+                    if st.session_state.service:
+                        st.session_state.df = pd.DataFrame()
+                    else:
+                        _df_curr, _df_daily_curr, _df_daily_comp, _metrics = generate_centralec_gsc_data(site_name=s)
+                        st.session_state.df = _df_curr
+                        st.session_state.df_daily_curr = _df_daily_curr
+                        st.session_state.df_daily_comp = _df_daily_comp
+                        st.session_state.gsc_metrics = _metrics
+                    st.rerun()
 
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
@@ -736,15 +901,19 @@ with st.sidebar:
                     st.info("No saved data.")
 
         st.divider()
-        # Connection Status & Logins
-        is_connected = bool(st.session_state.service and st.session_state.sites)
+        is_connected = bool(st.session_state.service)
         if is_connected:
             st.markdown(f"**Google Account:** <span style='color:#10b981; font-weight:600;'>● Connected ({len(st.session_state.sites)} properties)</span>", unsafe_allow_html=True)
-            if st.button("🚪 Disconnect Google Account", use_container_width=True):
+            if st.button("🚪 Disconnect Google Account", use_container_width=True, key="btn_disconnect_bottom_expander"):
+                delete_saved_credentials()
                 st.session_state.service = None
                 st.session_state.service_v1 = None
-                st.session_state.sites = ["https://centralec-electrical.co.uk/"]
+                st.session_state.sites = list(DEFAULT_ACCOUNT_20_SITES)
+                st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in DEFAULT_ACCOUNT_20_SITES]
                 st.session_state.user_creds = None
+                st.session_state.user_email = None
+                st.session_state.current_site = DEFAULT_ACCOUNT_20_SITES[0]
+                st.session_state.portfolio_needs_refresh = True
                 st.rerun()
         else:
             st.markdown("**🔐 Connect Google Account:**")
@@ -1948,7 +2117,7 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
 
     # Property Management Forms (Add / Delete via GSC Sites API)
     st.markdown("### ⚙️ Search Console Property Management")
-    pm_t1, pm_t2 = st.tabs(["➕ Add New Property to Search Console", "🗑️ Remove Property"])
+    pm_t1, pm_t2, pm_t3 = st.tabs(["➕ Add New Property", "🗑️ Remove Property", "📋 Bulk Import / Load 20+ Sites"])
     with pm_t1:
         st.markdown("Register a new domain or URL-prefix property in your Google Search Console account:")
         new_site_input = st.text_input("Property URL or Domain (e.g. `sc-domain:example.com` or `https://example.com/`):", key="new_site_mgmt_input")
@@ -1990,12 +2159,59 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
                         st.session_state.sites_detailed = [s for s in st.session_state.sites_detailed if s.get('siteUrl') != site_to_del]
                         st.session_state.portfolio_needs_refresh = True
                         if st.session_state.current_site == site_to_del:
-                            st.session_state.current_site = st.session_state.sites[0] if st.session_state.sites else "https://centralec-electrical.co.uk/"
+                            st.session_state.current_site = st.session_state.sites[0] if st.session_state.sites else DEFAULT_ACCOUNT_20_SITES[0]
                         st.rerun()
                     else:
                         st.error(f"Failed to remove property: {res.get('message')}")
         else:
             st.info("No properties found.")
+
+    with pm_t3:
+        st.markdown("Import, paste, or update up to 20+ Search Console properties into your dashboard portfolio at once:")
+        bulk_input = st.text_area(
+            "Enter Property URLs or Domains (one per line):", 
+            value="\n".join([s.get('siteUrl', '') if isinstance(s, dict) else str(s) for s in detailed_sites]), 
+            height=160, 
+            key="bulk_mgmt_sites_input"
+        )
+        col_bm1, col_bm2, col_bm3 = st.columns(3)
+        with col_bm1:
+            if st.button("📥 Load All to Dashboard", use_container_width=True, type="primary", key="btn_mgmt_bulk_load"):
+                new_sites = [line.strip() for line in bulk_input.splitlines() if line.strip()]
+                if new_sites:
+                    st.session_state.sites = new_sites
+                    st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in new_sites]
+                    st.session_state.current_site = new_sites[0]
+                    st.session_state.portfolio_needs_refresh = True
+                    st.success(f"Successfully loaded {len(new_sites)} properties!")
+                    st.rerun()
+        with col_bm2:
+            if is_conn:
+                if st.button("☁️ Add All to GSC Account", use_container_width=True, key="btn_mgmt_bulk_add_gsc"):
+                    new_sites = [line.strip() for line in bulk_input.splitlines() if line.strip()]
+                    added_count = 0
+                    for s in new_sites:
+                        res = add_site_property(st.session_state.service, s)
+                        if res.get('success'):
+                            added_count += 1
+                    try:
+                        fresh_s = get_sites_detailed(st.session_state.service)
+                        st.session_state.sites_detailed = fresh_s
+                        st.session_state.sites = [s['siteUrl'] for s in fresh_s if 'siteUrl' in s]
+                    except Exception:
+                        pass
+                    st.session_state.portfolio_needs_refresh = True
+                    st.success(f"Added {added_count} properties to your Google Search Console account!")
+                    st.rerun()
+            else:
+                st.button("☁️ Add All to GSC Account", use_container_width=True, disabled=True, help="Connect Google Account first")
+        with col_bm3:
+            if st.button("🔄 Reset to Default 20 Sites", use_container_width=True, key="btn_mgmt_bulk_reset"):
+                st.session_state.sites = list(DEFAULT_ACCOUNT_20_SITES)
+                st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in DEFAULT_ACCOUNT_20_SITES]
+                st.session_state.current_site = DEFAULT_ACCOUNT_20_SITES[0]
+                st.session_state.portfolio_needs_refresh = True
+                st.rerun()
 
 
 # ----------------------------------------------------

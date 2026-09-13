@@ -98,7 +98,45 @@ def exchange_code(code: str, redirect_uri: str, config: dict = None):
         autogenerate_code_verifier=False
     )
     flow.fetch_token(code=code)
-    return flow.credentials
+    creds = flow.credentials
+    save_credentials(creds)
+    return creds
+
+def load_saved_credentials():
+    """Loads cached OAuth credentials from token.pickle if valid or refreshable."""
+    if os.path.exists(TOKEN_FILE):
+        try:
+            with open(TOKEN_FILE, 'rb') as f:
+                creds = pickle.load(f)
+            if creds:
+                if creds.expired and creds.refresh_token:
+                    try:
+                        creds.refresh(Request())
+                        save_credentials(creds)
+                    except Exception:
+                        pass
+                return creds
+        except Exception as ex:
+            print(f"Error loading saved credentials: {ex}")
+    return None
+
+def save_credentials(creds):
+    """Saves OAuth credentials to token.pickle for persistence across sessions."""
+    if not creds:
+        return
+    try:
+        with open(TOKEN_FILE, 'wb') as f:
+            pickle.dump(creds, f)
+    except Exception as ex:
+        print(f"Error saving credentials: {ex}")
+
+def delete_saved_credentials():
+    """Deletes cached credentials file on logout."""
+    try:
+        if os.path.exists(TOKEN_FILE):
+            os.remove(TOKEN_FILE)
+    except Exception as ex:
+        print(f"Error removing credentials file: {ex}")
 
 def authenticate_local(port=8080):
     """Local server flow for desktop/single-machine usage."""
@@ -121,6 +159,8 @@ def authenticate_local(port=8080):
             authorization_prompt_message='Please authorize GSC Pro Dashboard in your browser.',
             success_message='Authentication successful! You can close this tab and return to the dashboard.'
         )
+    if creds:
+        save_credentials(creds)
     return creds
 
 def get_gsc_service(creds):
