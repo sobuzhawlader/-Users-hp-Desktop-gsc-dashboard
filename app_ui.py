@@ -132,72 +132,71 @@ st.set_page_config(
 )
 
 # ==============================
-# Custom CSS - Authentic Google Search Console Light UI
+# Custom CSS - Cyber Tech Vibe UI
 # ==============================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
-    * { font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    * { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
     
-    /* Force 100% Light Mode everywhere */
+    /* Deep Tech Dark Canvas */
     html, body, [class*="css"], .stApp, .main, [data-testid="stAppViewContainer"], [data-testid="stHeader"] { 
-        background-color: #ffffff !important; 
-        color: #202124 !important;
+        background-color: #080c14 !important; 
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.22) 0px, transparent 50%), 
+            radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%), 
+            radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%) !important;
+        color: #f1f5f9 !important;
     }
     
+    /* Cyber Dark Sidebar */
     section[data-testid="stSidebar"] {
-        background-color: #f8f9fa !important;
-        border-right: 1px solid #dadce0 !important;
+        background-color: #0c111d !important;
+        border-right: 1px solid rgba(56, 189, 248, 0.15) !important;
     }
     
-    /* GSC Sidebar Menu Styling */
+    /* Futuristic Sidebar Menu */
     section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] {
-        gap: 2px !important;
+        gap: 4px !important;
     }
     section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label {
-        color: #3c4043 !important;
+        color: #94a3b8 !important;
         font-size: 13.5px !important;
         font-weight: 500 !important;
-        border-radius: 0 24px 24px 0 !important;
-        padding: 9px 18px !important;
-        margin-right: 14px !important;
+        border-radius: 8px !important;
+        padding: 8px 14px !important;
+        margin-right: 10px !important;
         cursor: pointer !important;
-        transition: all 0.12s ease-in-out !important;
+        transition: all 0.15s ease-in-out !important;
         display: flex !important;
         align-items: center !important;
     }
     section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label:hover {
-        background-color: #f1f3f4 !important;
-        color: #202124 !important;
+        background-color: rgba(56, 189, 248, 0.08) !important;
+        color: #f8fafc !important;
     }
     section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label[data-checked="true"] {
-        background-color: #e8f0fe !important;
-        color: #1a73e8 !important;
+        background: linear-gradient(90deg, rgba(56, 189, 248, 0.2) 0%, rgba(37, 99, 235, 0.05) 100%) !important;
+        color: #38bdf8 !important;
+        border-left: 3px solid #38bdf8 !important;
         font-weight: 600 !important;
+        text-shadow: 0 0 10px rgba(56, 189, 248, 0.5) !important;
     }
-    /* Hide the radio bullet circle so it looks like authentic GSC menu tabs */
     section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label > div:first-child {
         display: none !important;
     }
     
-    /* Property Card */
-    .gsc-prop-card {
-        background: #ffffff;
-        border: 1px solid #dadce0;
-        border-radius: 8px;
-        padding: 8px 12px;
-        margin-bottom: 12px;
-        box-shadow: 0 1px 2px rgba(60,64,67,0.08);
-    }
-    
-    /* GSC Top Header */
+    /* Tech HUD Top Header Bar */
     .gsc-top-bar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 8px 16px;
-        background: #ffffff;
-        border-bottom: 1px solid #dadce0;
+        padding: 10px 20px;
+        background: rgba(12, 17, 29, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
         margin: -4rem -3rem 1.5rem -3rem;
         position: sticky;
         top: 0;
@@ -207,252 +206,357 @@ st.markdown("""
         display: flex;
         align-items: center;
         gap: 12px;
-        background: #e8f0fe;
+        background: rgba(22, 30, 49, 0.85);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
         border-radius: 24px;
-        padding: 8px 20px;
+        padding: 7px 18px;
         width: 48%;
         max-width: 650px;
-        color: #3c4043;
+        color: #cbd5e1;
         font-size: 13px;
+        transition: border-color 0.2s;
+    }
+    .gsc-search-pill:hover {
+        border-color: rgba(56, 189, 248, 0.5);
     }
     
-    /* GSC Filter Chips */
+    /* Tech Filter Chips & Pills */
     .gsc-chip-group {
         display: inline-flex;
-        border: 1px solid #dadce0;
-        border-radius: 4px;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        background: rgba(15, 23, 42, 0.8);
+        border-radius: 6px;
         overflow: hidden;
     }
     .gsc-chip {
         padding: 5px 12px;
         font-size: 12px;
-        color: #3c4043;
-        background: #ffffff;
-        border-right: 1px solid #dadce0;
+        color: #94a3b8;
+        background: transparent;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
         cursor: pointer;
         font-weight: 500;
+        transition: all 0.15s;
+    }
+    .gsc-chip:hover {
+        color: #f8fafc;
+        background: rgba(255, 255, 255, 0.04);
     }
     .gsc-chip:last-child {
         border-right: none;
     }
     .gsc-chip-active {
-        background: #e8f0fe !important;
-        color: #1a73e8 !important;
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(37, 99, 235, 0.35)) !important;
+        color: #38bdf8 !important;
         font-weight: 600 !important;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.3) !important;
     }
     .gsc-filter-pill {
         display: inline-flex;
         align-items: center;
         gap: 6px;
         padding: 5px 14px;
-        border-radius: 16px;
-        border: 1px solid #dadce0;
+        border-radius: 20px;
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        background: rgba(15, 23, 42, 0.8);
         font-size: 12px;
-        color: #3c4043;
-        background: #ffffff;
+        color: #cbd5e1;
         font-weight: 500;
     }
     
-    /* GSC Scorecard Cards */
+    /* Tech Glassmorphism KPI Tiles */
     .gsc-tile-wrapper {
-        border: 1px solid #dadce0;
-        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
         overflow: hidden;
         margin-bottom: 12px;
-        background: #ffffff;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .gsc-tile-wrapper:hover {
+        transform: translateY(-2px);
+        border-color: rgba(56, 189, 248, 0.35);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.12);
     }
     .gsc-card {
-        padding: 14px 16px;
-        min-height: 155px;
+        padding: 16px 18px;
+        min-height: 160px;
         position: relative;
-        transition: all 0.15s ease-in-out;
         border-radius: 0px;
     }
     .gsc-card-users-on {
-        background: #1e8e3e !important;
-        color: #ffffff !important;
+        background: linear-gradient(180deg, rgba(16, 185, 129, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        border-top: 3px solid #10b981 !important;
+        color: #f1f5f9 !important;
     }
     .gsc-card-clicks-on {
-        background: #1a73e8 !important;
-        color: #ffffff !important;
+        background: linear-gradient(180deg, rgba(56, 189, 248, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        border-top: 3px solid #38bdf8 !important;
+        color: #f1f5f9 !important;
     }
     .gsc-card-imps-on {
-        background: #5e35b1 !important;
-        color: #ffffff !important;
+        background: linear-gradient(180deg, rgba(168, 85, 247, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        border-top: 3px solid #a855f7 !important;
+        color: #f1f5f9 !important;
     }
     .gsc-card-ctr-on {
-        background: #00897b !important;
-        color: #ffffff !important;
+        background: linear-gradient(180deg, rgba(20, 184, 166, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        border-top: 3px solid #14b8a6 !important;
+        color: #f1f5f9 !important;
     }
     .gsc-card-pos-on {
-        background: #e8710a !important;
-        color: #ffffff !important;
+        background: linear-gradient(180deg, rgba(245, 158, 11, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        border-top: 3px solid #f59e0b !important;
+        color: #f1f5f9 !important;
     }
     .gsc-card-off {
-        background: #ffffff !important;
-        color: #3c4043 !important;
-        border-right: 1px solid #dadce0;
-    }
-    .gsc-card-off:last-child {
-        border-right: none;
+        background: rgba(15, 23, 42, 0.5) !important;
+        color: #64748b !important;
+        border-top: 3px solid transparent !important;
     }
     
     .gsc-card-title {
         font-size: 12px;
-        font-weight: 500;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
         display: flex;
         align-items: center;
         gap: 6px;
     }
     .gsc-card-val-big {
-        font-size: 30px;
-        font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 32px;
+        font-weight: 700;
         line-height: 1.15;
-        margin-top: 6px;
+        margin-top: 8px;
+        color: #ffffff;
+        letter-spacing: -0.5px;
     }
     .gsc-card-sub {
         font-size: 11px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: 2px;
-        opacity: 0.9;
+        margin-top: 3px;
+        color: #94a3b8;
     }
     .gsc-card-val-comp {
-        font-size: 19px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 18px;
         font-weight: 600;
         line-height: 1.15;
-        margin-top: 8px;
+        margin-top: 10px;
+        color: #cbd5e1;
     }
     .gsc-card-info-icon {
         position: absolute;
-        bottom: 10px;
-        right: 12px;
-        font-size: 12px;
-        opacity: 0.7;
+        bottom: 12px;
+        right: 14px;
+        font-size: 11px;
+        color: #64748b;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-
-    /* AI Banner */
+    
+    /* AI Cyber Banner */
     .gsc-ai-banner {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: #ffffff;
-        border: 1px solid #dadce0;
-        border-radius: 8px;
-        padding: 12px 18px;
-        margin: 14px 0 20px 0;
+        background: linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.8) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        border-radius: 10px;
+        padding: 14px 20px;
+        margin: 16px 0 22px 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
-
-    /* Streamlit dataframe & tabs */
+    
+    /* Streamlit Tabs */
     .stTabs [data-baseweb="tab-list"] {
-        border-bottom: 2px solid #dadce0 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
         gap: 20px !important;
+        background: transparent !important;
     }
     .stTabs [data-baseweb="tab"] {
         font-size: 13px !important;
         font-weight: 600 !important;
-        color: #5f6368 !important;
+        color: #94a3b8 !important;
         padding: 10px 16px !important;
+        background: transparent !important;
     }
     .stTabs [aria-selected="true"] {
-        color: #1a73e8 !important;
-        border-bottom: 3px solid #1a73e8 !important;
+        color: #38bdf8 !important;
+        border-bottom: 2px solid #38bdf8 !important;
+        text-shadow: 0 0 10px rgba(56, 189, 248, 0.4) !important;
     }
     
+    /* Buttons */
     .stButton > button {
-        background: #1a73e8 !important;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
         color: white !important;
-        border: none !important;
-        border-radius: 4px !important;
-        font-weight: 500 !important;
+        border: 1px solid rgba(96, 165, 250, 0.35) !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
         font-size: 13px !important;
-        padding: 6px 16px !important;
+        padding: 7px 18px !important;
+        box-shadow: 0 0 16px rgba(37, 99, 235, 0.35) !important;
+        transition: all 0.2s ease !important;
     }
     .stButton > button:hover {
-        background: #1765cc !important;
+        box-shadow: 0 0 24px rgba(59, 130, 246, 0.6) !important;
+        transform: translateY(-1px) !important;
+        border-color: #60a5fa !important;
     }
     
-    /* Section headers */
+    /* Tech Section Headers */
     .section-header {
-        background: #f8f9fa;
-        border-left: 4px solid #1a73e8;
-        border-radius: 4px;
-        padding: 10px 14px;
-        margin: 15px 0 12px 0;
-        color: #202124;
+        background: linear-gradient(90deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.6) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        border-left: 4px solid #38bdf8;
+        border-radius: 8px;
+        padding: 10px 16px;
+        margin: 18px 0 14px 0;
+        color: #f8fafc;
         font-size: 16px;
-        font-weight: 600;
-        border: 1px solid #dadce0;
-        border-left: 4px solid #1a73e8;
+        font-weight: 700;
+        letter-spacing: -0.2px;
     }
     
-    /* Light Material alert boxes */
+    /* Tech Alerts */
     .alert-danger {
-        background: #fce8e6;
-        border: 1px solid #fad2cf;
-        border-radius: 6px;
-        padding: 10px 14px;
-        margin: 8px 0;
-        color: #c5221f;
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin: 10px 0;
+        color: #fca5a5;
     }
     .alert-warning {
-        background: #fef7e0;
-        border: 1px solid #feefc3;
-        border-radius: 6px;
-        padding: 10px 14px;
-        margin: 8px 0;
-        color: #b06000;
+        background: rgba(245, 158, 11, 0.15);
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin: 10px 0;
+        color: #fcd34d;
     }
     .alert-success {
-        background: #e6f4ea;
-        border: 1px solid #ceead6;
-        border-radius: 6px;
-        padding: 10px 14px;
-        margin: 8px 0;
-        color: #137333;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin: 10px 0;
+        color: #6ee7b7;
     }
     
-    /* Real-Time Live Pulse & Badges */
+    /* Real-Time Pulse Animation */
     @keyframes gscPulse {
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(30, 142, 62, 0.7); }
-        70% { transform: scale(1.05); box-shadow: 0 0 0 7px rgba(30, 142, 62, 0); }
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(30, 142, 62, 0); }
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
     .gsc-pulse-dot {
         width: 8px;
         height: 8px;
-        background-color: #1e8e3e;
+        background-color: #10b981;
         border-radius: 50%;
         display: inline-block;
         animation: gscPulse 1.8s infinite;
         vertical-align: middle;
+        box-shadow: 0 0 10px #10b981;
     }
     .gsc-live-badge {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: #e6f4ea;
-        border: 1px solid #ceead6;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.4);
         border-radius: 16px;
-        padding: 4px 10px;
-        font-size: 12px;
-        color: #137333;
-        font-weight: 500;
+        padding: 4px 11px;
+        font-size: 11px;
+        color: #34d399;
+        font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
         white-space: nowrap;
     }
     .gsc-dash-badge {
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        background: #f1f3f4;
-        border: 1px solid #dadce0;
+        background: rgba(56, 189, 248, 0.15);
+        border: 1px solid rgba(56, 189, 248, 0.35);
         border-radius: 16px;
-        padding: 4px 10px;
-        font-size: 12px;
-        color: #5f6368;
-        font-weight: 500;
+        padding: 4px 11px;
+        font-size: 11px;
+        color: #38bdf8;
+        font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
         white-space: nowrap;
+    }
+    
+    /* Form Elements & Inputs */
+    input, textarea, [data-baseweb="input"], [data-baseweb="select"] {
+        background-color: rgba(15, 23, 42, 0.85) !important;
+        color: #f8fafc !important;
+        border: 1px solid rgba(56, 189, 248, 0.25) !important;
+        border-radius: 8px !important;
+    }
+    input:focus, textarea:focus {
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.35) !important;
+    }
+    
+    /* Checkboxes */
+    [data-testid="stCheckbox"] label span {
+        color: #cbd5e1 !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+    }
+    [data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] {
+        background-color: #38bdf8 !important;
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.4) !important;
+    }
+    
+    /* Dataframes / Tables */
+    [data-testid="stDataFrame"] {
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 8px !important;
+        background: rgba(15, 23, 42, 0.7) !important;
+    }
+    
+    /* Streamlit Expander */
+    .streamlit-expanderHeader {
+        background: rgba(15, 23, 42, 0.6) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 8px !important;
+        color: #e2e8f0 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Custom Tech Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #080c14;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(56, 189, 248, 0.25);
+        border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(56, 189, 248, 0.5);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -620,14 +724,17 @@ if st.session_state.service:
 with st.sidebar:
     # 1. GSC Logo & Brand Header
     st.markdown("""
-    <div style='display:flex; align-items:center; gap:8px; padding: 4px 6px 12px 6px;'>
-        <svg width="24" height="24" viewBox="0 0 48 48">
-            <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-            <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-            <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-            <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+    <div style='display:flex; align-items:center; gap:10px; padding: 6px 6px 14px 6px; border-bottom: 1px solid rgba(56, 189, 248, 0.15); margin-bottom: 12px;'>
+        <svg width="26" height="26" viewBox="0 0 48 48">
+            <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+            <path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+            <path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+            <path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
         </svg>
-        <span style='font-size:16px; font-weight:500; color:#5f6368; letter-spacing:-0.2px;'>Search Console</span>
+        <div>
+            <div style='font-size:16px; font-weight:800; background:linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;'>GSC TERMINAL</div>
+            <div style='font-size:9.5px; font-family:"JetBrains Mono",monospace; color:#34d399; letter-spacing:0.5px;'>● ENTERPRISE AI SEO</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -650,13 +757,13 @@ with st.sidebar:
         user_mail_disp = st.session_state.get('user_email') or 'Connected Google Account'
         if total_p > 0:
             st.markdown(f"""
-            <div style="background:#e8f0fe; border:1.5px solid #1a73e8; border-radius:8px; padding:10px 12px; margin-bottom:8px;">
+            <div style="background:linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.8) 100%); border:1px solid rgba(56, 189, 248, 0.3); border-radius:10px; padding:12px 14px; margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.3);">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-size:10px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">🟢 CONNECTED GOOGLE ACCOUNT</div>
-                    <span style="font-size:10px; background:#1a73e8; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:600;">{total_p} SITES</span>
+                    <div style="font-size:10px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">● CONNECTED SESSION</div>
+                    <span style="font-size:10px; background:rgba(56, 189, 248, 0.2); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); padding:1px 7px; border-radius:12px; font-weight:700; font-family:'JetBrains Mono',monospace;">{total_p} PROPERTIES</span>
                 </div>
-                <div style="font-size:13px; font-weight:600; color:#202124; margin-top:3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
-                <div style="font-size:11px; color:#5f6368; margin-top:2px;">Showing all <b style="color:#1a73e8;">{total_p}</b> verified properties from your Google Search Console ▾</div>
+                <div style="font-size:13px; font-weight:600; color:#f8fafc; margin-top:5px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
+                <div style="font-size:11px; color:#94a3b8; margin-top:3px;">Consolidating <b style="color:#38bdf8;">{total_p}</b> verified search properties ▾</div>
             </div>
             """, unsafe_allow_html=True)
             col_acc1, col_acc2 = st.columns(2)
@@ -695,13 +802,13 @@ with st.sidebar:
         else:
             # Connected, but 0 sites found in this Gmail!
             st.markdown(f"""
-            <div style="background:#fff3cd; border:1.5px solid #ffeeba; border-radius:8px; padding:10px 12px; margin-bottom:8px;">
+            <div style="background:linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%); border:1px solid rgba(245, 158, 11, 0.35); border-radius:10px; padding:12px 14px; margin-bottom:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-size:10px; font-weight:700; color:#856404; text-transform:uppercase; letter-spacing:0.5px;">🟢 LOGGED IN</div>
-                    <span style="font-size:10px; background:#e0a800; color:#202124; padding:1px 6px; border-radius:10px; font-weight:700;">0 SITES</span>
+                    <div style="font-size:10px; font-weight:700; color:#fbbf24; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">● SESSION ACTIVE</div>
+                    <span style="font-size:10px; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.4); padding:1px 7px; border-radius:12px; font-weight:700; font-family:'JetBrains Mono',monospace;">0 SITES</span>
                 </div>
-                <div style="font-size:13px; font-weight:600; color:#202124; margin-top:3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
-                <div style="font-size:11px; color:#856404; margin-top:4px; line-height:1.4;">
+                <div style="font-size:13px; font-weight:600; color:#f8fafc; margin-top:5px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
+                <div style="font-size:11px; color:#fcd34d; margin-top:4px; line-height:1.4;">
                     ⚠️ <b>0 properties found in Search Console.</b><br>
                     If your 20+ sites are in another Gmail, switch accounts below:
                 </div>
@@ -742,9 +849,9 @@ with st.sidebar:
     else:
         # Not connected yet
         st.markdown("""
-        <div style="background:#f8fafd; border:1.5px solid #4285f4; border-radius:8px; padding:10px 12px; margin-bottom:8px;">
-            <div style="font-size:10px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">🔐 CONNECT GMAIL SEARCH CONSOLE</div>
-            <div style="font-size:11px; color:#3c4043; margin-top:2px; line-height:1.35;">Sign in to load all <b>20+ Search Console properties</b> from your Gmail account.</div>
+        <div style="background:linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%); border:1px solid rgba(56, 189, 248, 0.3); border-radius:10px; padding:12px 14px; margin-bottom:10px; box-shadow:0 0 15px rgba(56, 189, 248, 0.08);">
+            <div style="font-size:10px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">🔐 GOOGLE SEARCH CONSOLE AUTH</div>
+            <div style="font-size:11.5px; color:#94a3b8; margin-top:4px; line-height:1.4;">Sign in to stream live telemetry across all <b style="color:#f8fafc;">Search Console properties</b>.</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -810,7 +917,7 @@ with st.sidebar:
         def_idx = 0
 
     dropdown_label = f"Select Property ({total_p} Sites Loaded ▾):" if total_p > 0 else "Select Property (Sign In ▾):"
-    st.markdown(f"<div style='font-size:11px; font-weight:700; color:#5f6368; text-transform:uppercase; margin-top:6px; margin-bottom:4px; letter-spacing:0.3px;'>{dropdown_label}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='font-size:11px; font-weight:700; color:#38bdf8; font-family:\"JetBrains Mono\",monospace; text-transform:uppercase; margin-top:8px; margin-bottom:4px; letter-spacing:0.5px;'>{dropdown_label}</div>", unsafe_allow_html=True)
     selected_choice = st.selectbox("Property", site_options, index=def_idx, label_visibility="collapsed", key="sidebar_property_selector")
 
     if selected_choice == "➕ Enter Custom Property URL":
@@ -993,20 +1100,20 @@ with st.sidebar:
 
     # 5. Live Telemetry Status Card (Sidebar Footer)
     st.markdown(f"""
-    <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:10px 12px; margin-top:14px; box-shadow:0 1px 2px rgba(60,64,67,0.08);">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-            <div style="display:flex; align-items:center; gap:6px;">
+    <div style="background:rgba(15, 23, 42, 0.75); border:1px solid rgba(56, 189, 248, 0.2); border-radius:10px; padding:12px 14px; margin-top:16px; backdrop-filter:blur(8px);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
                 <span class="gsc-pulse-dot"></span>
-                <span style="font-size:12px; font-weight:600; color:#202124;">Live Telemetry</span>
+                <span style="font-size:11px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">LIVE TELEMETRY</span>
             </div>
-            <span style="font-size:11px; background:#e6f4ea; color:#137333; font-weight:600; padding:2px 7px; border-radius:10px;">
-                {live_site_users} Active
+            <span style="font-size:11px; background:rgba(16, 185, 129, 0.15); color:#34d399; border:1px solid rgba(16, 185, 129, 0.3); font-weight:700; padding:2px 8px; border-radius:12px; font-family:'JetBrains Mono',monospace;">
+                {live_site_users} ACTIVE
             </span>
         </div>
-        <div style="font-size:11px; color:#5f6368; line-height:1.4;">
-            <div>🌐 Site: <b>{live_site_users}</b> online right now</div>
-            <div>⏱️ Last 30m: <b>{rt_metrics['users_last_30m']}</b> visitors</div>
-            <div>👥 Dashboard: <b>{active_dash_users}</b> active session{'s' if active_dash_users > 1 else ''}</div>
+        <div style="font-size:11px; color:#94a3b8; line-height:1.6; font-family:'JetBrains Mono',monospace;">
+            <div>🌐 Site: <b style="color:#f8fafc;">{live_site_users}</b> online right now</div>
+            <div>⏱️ Last 30m: <b style="color:#38bdf8;">{rt_metrics['users_last_30m']}</b> visitors</div>
+            <div>👥 Dashboard: <b style="color:#a855f7;">{active_dash_users}</b> session{'s' if active_dash_users > 1 else ''}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1043,39 +1150,40 @@ if page in ["📈 Performance", "📊 Overview"]:
     pill_site_text = f"Consolidated Portfolio ({len(real_active_sites)} verified properties)" if is_portfolio_mode else (current_site or (real_active_sites[0] if real_active_sites else "No Property Selected"))
     st.markdown(f"""
     <div class="gsc-top-bar">
-        <div style="display:flex; align-items:center; gap:16px;">
-            <span style="font-size:20px; color:#5f6368; cursor:pointer;">☰</span>
-            <div style="display:flex; align-items:center; gap:8px;">
+        <div style="display:flex; align-items:center; gap:14px;">
+            <span style="font-size:20px; color:#94a3b8; cursor:pointer;">☰</span>
+            <div style="display:flex; align-items:center; gap:10px;">
                 <svg width="24" height="24" viewBox="0 0 48 48">
-                    <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                    <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                    <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                    <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                    <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                    <path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                    <path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                    <path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
                 </svg>
-                <span style="font-size:18px; font-weight:500; color:#5f6368; letter-spacing:-0.2px;">Google Search Console</span>
+                <span style="font-size:17px; font-weight:700; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">Search Console <span style="font-size:10px; font-weight:700; color:#38bdf8; -webkit-text-fill-color:#38bdf8; background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px; border:1px solid rgba(56,189,248,0.3); vertical-align:middle; margin-left:4px;">TECH VIBE</span></span>
             </div>
         </div>
         <div class="gsc-search-pill">
-            <span style="color:#5f6368; font-size:15px;">🔍</span>
-            <span style="color:#3c4043; font-size:13px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Inspect any URL in "{pill_site_text}"</span>
+            <span style="color:#38bdf8; font-size:14px;">🔍</span>
+            <span style="color:#cbd5e1; font-size:12.5px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">Inspect any URL in "{pill_site_text}"</span>
+            <span style="font-size:10px; font-family:'JetBrains Mono', monospace; background:rgba(255,255,255,0.08); color:#94a3b8; padding:2px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.1);">⌘K</span>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
             <div class="gsc-live-badge" title="Live active visitors browsing your website right now">
                 <span class="gsc-pulse-dot"></span>
-                <span><b>{live_site_users}</b> active on site</span>
+                <span><b>{live_site_users}</b> ACTIVE</span>
             </div>
             <div class="gsc-dash-badge" title="Users currently viewing this dashboard">
                 <span>👥</span>
-                <span><b>{active_dash_users}</b> online</span>
+                <span><b>{active_dash_users}</b> ONLINE</span>
             </div>
-            <div style="display:flex; align-items:center; gap:12px; margin-left:4px;">
-                <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Help">❔</span>
-                <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Feedback">💬</span>
+            <div style="display:flex; align-items:center; gap:10px; margin-left:6px;">
+                <span style="color:#94a3b8; font-size:16px; cursor:pointer;" title="Help">❔</span>
+                <span style="color:#94a3b8; font-size:16px; cursor:pointer;" title="Feedback">💬</span>
                 <div style="position:relative; cursor:pointer;">
-                    <span style="color:#5f6368; font-size:17px;">🔔</span>
-                    <span style="position:absolute; top:-4px; right:-6px; background:#d93025; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:15px; height:15px; display:flex; align-items:center; justify-content:center;">0</span>
+                    <span style="color:#94a3b8; font-size:16px;">🔔</span>
+                    <span style="position:absolute; top:-4px; right:-6px; background:#ef4444; color:white; font-size:9px; font-weight:bold; border-radius:50%; width:14px; height:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 8px #ef4444;">0</span>
                 </div>
-                <div style="width:30px; height:30px; border-radius:50%; background:#5c6bc0; color:white; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;">S</div>
+                <div style="width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #8b5cf6); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; box-shadow:0 0 10px rgba(59,130,246,0.5);">S</div>
             </div>
         </div>
     </div>
@@ -1084,12 +1192,12 @@ if page in ["📈 Performance", "📊 Overview"]:
     if is_connected and not real_active_sites:
         user_e = st.session_state.get('user_email') or 'your Google Account'
         st.markdown(f"""
-        <div style="background:#fff3cd; border:1.5px solid #ffeeba; border-radius:10px; padding:32px 24px; margin:20px 0; text-align:center;">
+        <div style="background:linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(15, 23, 42, 0.85) 100%); border:1px solid rgba(245, 158, 11, 0.35); border-radius:12px; padding:32px 24px; margin:20px 0; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.4);">
             <div style="font-size:40px; margin-bottom:10px;">⚠️</div>
-            <div style="font-size:20px; font-weight:700; color:#856404;">No Search Console Properties Found in 📧 {user_e}</div>
-            <div style="font-size:14px; color:#664d03; max-width:620px; margin:10px auto 20px auto; line-height:1.5;">
-                Google Search Console reported <b>0 verified properties</b> under this Gmail address.<br>
-                If your <b>20+ websites</b> are registered under a different Gmail account, click the button below to switch accounts and select the correct email:
+            <div style="font-size:20px; font-weight:700; color:#fbbf24;">No Search Console Properties Found in 📧 {user_e}</div>
+            <div style="font-size:14px; color:#cbd5e1; max-width:620px; margin:10px auto 20px auto; line-height:1.5;">
+                Google Search Console reported <b style="color:#fbbf24;">0 verified properties</b> under this Gmail address.<br>
+                If your <b>websites</b> are registered under a different Gmail account, click the button below to switch accounts:
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1100,18 +1208,18 @@ if page in ["📈 Performance", "📊 Overview"]:
         st.stop()
     elif not is_connected and not real_active_sites:
         st.markdown("""
-        <div style="background:#e8f0fe; border:1.5px solid #1a73e8; border-radius:10px; padding:32px 24px; margin:20px 0; text-align:center;">
-            <div style="font-size:40px; margin-bottom:10px;">🔐</div>
-            <div style="font-size:20px; font-weight:700; color:#1a73e8;">Connect Your Google Search Console Account</div>
-            <div style="font-size:14px; color:#3c4043; max-width:620px; margin:10px auto 20px auto; line-height:1.5;">
-                Please sign in with the Gmail account where your <b>Search Console properties</b> are registered to view live data.
+        <div style="background:linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.9) 100%); border:1px solid rgba(56, 189, 248, 0.35); border-radius:12px; padding:36px 24px; margin:20px 0; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+            <div style="font-size:44px; margin-bottom:10px; filter:drop-shadow(0 0 12px rgba(56,189,248,0.5));">🔐</div>
+            <div style="font-size:22px; font-weight:800; background:linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Connect Your Google Search Console Account</div>
+            <div style="font-size:14px; color:#94a3b8; max-width:620px; margin:10px auto 24px auto; line-height:1.6;">
+                Authenticate with your verified Google account to load live search telemetry, impressions, clicks, keyword rankings, and index status.
             </div>
         </div>
         """, unsafe_allow_html=True)
         if auth_url:
             c1, c2, c3 = st.columns([1, 2, 1])
             with c2:
-                st.link_button("🌐 Sign in with Google (Load All Sites)", auth_url, type="primary", use_container_width=True)
+                st.link_button("🌐 Sign in with Google (Load All Properties)", auth_url, type="primary", use_container_width=True)
         st.stop()
 
     # 2. GSC Performance Header
@@ -1119,11 +1227,11 @@ if page in ["📈 Performance", "📊 Overview"]:
     with hdr_c1:
         if is_portfolio_mode:
             st.markdown(f"""
-            <div style="font-size:22px; font-weight:400; color:#202124; margin-bottom:2px;">Performance across All Verified Properties ({len(real_active_sites)} Sites)</div>
+            <div style="font-size:22px; font-weight:700; color:#f8fafc; margin-bottom:2px; letter-spacing:-0.3px;">Performance across All Verified Properties ({len(real_active_sites)} Sites)</div>
             """, unsafe_allow_html=True)
         else:
             st.markdown("""
-            <div style="font-size:22px; font-weight:400; color:#202124; margin-bottom:2px;">Performance on Search results</div>
+            <div style="font-size:22px; font-weight:700; color:#f8fafc; margin-bottom:2px; letter-spacing:-0.3px;">Performance on Search Results</div>
             """, unsafe_allow_html=True)
     with hdr_c2:
         if is_portfolio_mode and st.session_state.get('portfolio_data'):
@@ -1186,25 +1294,25 @@ if page in ["📈 Performance", "📊 Overview"]:
 
     # 2.5 Prominent Live Active Users Banner
     st.markdown(f"""
-    <div style="background: linear-gradient(90deg, #edf7ee 0%, #ffffff 100%); border: 1.5px solid #34a853; border-radius: 8px; padding: 12px 18px; margin: 10px 0 16px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow: 0 1px 3px rgba(30,142,62,0.12);">
-        <div style="display:flex; align-items:center; gap:12px;">
-            <span class="gsc-pulse-dot" style="width:12px; height:12px;"></span>
+    <div style="background: linear-gradient(90deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1px solid rgba(16, 185, 129, 0.35); border-left: 4px solid #10b981; border-radius: 10px; padding: 14px 20px; margin: 10px 0 18px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        <div style="display:flex; align-items:center; gap:14px;">
+            <span class="gsc-pulse-dot" style="width:13px; height:13px;"></span>
             <div>
-                <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#188038; letter-spacing:0.5px;">🟢 LIVE ACTIVE USERS</div>
-                <div style="font-size:24px; font-weight:700; color:#137333; line-height:1.2;">
-                    {live_site_users} Active Visitors
-                    <span style="font-size:13px; font-weight:400; color:#5f6368; margin-left:8px;">— Currently browsing {pill_site_text}</span>
+                <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:#34d399; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">LIVE REAL-TIME TELEMETRY</div>
+                <div style="font-size:24px; font-weight:700; color:#f8fafc; line-height:1.2; font-family:'Plus Jakarta Sans',sans-serif;">
+                    <span style="color:#10b981; font-family:'JetBrains Mono',monospace;">{live_site_users}</span> Active Visitors
+                    <span style="font-size:12px; font-weight:400; color:#94a3b8; margin-left:8px; font-family:'JetBrains Mono',monospace;">— Currently on {pill_site_text}</span>
                 </div>
             </div>
         </div>
-        <div style="display:flex; align-items:center; gap:12px;">
-            <div style="background:#ffffff; border:1px solid #ceead6; border-radius:6px; padding:6px 12px; text-align:center;">
-                <div style="font-size:11px; color:#5f6368;">Past 30 Minutes</div>
-                <div style="font-size:16px; font-weight:700; color:#1a73e8;">⏱️ {rt_metrics['users_last_30m']} users</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div style="background:rgba(15, 23, 42, 0.85); border:1px solid rgba(56, 189, 248, 0.25); border-radius:8px; padding:6px 14px; text-align:center;">
+                <div style="font-size:10px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; font-family:'JetBrains Mono',monospace;">PAST 30 MINS</div>
+                <div style="font-size:15px; font-weight:700; color:#38bdf8; font-family:'JetBrains Mono',monospace;">⏱️ {rt_metrics['users_last_30m']}</div>
             </div>
-            <div style="background:#ffffff; border:1px solid #dadce0; border-radius:6px; padding:6px 12px; text-align:center;">
-                <div style="font-size:11px; color:#5f6368;">Dashboard Viewers</div>
-                <div style="font-size:16px; font-weight:700; color:#5e35b1;">👥 {active_dash_users} online</div>
+            <div style="background:rgba(15, 23, 42, 0.85); border:1px solid rgba(168, 85, 247, 0.25); border-radius:8px; padding:6px 14px; text-align:center;">
+                <div style="font-size:10px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; font-family:'JetBrains Mono',monospace;">DASH SESSIONS</div>
+                <div style="font-size:15px; font-weight:700; color:#c084fc; font-family:'JetBrains Mono',monospace;">👥 {active_dash_users} online</div>
             </div>
         </div>
     </div>
@@ -1212,12 +1320,12 @@ if page in ["📈 Performance", "📊 Overview"]:
 
     if is_portfolio_mode:
         st.markdown(f"""
-        <div style="background:#e8f0fe; border-left:4px solid #1a73e8; border-radius:6px; padding:10px 16px; margin: 0 0 16px 0; font-size:13px; color:#1a73e8; display:flex; justify-content:space-between; align-items:center;">
+        <div style="background:linear-gradient(90deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.7) 100%); border:1px solid rgba(56, 189, 248, 0.25); border-left:4px solid #38bdf8; border-radius:8px; padding:12px 18px; margin: 0 0 16px 0; font-size:13px; color:#cbd5e1; display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <b>🌐 Consolidated Multi-Site Portfolio Active:</b> Viewing combined performance across all <b>{len(real_active_sites)}</b> verified properties for <b>{st.session_state.get('user_email') or 'your account'}</b>.
+                <b style="color:#38bdf8;">🌐 CONSOLIDATED PORTFOLIO ACTIVE:</b> Viewing combined performance across all <b style="color:#f8fafc;">{len(real_active_sites)}</b> verified properties for <b style="color:#f8fafc;">{st.session_state.get('user_email') or 'your account'}</b>.
             </div>
             <div>
-                <a href="#portfolio-table" style="color:#1a73e8; font-weight:600; text-decoration:none;">View Site Breakdown ▾</a>
+                <a href="#portfolio-table" style="color:#38bdf8; font-weight:600; text-decoration:none;">View Site Breakdown ▾</a>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1320,16 +1428,16 @@ if page in ["📈 Performance", "📊 Overview"]:
 
     # Live Real-Time Activity Bar
     st.markdown(f"""
-    <div style="background:#f8f9fa; border:1px solid #dadce0; border-radius:8px; padding:9px 14px; margin: 12px 0 6px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-        <div style="display:flex; align-items:center; gap:8px;">
+    <div style="background:linear-gradient(90deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%); border:1px solid rgba(56, 189, 248, 0.25); border-radius:10px; padding:10px 16px; margin: 12px 0 6px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+        <div style="display:flex; align-items:center; gap:10px;">
             <span class="gsc-pulse-dot"></span>
-            <span style="font-weight:600; color:#202124; font-size:13px;">Live Site Visitors:</span>
-            <span style="color:#137333; font-weight:700; font-size:13px;">{live_site_users} Active Users browsing right now</span>
-            <span style="color:#5f6368; font-size:12px;">on {current_site or (real_active_sites[0] if real_active_sites else 'selected property')} • {rt_metrics['users_last_30m']} in last 30m</span>
+            <span style="font-weight:700; color:#f8fafc; font-size:13px; font-family:'JetBrains Mono',monospace;">LIVE SITE TELEMETRY:</span>
+            <span style="color:#34d399; font-weight:700; font-size:13px; font-family:'JetBrains Mono',monospace;">{live_site_users} Active Users browsing</span>
+            <span style="color:#94a3b8; font-size:12px;">on <b style="color:#38bdf8;">{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}</b> • {rt_metrics['users_last_30m']} in last 30m</span>
         </div>
-        <div style="display:flex; align-items:center; gap:12px; font-size:12px; color:#5f6368;">
-            <span>👥 <b>{active_dash_users}</b> viewing dashboard</span>
-            <span>⚡ <b>{rt_metrics['pageviews_per_min']}</b> views/min</span>
+        <div style="display:flex; align-items:center; gap:14px; font-size:12px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">
+            <span>👥 <b style="color:#38bdf8;">{active_dash_users}</b> viewing dashboard</span>
+            <span>⚡ <b style="color:#34d399;">{rt_metrics['pageviews_per_min']}</b> views/min</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1366,19 +1474,19 @@ if page in ["📈 Performance", "📊 Overview"]:
         use_secondary = show_impressions or show_position
         fig = make_subplots(specs=[[{"secondary_y": use_secondary}]])
 
-        # Trace 1: Current Clicks (Solid #1a73e8)
+        # Trace 1: Current Clicks (Solid #38bdf8 Neon Cyan)
         if show_clicks and 'clicks' in df_daily_curr.columns:
             x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
             clicks_label = 'Total Combined Clicks' if is_portfolio_mode else 'Clicks'
             fig.add_trace(go.Scatter(
                 x=x_vals, y=df_daily_curr['clicks'], name=clicks_label,
-                line=dict(color='#1a73e8', width=2.8),
+                line=dict(color='#38bdf8', width=2.8),
                 hoverinfo='y+name'
             ), secondary_y=False)
 
         # Multi-site breakdown lines in portfolio mode
         if is_portfolio_mode and show_clicks and not portfolio_obj.get('df_daily', pd.DataFrame()).empty:
-            palette = ['#34a853', '#ea4335', '#fbbc04', '#9334e6', '#00acc1', '#ff6d00', '#795548']
+            palette = ['#34d399', '#f43f5e', '#fbbf24', '#a855f7', '#06b6d4', '#f97316', '#64748b']
             for s_idx, s_dom in enumerate(df_all_daily['site'].unique()):
                 s_data = df_all_daily[df_all_daily['site'] == s_dom].sort_values('date')
                 x_sub = s_data['day_index'] if 'day_index' in s_data.columns else s_data['date']
@@ -1388,76 +1496,77 @@ if page in ["📈 Performance", "📊 Overview"]:
                     hoverinfo='y+name'
                 ), secondary_y=False)
 
-        # Trace 2: Comp Clicks (Dashed #4285f4)
+        # Trace 2: Comp Clicks (Dashed #38bdf8)
         if not is_portfolio_mode and show_clicks and not df_daily_comp.empty and 'clicks' in df_daily_comp.columns:
             x_vals = df_daily_comp['day_index'] if 'day_index' in df_daily_comp.columns else df_daily_comp['date']
             fig.add_trace(go.Scatter(
                 x=x_vals, y=df_daily_comp['clicks'], name='Clicks (Previous)',
-                line=dict(color='#4285f4', width=2.0, dash='dash'),
+                line=dict(color='rgba(56, 189, 248, 0.5)', width=2.0, dash='dash'),
                 hoverinfo='y+name'
             ), secondary_y=False)
 
-        # Trace 3: Current Impressions (Solid #673ab7)
+        # Trace 3: Current Impressions (Solid #a855f7 Neon Violet)
         if show_impressions and 'impressions' in df_daily_curr.columns:
             x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
             imps_label = 'Total Combined Impressions' if is_portfolio_mode else 'Impressions'
             fig.add_trace(go.Scatter(
                 x=x_vals, y=df_daily_curr['impressions'], name=imps_label,
-                line=dict(color='#673ab7', width=2.4),
+                line=dict(color='#a855f7', width=2.4),
                 hoverinfo='y+name'
             ), secondary_y=True if use_secondary else False)
 
-        # Trace 4: Comp Impressions (Dashed #9575cd)
+        # Trace 4: Comp Impressions (Dashed #a855f7)
         if not is_portfolio_mode and show_impressions and not df_daily_comp.empty and 'impressions' in df_daily_comp.columns:
             x_vals = df_daily_comp['day_index'] if 'day_index' in df_daily_comp.columns else df_daily_comp['date']
             fig.add_trace(go.Scatter(
                 x=x_vals, y=df_daily_comp['impressions'], name='Impressions (Previous)',
-                line=dict(color='#9575cd', width=2.0, dash='dash'),
+                line=dict(color='rgba(168, 85, 247, 0.5)', width=2.0, dash='dash'),
                 hoverinfo='y+name'
             ), secondary_y=True if use_secondary else False)
 
-        # Trace 5: CTR
+        # Trace 5: CTR (Solid #10b981 Cyber Emerald)
         if show_ctr and 'ctr' in df_daily_curr.columns:
             x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
             fig.add_trace(go.Scatter(
                 x=x_vals, y=df_daily_curr['ctr'], name='CTR (%)',
-                line=dict(color='#00897b', width=2.0),
+                line=dict(color='#10b981', width=2.0),
                 hoverinfo='y+name'
             ), secondary_y=False)
 
-        # Trace 6: Position (Inverted)
+        # Trace 6: Position (Solid #f59e0b Neon Amber)
         if show_position and 'position' in df_daily_curr.columns:
             x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
             fig.add_trace(go.Scatter(
                 x=x_vals, y=df_daily_curr['position'], name='Position',
-                line=dict(color='#e8710a', width=2.2),
+                line=dict(color='#f59e0b', width=2.2),
                 hoverinfo='y+name'
             ), secondary_y=True)
 
         fig.update_layout(
-            paper_bgcolor='#ffffff',
-            plot_bgcolor='#ffffff',
-            font=dict(color='#70757a', family='Roboto, Arial, sans-serif', size=11),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(15, 23, 42, 0.5)',
+            font=dict(color='#94a3b8', family='Plus Jakarta Sans, sans-serif', size=11),
             hovermode='x unified',
             showlegend=is_portfolio_mode,
-            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1, font=dict(color='#cbd5e1')),
             margin=dict(l=35, r=35, t=10, b=25),
             height=340
         )
         fig.update_xaxes(
-            showgrid=False, linecolor='#dadce0', tickmode='linear', dtick=8,
-            title_text=""
+            showgrid=False, linecolor='rgba(255,255,255,0.12)', tickmode='linear', dtick=8,
+            title_text="", tickfont=dict(color='#94a3b8')
         )
         fig.update_yaxes(
             title_text="Clicks" if show_clicks else "",
-            secondary_y=False, showgrid=True, gridcolor='#ebebeb',
-            linecolor='#dadce0', rangemode='tozero'
+            secondary_y=False, showgrid=True, gridcolor='rgba(255,255,255,0.06)',
+            linecolor='rgba(255,255,255,0.12)', rangemode='tozero', tickfont=dict(color='#94a3b8'),
+            title_font=dict(color='#94a3b8')
         )
         if use_secondary:
             if show_position:
-                fig.update_yaxes(title_text="Position", secondary_y=True, autorange="reversed", showgrid=False)
+                fig.update_yaxes(title_text="Position", secondary_y=True, autorange="reversed", showgrid=False, tickfont=dict(color='#94a3b8'), title_font=dict(color='#94a3b8'))
             elif show_impressions:
-                fig.update_yaxes(title_text="Impressions", secondary_y=True, showgrid=False, rangemode='tozero')
+                fig.update_yaxes(title_text="Impressions", secondary_y=True, showgrid=False, rangemode='tozero', tickfont=dict(color='#94a3b8'), title_font=dict(color='#94a3b8'))
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -1465,10 +1574,10 @@ if page in ["📈 Performance", "📊 Overview"]:
     st.markdown("""
     <div class="gsc-ai-banner">
         <div style="display:flex; align-items:center; gap:12px;">
-            <span style="color:#1a73e8; font-size:18px;">ⓘ</span>
-            <span style="color:#3c4043; font-size:13px; font-weight:400;">Get more details on your site's performance in generative AI features on Google Search</span>
+            <span style="color:#38bdf8; font-size:18px;">✨</span>
+            <span style="color:#cbd5e1; font-size:13px; font-weight:500;">Real-time AI telemetry: Monitor impressions &amp; click performance in Generative Search (SGE / AI Overviews).</span>
         </div>
-        <span style="color:#1a73e8; font-size:13px; font-weight:500; cursor:pointer;">Open report &gt;</span>
+        <span style="color:#38bdf8; font-size:13px; font-weight:700; cursor:pointer; text-shadow:0 0 10px rgba(56,189,248,0.5);">OPEN REPORT &gt;</span>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1641,39 +1750,40 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
     # 1. GSC Top Bar
     st.markdown(f"""
     <div class="gsc-top-bar">
-        <div style="display:flex; align-items:center; gap:16px;">
-            <span style="font-size:20px; color:#5f6368; cursor:pointer;">☰</span>
-            <div style="display:flex; align-items:center; gap:8px;">
+        <div style="display:flex; align-items:center; gap:14px;">
+            <span style="font-size:20px; color:#94a3b8; cursor:pointer;">☰</span>
+            <div style="display:flex; align-items:center; gap:10px;">
                 <svg width="24" height="24" viewBox="0 0 48 48">
-                    <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                    <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                    <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                    <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                    <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                    <path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                    <path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                    <path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
                 </svg>
-                <span style="font-size:18px; font-weight:500; color:#5f6368; letter-spacing:-0.2px;">Google Search Console</span>
+                <span style="font-size:17px; font-weight:700; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">Search Console <span style="font-size:10px; font-weight:700; color:#38bdf8; -webkit-text-fill-color:#38bdf8; background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px; border:1px solid rgba(56,189,248,0.3); vertical-align:middle; margin-left:4px;">TECH VIBE</span></span>
             </div>
         </div>
         <div class="gsc-search-pill">
-            <span style="color:#5f6368; font-size:15px;">🔍</span>
-            <span style="color:#3c4043; font-size:13px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Inspect any URL in "{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}"</span>
+            <span style="color:#38bdf8; font-size:14px;">🔍</span>
+            <span style="color:#cbd5e1; font-size:12.5px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">Inspect any URL in "{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}"</span>
+            <span style="font-size:10px; font-family:'JetBrains Mono', monospace; background:rgba(255,255,255,0.08); color:#94a3b8; padding:2px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.1);">⌘K</span>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
             <div class="gsc-live-badge" title="Live active visitors browsing your website right now">
                 <span class="gsc-pulse-dot"></span>
-                <span><b>{live_site_users}</b> active on site</span>
+                <span><b>{live_site_users}</b> ACTIVE</span>
             </div>
             <div class="gsc-dash-badge" title="Users currently viewing this dashboard">
                 <span>👥</span>
-                <span><b>{active_dash_users}</b> online</span>
+                <span><b>{active_dash_users}</b> ONLINE</span>
             </div>
-            <div style="display:flex; align-items:center; gap:12px; margin-left:4px;">
-                <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Help">❔</span>
-                <span style="color:#5f6368; font-size:17px; cursor:pointer;" title="Feedback">💬</span>
+            <div style="display:flex; align-items:center; gap:10px; margin-left:6px;">
+                <span style="color:#94a3b8; font-size:16px; cursor:pointer;" title="Help">❔</span>
+                <span style="color:#94a3b8; font-size:16px; cursor:pointer;" title="Feedback">💬</span>
                 <div style="position:relative; cursor:pointer;">
-                    <span style="color:#5f6368; font-size:17px;">🔔</span>
-                    <span style="position:absolute; top:-4px; right:-6px; background:#d93025; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:15px; height:15px; display:flex; align-items:center; justify-content:center;">0</span>
+                    <span style="color:#94a3b8; font-size:16px;">🔔</span>
+                    <span style="position:absolute; top:-4px; right:-6px; background:#ef4444; color:white; font-size:9px; font-weight:bold; border-radius:50%; width:14px; height:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 8px #ef4444;">0</span>
                 </div>
-                <div style="width:30px; height:30px; border-radius:50%; background:#5c6bc0; color:white; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;">S</div>
+                <div style="width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg, #38bdf8, #818cf8); color:#080c14; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; font-family:'JetBrains Mono', monospace;">AG</div>
             </div>
         </div>
     </div>
@@ -1683,14 +1793,14 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
     hdr_c1, hdr_c2 = st.columns([3, 1])
     with hdr_c1:
         st.markdown(f"""
-        <div style="margin-bottom:16px;">
-            <div style="font-size:12px; color:#5f6368; margin-bottom:4px;">Performance &gt; Real-Time Active Users</div>
-            <div style="font-size:24px; font-weight:500; color:#202124; display:flex; align-items:center; gap:10px;">
-                <span class="gsc-pulse-dot" style="width:12px; height:12px;"></span>
+        <div style="margin-bottom:18px;">
+            <div style="font-size:11px; font-weight:700; color:#64748b; font-family:'JetBrains Mono',monospace; letter-spacing:0.8px; text-transform:uppercase; margin-bottom:4px;">TELEMETRY // REAL-TIME ACTIVE VISITORS</div>
+            <div style="font-size:24px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; display:flex; align-items:center; gap:10px;">
+                <span class="gsc-pulse-dot" style="width:13px; height:13px;"></span>
                 <span>Real-Time Active Visitors &amp; Site Usage</span>
             </div>
-            <div style="font-size:13px; color:#5f6368; margin-top:4px;">
-                Live visitor activity on <b style="color:#1a73e8;">{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}</b> and connected dashboard sessions.
+            <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
+                Live telemetry on <b style="color:#38bdf8; font-family:'JetBrains Mono',monospace;">{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}</b> and connected dashboard sessions.
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1700,53 +1810,53 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
             st.rerun()
         st.markdown(f"<div style='text-align:right; font-size:11px; color:#70757a;'>Synced: {rt_metrics['last_updated']}</div>", unsafe_allow_html=True)
 
-    # 3. Four Google Material Scorecards
+    # 3. Four Cyber Telemetry Scorecards
     rt_col1, rt_col2, rt_col3, rt_col4 = st.columns(4)
     with rt_col1:
         st.markdown(f"""
-        <div style="background:#ffffff; border:2px solid #34a853; border-radius:8px; padding:16px; box-shadow:0 1px 3px rgba(60,64,67,0.12);">
-            <div style="font-size:13px; font-weight:600; color:#137333; display:flex; align-items:center; gap:6px; margin-bottom:8px;">
-                <span class="gsc-pulse-dot"></span> Active Users Right Now
+        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(16, 185, 129, 0.4); border-top:3px solid #10b981; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+            <div style="font-size:11px; font-weight:700; color:#34d399; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                <span class="gsc-pulse-dot"></span> ACTIVE USERS NOW
             </div>
-            <div style="font-size:36px; font-weight:700; color:#137333; line-height:1.1; margin-bottom:6px;">{live_site_users}</div>
-            <div style="font-size:12px; color:#5f6368;">Browsing website right now</div>
-            <div style="font-size:11px; color:#188038; font-weight:500; margin-top:4px;">+2 in last 5 minutes</div>
+            <div style="font-size:36px; font-weight:700; color:#10b981; font-family:'JetBrains Mono',monospace; line-height:1.1; margin-bottom:6px;">{live_site_users}</div>
+            <div style="font-size:12px; color:#94a3b8;">Browsing website right now</div>
+            <div style="font-size:11px; color:#34d399; font-weight:600; font-family:'JetBrains Mono',monospace; margin-top:4px;">▲ +2 in last 5m</div>
         </div>
         """, unsafe_allow_html=True)
 
     with rt_col2:
         st.markdown(f"""
-        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:16px; box-shadow:0 1px 3px rgba(60,64,67,0.08);">
-            <div style="font-size:13px; font-weight:600; color:#1a73e8; margin-bottom:8px;">
-                ⏱️ Users in Last 30 Minutes
+        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(56, 189, 248, 0.3); border-top:3px solid #38bdf8; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+            <div style="font-size:11px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace; margin-bottom:8px;">
+                ⏱️ VISITORS LAST 30M
             </div>
-            <div style="font-size:36px; font-weight:700; color:#1a73e8; line-height:1.1; margin-bottom:6px;">{rt_metrics['users_last_30m']}</div>
-            <div style="font-size:12px; color:#5f6368;">Unique sessions across site</div>
-            <div style="font-size:11px; color:#1a73e8; font-weight:500; margin-top:4px;">~1.6 pageviews / user</div>
+            <div style="font-size:36px; font-weight:700; color:#38bdf8; font-family:'JetBrains Mono',monospace; line-height:1.1; margin-bottom:6px;">{rt_metrics['users_last_30m']}</div>
+            <div style="font-size:12px; color:#94a3b8;">Unique sessions across site</div>
+            <div style="font-size:11px; color:#7dd3fc; font-weight:600; font-family:'JetBrains Mono',monospace; margin-top:4px;">~1.6 pageviews / user</div>
         </div>
         """, unsafe_allow_html=True)
 
     with rt_col3:
         st.markdown(f"""
-        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:16px; box-shadow:0 1px 3px rgba(60,64,67,0.08);">
-            <div style="font-size:13px; font-weight:600; color:#5e35b1; margin-bottom:8px;">
-                👥 Dashboard Viewers
+        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(168, 85, 247, 0.3); border-top:3px solid #a855f7; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+            <div style="font-size:11px; font-weight:700; color:#c084fc; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace; margin-bottom:8px;">
+                👥 DASHBOARD VIEWERS
             </div>
-            <div style="font-size:36px; font-weight:700; color:#5e35b1; line-height:1.1; margin-bottom:6px;">{active_dash_users}</div>
-            <div style="font-size:12px; color:#5f6368;">Currently viewing this app</div>
-            <div style="font-size:11px; color:#5e35b1; font-weight:500; margin-top:4px;">Live active session</div>
+            <div style="font-size:36px; font-weight:700; color:#c084fc; font-family:'JetBrains Mono',monospace; line-height:1.1; margin-bottom:6px;">{active_dash_users}</div>
+            <div style="font-size:12px; color:#94a3b8;">Currently viewing this app</div>
+            <div style="font-size:11px; color:#e9d5ff; font-weight:600; font-family:'JetBrains Mono',monospace; margin-top:4px;">Live active session</div>
         </div>
         """, unsafe_allow_html=True)
 
     with rt_col4:
         st.markdown(f"""
-        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:16px; box-shadow:0 1px 3px rgba(60,64,67,0.08);">
-            <div style="font-size:13px; font-weight:600; color:#e37400; margin-bottom:8px;">
-                ⚡ Page Views / Minute
+        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(245, 158, 11, 0.3); border-top:3px solid #f59e0b; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+            <div style="font-size:11px; font-weight:700; color:#fbbf24; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace; margin-bottom:8px;">
+                ⚡ VIEWS / MINUTE
             </div>
-            <div style="font-size:36px; font-weight:700; color:#e37400; line-height:1.1; margin-bottom:6px;">{rt_metrics['pageviews_per_min']}</div>
-            <div style="font-size:12px; color:#5f6368;">Real-time velocity</div>
-            <div style="font-size:11px; color:#e37400; font-weight:500; margin-top:4px;">Normal peak activity</div>
+            <div style="font-size:36px; font-weight:700; color:#f59e0b; font-family:'JetBrains Mono',monospace; line-height:1.1; margin-bottom:6px;">{rt_metrics['pageviews_per_min']}</div>
+            <div style="font-size:12px; color:#94a3b8;">Real-time event velocity</div>
+            <div style="font-size:11px; color:#fde68a; font-weight:600; font-family:'JetBrains Mono',monospace; margin-top:4px;">Normal peak activity</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -1754,12 +1864,13 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
 
     # 4. Real-time Activity Timeline (Users per Minute - Last 30 Minutes)
     st.markdown("""
-    <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:14px 16px; margin-bottom:18px;">
-        <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:4px;">
-            📊 Real-Time Activity: Users per Minute (Last 30 Minutes)
+    <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:16px; margin-bottom:20px; backdrop-filter:blur(12px);">
+        <div style="font-size:14px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+            <span>📊 Real-Time Activity: Users per Minute</span>
+            <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; background:rgba(56, 189, 248, 0.15); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.3); padding:2px 8px; border-radius:6px;">PAST 30 MINS</span>
         </div>
-        <div style="font-size:12px; color:#5f6368; margin-bottom:12px;">
-            Continuous stream of active visitors on website per minute (Google Analytics 4 style)
+        <div style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+            Continuous stream of active website visitors per minute (GA4 Real-Time Telemetry Stream)
         </div>
     """, unsafe_allow_html=True)
     
@@ -1768,27 +1879,27 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         x=rt_metrics['df_minutes']['minute'],
         y=rt_metrics['df_minutes']['users'],
         marker=dict(
-            color='#34a853',
-            line=dict(color='#1e8e3e', width=1)
+            color='#10b981',
+            line=dict(color='#34d399', width=1)
         ),
-        hovertemplate='Time: %{x}<br>Active Users: <b>%{y}</b><extra></extra>',
+        hovertemplate='Minute: %{x}<br>Active Users: <b>%{y}</b><extra></extra>',
         name='Active Users'
     ))
     fig_rt.update_layout(
-        paper_bgcolor='#ffffff',
-        plot_bgcolor='#ffffff',
-        font=dict(color='#202124', family='Roboto, sans-serif'),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(15, 23, 42, 0.45)',
+        font=dict(color='#94a3b8', family="'JetBrains Mono', monospace", size=11),
         height=220,
         margin=dict(l=30, r=20, t=10, b=30),
         xaxis=dict(
             showgrid=False,
-            color='#5f6368',
+            color='#64748b',
             tickangle=-45
         ),
         yaxis=dict(
             showgrid=True,
-            gridcolor='#f1f3f4',
-            color='#5f6368',
+            gridcolor='rgba(255, 255, 255, 0.05)',
+            color='#64748b',
             dtick=1
         ),
         showlegend=False
@@ -1801,12 +1912,12 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
 
     with rt_grid1:
         st.markdown("""
-        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-            <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:4px;">
-                📄 Top Active Pages Right Now
+        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:16px; margin-bottom:16px; backdrop-filter:blur(12px);">
+            <div style="font-size:13.5px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                <span>📄 Top Active Pages Right Now</span>
             </div>
-            <div style="font-size:12px; color:#5f6368; margin-bottom:12px;">
-                Which URLs visitors are currently viewing on the site
+            <div style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+                Live URLs currently receiving browsing activity
             </div>
         """, unsafe_allow_html=True)
         st.dataframe(
@@ -1818,12 +1929,12 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("""
-        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-            <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:4px;">
-                🔗 Real-Time Traffic Sources
+        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:16px; margin-bottom:16px; backdrop-filter:blur(12px);">
+            <div style="font-size:13.5px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                <span>🔗 Real-Time Traffic Sources</span>
             </div>
-            <div style="font-size:12px; color:#5f6368; margin-bottom:12px;">
-                How active visitors discovered and entered the site
+            <div style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+                Acquisition channels of current concurrent visitors
             </div>
         """, unsafe_allow_html=True)
         st.dataframe(
@@ -1836,12 +1947,12 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
 
     with rt_grid2:
         st.markdown("""
-        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-            <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:4px;">
-                📍 Active Visitor Locations (UK Focus)
+        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:16px; margin-bottom:16px; backdrop-filter:blur(12px);">
+            <div style="font-size:13.5px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                <span>📍 Active Visitor Locations</span>
             </div>
-            <div style="font-size:12px; color:#5f6368; margin-bottom:12px;">
-                Geographical distribution of real-time visitors
+            <div style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+                Geographical telemetry distribution of live traffic
             </div>
         """, unsafe_allow_html=True)
         st.dataframe(
@@ -1853,12 +1964,12 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("""
-        <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-            <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:4px;">
-                📱 Device Distribution
+        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:16px; margin-bottom:16px; backdrop-filter:blur(12px);">
+            <div style="font-size:13.5px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                <span>📱 Device Distribution</span>
             </div>
-            <div style="font-size:12px; color:#5f6368; margin-bottom:12px;">
-                Hardware used by currently active visitors
+            <div style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+                Hardware & client breakdown of active sessions
             </div>
         """, unsafe_allow_html=True)
         st.dataframe(
@@ -1871,23 +1982,24 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
 
     # 6. Live Stream of Recent User Actions
     st.markdown("""
-    <div style="background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:14px 16px; margin-bottom:18px;">
-        <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:4px;">
-            ⚡ Live Activity Stream &amp; Events
+    <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:16px; margin-bottom:20px; backdrop-filter:blur(12px);">
+        <div style="font-size:14px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+            <span>⚡ Live Telemetry Stream &amp; Events</span>
+            <span style="font-size:10px; font-family:'JetBrains Mono',monospace; background:rgba(16, 185, 129, 0.15); color:#34d399; border:1px solid rgba(16, 185, 129, 0.3); padding:2px 7px; border-radius:10px;">LIVE FEED</span>
         </div>
-        <div style="font-size:12px; color:#5f6368; margin-bottom:12px;">
-            Real-time feed of events and user interactions happening across the website
+        <div style="font-size:12px; color:#94a3b8; margin-bottom:14px;">
+            Real-time telemetry event stream recorded across connected properties
         </div>
     """, unsafe_allow_html=True)
     for evt in rt_metrics['recent_events']:
         st.markdown(f"""
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-bottom:1px solid #f1f3f4; font-size:13px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid rgba(255, 255, 255, 0.05); font-size:13px;">
             <div style="display:flex; align-items:center; gap:10px;">
-                <span style="font-size:15px;">{evt['icon']}</span>
-                <span style="font-weight:500; color:#202124;">{evt['type']}:</span>
-                <span style="color:#5f6368;">{evt['detail']}</span>
+                <span style="font-size:16px;">{evt['icon']}</span>
+                <span style="font-weight:600; color:#f1f5f9; font-family:'JetBrains Mono',monospace;">{evt['type']}:</span>
+                <span style="color:#94a3b8;">{evt['detail']}</span>
             </div>
-            <span style="font-size:11px; color:#188038; font-weight:500; background:#e6f4ea; padding:2px 8px; border-radius:10px;">{evt['time']}</span>
+            <span style="font-size:11px; color:#34d399; font-weight:600; font-family:'JetBrains Mono',monospace; background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.25); padding:2px 8px; border-radius:10px;">{evt['time']}</span>
         </div>
         """, unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -1955,25 +2067,26 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
     df_all_daily = portfolio_data.get('df_daily', pd.DataFrame())
 
     # Top Account Details Banner
-    conn_badge = "🟢 Live Connected" if is_conn else "🧪 Offline / Demo Mode"
-    badge_bg = "#e6f4ea" if is_conn else "#fef7e0"
-    badge_color = "#137333" if is_conn else "#b06000"
+    conn_badge = "🟢 LIVE CONNECTED" if is_conn else "🧪 DEMO / OFFLINE"
+    badge_bg = "rgba(16, 185, 129, 0.15)" if is_conn else "rgba(245, 158, 11, 0.15)"
+    badge_color = "#34d399" if is_conn else "#fbbf24"
+    badge_border = "rgba(16, 185, 129, 0.3)" if is_conn else "rgba(245, 158, 11, 0.3)"
 
     st.markdown(f"""
-    <div style="background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%); border: 1.5px solid #dadce0; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(60,64,67,0.08);">
+    <div style="background: linear-gradient(90deg, rgba(30, 58, 138, 0.2) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1px solid rgba(56, 189, 248, 0.25); border-left: 4px solid #38bdf8; border-radius: 10px; padding: 18px 22px; margin-bottom: 20px; backdrop-filter:blur(12px); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div>
-                <div style="font-size:11px; font-weight:700; color:#5f6368; text-transform:uppercase; letter-spacing:0.5px;">AUTHENTICATED GOOGLE ACCOUNT</div>
-                <div style="font-size:20px; font-weight:600; color:#202124; margin-top:2px;">
+                <div style="font-size:10.5px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">AUTHENTICATED ACCOUNT TELEMETRY</div>
+                <div style="font-size:20px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-top:2px;">
                     📧 {user_email_disp}
                 </div>
-                <div style="font-size:13px; color:#5f6368; margin-top:4px;">
-                    Active Dashboard Selection: <b style="color:#1a73e8;">{st.session_state.current_site or 'None'}</b>
+                <div style="font-size:12.5px; color:#94a3b8; margin-top:4px; font-family:'JetBrains Mono',monospace;">
+                    Active Selection: <b style="color:#38bdf8;">{st.session_state.current_site or 'None'}</b>
                 </div>
             </div>
             <div style="text-align:right;">
-                <span style="background:{badge_bg}; color:{badge_color}; border-radius:16px; padding:4px 14px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">{conn_badge}</span>
-                <div style="font-size:12px; color:#5f6368;">Total Verified Properties: <b>{len(detailed_sites)}</b></div>
+                <span style="background:{badge_bg}; color:{badge_color}; border:1px solid {badge_border}; border-radius:16px; padding:4px 14px; font-size:11px; font-weight:700; font-family:'JetBrains Mono',monospace; display:inline-block; margin-bottom:6px;">{conn_badge}</span>
+                <div style="font-size:12px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">Total Verified Properties: <b style="color:#f8fafc;">{len(detailed_sites)}</b></div>
             </div>
         </div>
     </div>
@@ -2038,34 +2151,34 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
     m_c1, m_c2, m_c3, m_c4 = st.columns(4)
     with m_c1:
         st.markdown(f"""
-        <div style="background:#ffffff; border:1.5px solid #dadce0; border-radius:8px; padding:14px 18px; box-shadow:0 1px 2px rgba(60,64,67,0.06);">
-            <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px;">COMBINED TOTAL CLICKS</div>
-            <div style="font-size:28px; font-weight:600; color:#1a73e8; margin-top:2px;">{p_clicks:,}</div>
-            <div style="font-size:12px; color:#5f6368; margin-top:4px;">Across all {len(detailed_sites)} verified properties (Past 28d)</div>
+        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(56, 189, 248, 0.35); border-top:3px solid #38bdf8; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+            <div style="font-size:10.5px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">COMBINED TOTAL CLICKS</div>
+            <div style="font-size:32px; font-weight:700; color:#38bdf8; font-family:'JetBrains Mono',monospace; margin-top:4px; line-height:1.1;">{p_clicks:,}</div>
+            <div style="font-size:12px; color:#94a3b8; margin-top:6px;">Across all {len(detailed_sites)} verified properties (Past 28d)</div>
         </div>
         """, unsafe_allow_html=True)
     with m_c2:
         st.markdown(f"""
-        <div style="background:#ffffff; border:1.5px solid #dadce0; border-radius:8px; padding:14px 18px; box-shadow:0 1px 2px rgba(60,64,67,0.06);">
-            <div style="font-size:11px; font-weight:700; color:#5e35b1; text-transform:uppercase; letter-spacing:0.5px;">COMBINED TOTAL IMPRESSIONS</div>
-            <div style="font-size:28px; font-weight:600; color:#5e35b1; margin-top:2px;">{_fmt_big(p_imps)}</div>
-            <div style="font-size:12px; color:#5f6368; margin-top:4px;">Total search visibility ({p_imps:,} total)</div>
+        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(168, 85, 247, 0.35); border-top:3px solid #a855f7; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+            <div style="font-size:10.5px; font-weight:700; color:#c084fc; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">COMBINED IMPRESSIONS</div>
+            <div style="font-size:32px; font-weight:700; color:#c084fc; font-family:'JetBrains Mono',monospace; margin-top:4px; line-height:1.1;">{_fmt_big(p_imps)}</div>
+            <div style="font-size:12px; color:#94a3b8; margin-top:6px;">Total search visibility ({p_imps:,} total)</div>
         </div>
         """, unsafe_allow_html=True)
     with m_c3:
         st.markdown(f"""
-        <div style="background:#ffffff; border:1.5px solid #dadce0; border-radius:8px; padding:14px 18px; box-shadow:0 1px 2px rgba(60,64,67,0.06);">
-            <div style="font-size:11px; font-weight:700; color:#00897b; text-transform:uppercase; letter-spacing:0.5px;">WEIGHTED AVERAGE CTR</div>
-            <div style="font-size:28px; font-weight:600; color:#00897b; margin-top:2px;">{p_ctr}%</div>
-            <div style="font-size:12px; color:#5f6368; margin-top:4px;">Organic click-through conversion rate</div>
+        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(16, 185, 129, 0.35); border-top:3px solid #10b981; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+            <div style="font-size:10.5px; font-weight:700; color:#34d399; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">WEIGHTED AVG CTR</div>
+            <div style="font-size:32px; font-weight:700; color:#10b981; font-family:'JetBrains Mono',monospace; margin-top:4px; line-height:1.1;">{p_ctr}%</div>
+            <div style="font-size:12px; color:#94a3b8; margin-top:6px;">Organic click-through conversion rate</div>
         </div>
         """, unsafe_allow_html=True)
     with m_c4:
         st.markdown(f"""
-        <div style="background:#ffffff; border:1.5px solid #dadce0; border-radius:8px; padding:14px 18px; box-shadow:0 1px 2px rgba(60,64,67,0.06);">
-            <div style="font-size:11px; font-weight:700; color:#e8710a; text-transform:uppercase; letter-spacing:0.5px;">WEIGHTED AVG POSITION</div>
-            <div style="font-size:28px; font-weight:600; color:#e8710a; margin-top:2px;">{p_pos}</div>
-            <div style="font-size:12px; color:#5f6368; margin-top:4px;">Impression-weighted average ranking</div>
+        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(245, 158, 11, 0.35); border-top:3px solid #f59e0b; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+            <div style="font-size:10.5px; font-weight:700; color:#fbbf24; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">WEIGHTED AVG POSITION</div>
+            <div style="font-size:32px; font-weight:700; color:#f59e0b; font-family:'JetBrains Mono',monospace; margin-top:4px; line-height:1.1;">{p_pos}</div>
+            <div style="font-size:12px; color:#94a3b8; margin-top:6px;">Impression-weighted average ranking</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -2076,49 +2189,50 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
         st.markdown("### 📈 Comparative Multi-Property Search Analytics")
         ch_c1, ch_c2 = st.columns([5, 3])
         with ch_c1:
-            st.markdown("<div style='font-size:14px; font-weight:600; color:#202124; margin-bottom:6px;'>Clicks & Impressions by Property</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:13.5px; font-weight:600; color:#f8fafc; margin-bottom:6px;'>Clicks &amp; Impressions by Property</div>", unsafe_allow_html=True)
             fig_bar = go.Figure()
             fig_bar.add_trace(go.Bar(
                 x=df_all_sites['domain'],
                 y=df_all_sites['clicks'],
                 name='Clicks',
-                marker_color='#1a73e8',
+                marker_color='#38bdf8',
                 yaxis='y1'
             ))
             fig_bar.add_trace(go.Bar(
                 x=df_all_sites['domain'],
                 y=df_all_sites['impressions'],
                 name='Impressions',
-                marker_color='#9334e6',
+                marker_color='#a855f7',
                 yaxis='y2'
             ))
             fig_bar.update_layout(
                 barmode='group',
-                paper_bgcolor='#ffffff',
-                plot_bgcolor='#ffffff',
-                font=dict(color='#70757a', family='Roboto, Arial, sans-serif', size=11),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(15, 23, 42, 0.45)',
+                font=dict(color='#94a3b8', family="'Plus Jakarta Sans', sans-serif", size=11),
                 hovermode='x unified',
-                legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+                legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1, font=dict(color='#94a3b8')),
                 margin=dict(l=30, r=35, t=10, b=30),
                 height=310,
-                yaxis=dict(title="Clicks", showgrid=True, gridcolor='#ebebeb', rangemode='tozero'),
+                xaxis=dict(gridcolor='rgba(255, 255, 255, 0.05)'),
+                yaxis=dict(title="Clicks", showgrid=True, gridcolor='rgba(255, 255, 255, 0.05)', rangemode='tozero'),
                 yaxis2=dict(title="Impressions", overlaying='y', side='right', showgrid=False, rangemode='tozero')
             )
             st.plotly_chart(fig_bar, use_container_width=True)
 
         with ch_c2:
-            st.markdown("<div style='font-size:14px; font-weight:600; color:#202124; margin-bottom:6px;'>Traffic Share Distribution (%)</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:13.5px; font-weight:600; color:#f8fafc; margin-bottom:6px;'>Traffic Share Distribution (%)</div>", unsafe_allow_html=True)
             fig_pie = px.pie(
                 df_all_sites,
                 values='clicks',
                 names='domain',
                 hole=0.55,
-                color_discrete_sequence=['#1a73e8', '#34a853', '#fbbc04', '#ea4335', '#9334e6', '#00acc1', '#ff6d00']
+                color_discrete_sequence=['#38bdf8', '#a855f7', '#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#6366f1']
             )
             fig_pie.update_layout(
-                paper_bgcolor='#ffffff',
-                plot_bgcolor='#ffffff',
-                font=dict(color='#70757a', family='Roboto, Arial, sans-serif', size=11),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='#94a3b8', family="'Plus Jakarta Sans', sans-serif", size=11),
                 margin=dict(l=10, r=10, t=10, b=10),
                 height=310,
                 showlegend=True
@@ -2127,25 +2241,26 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
 
         # Multi-line Daily Trend Chart
         if not df_all_daily.empty:
-            st.markdown("<div style='font-size:14px; font-weight:600; color:#202124; margin:10px 0 6px 0;'>Daily Search Traffic Trajectory (Past 28 Days)</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:13.5px; font-weight:600; color:#f8fafc; margin:10px 0 6px 0;'>Daily Search Traffic Trajectory (Past 28 Days)</div>", unsafe_allow_html=True)
             fig_trend = px.line(
                 df_all_daily,
                 x='date',
                 y='clicks',
                 color='site',
                 markers=True,
-                color_discrete_sequence=['#1a73e8', '#34a853', '#fbbc04', '#ea4335', '#9334e6', '#00acc1', '#ff6d00']
+                color_discrete_sequence=['#38bdf8', '#a855f7', '#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#6366f1']
             )
             fig_trend.update_layout(
-                paper_bgcolor='#ffffff',
-                plot_bgcolor='#ffffff',
-                font=dict(color='#70757a', family='Roboto, Arial, sans-serif', size=11),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(15, 23, 42, 0.45)',
+                font=dict(color='#94a3b8', family="'Plus Jakarta Sans', sans-serif", size=11),
                 hovermode='x unified',
                 margin=dict(l=30, r=30, t=10, b=25),
                 height=280,
-                legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1)
+                legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1, font=dict(color='#94a3b8'))
             )
-            fig_trend.update_yaxes(title_text="Daily Clicks", showgrid=True, gridcolor='#ebebeb')
+            fig_trend.update_xaxes(gridcolor='rgba(255, 255, 255, 0.05)')
+            fig_trend.update_yaxes(title_text="Daily Clicks", showgrid=True, gridcolor='rgba(255, 255, 255, 0.05)')
             st.plotly_chart(fig_trend, use_container_width=True)
 
     st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
@@ -2196,27 +2311,27 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
         s_type = row['property_type']
         
         is_active = (s_url == st.session_state.current_site)
-        border_style = "2px solid #1a73e8" if is_active else "1px solid #dadce0"
-        bg_style = "#f8fafd" if is_active else "#ffffff"
-        active_pill = "<span style='background:#1a73e8; color:white; font-size:10px; font-weight:700; padding:2px 7px; border-radius:4px; margin-right:6px;'>ACTIVE NOW</span>" if is_active else ""
-        type_badge = "<span style='background:#e8f0fe; color:#1a73e8; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600;'>🌐 Domain Property</span>" if "Domain" in s_type else "<span style='background:#fce8e6; color:#c5221f; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600;'>🔗 URL Prefix</span>"
+        border_style = "1px solid rgba(56, 189, 248, 0.6)" if is_active else "1px solid rgba(255, 255, 255, 0.08)"
+        bg_style = "linear-gradient(90deg, rgba(56, 189, 248, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%)" if is_active else "rgba(15, 23, 42, 0.6)"
+        active_pill = "<span style='background:rgba(56, 189, 248, 0.2); border:1px solid #38bdf8; color:#38bdf8; font-family:\"JetBrains Mono\",monospace; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; margin-right:6px;'>ACTIVE NOW</span>" if is_active else ""
+        type_badge = "<span style='background:rgba(16, 185, 129, 0.15); color:#34d399; border:1px solid rgba(16, 185, 129, 0.3); padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600; font-family:\"JetBrains Mono\",monospace;'>🌐 Domain</span>" if "Domain" in s_type else "<span style='background:rgba(244, 63, 94, 0.15); color:#fb7185; border:1px solid rgba(244, 63, 94, 0.3); padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600; font-family:\"JetBrains Mono\",monospace;'>🔗 URL Prefix</span>"
 
         c_card, c_act1, c_act2 = st.columns([5, 2.5, 2.5])
         with c_card:
             st.markdown(f"""
-            <div style="background:{bg_style}; border:{border_style}; border-radius:8px; padding:12px 16px; margin-bottom:8px;">
+            <div style="background:{bg_style}; border:{border_style}; border-radius:10px; padding:14px 18px; margin-bottom:10px; backdrop-filter:blur(10px);">
                 <div style="display:flex; align-items:center; gap:8px;">
                     {active_pill}
-                    <span style="font-size:16px; font-weight:600; color:#202124;">#{row['Rank']} {s_domain}</span>
+                    <span style="font-size:15px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif;">#{row['Rank']} {s_domain}</span>
                     {type_badge}
                 </div>
-                <div style="font-size:12px; color:#5f6368; margin: 4px 0 6px 0; font-family:monospace; word-break:break-all;">{s_url}</div>
-                <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:#202124; margin-top:4px;">
-                    <span>Clicks: <b style="color:#1a73e8;">{s_clicks:,}</b></span>
-                    <span>Impressions: <b style="color:#5e35b1;">{s_imps:,}</b></span>
-                    <span>CTR: <b style="color:#00897b;">{s_ctr}%</b></span>
-                    <span>Avg Pos: <b style="color:#e8710a;">{s_pos}</b></span>
-                    <span>Traffic Share: <b>{s_share}%</b></span>
+                <div style="font-size:12px; color:#64748b; margin: 4px 0 8px 0; font-family:'JetBrains Mono',monospace; word-break:break-all;">{s_url}</div>
+                <div style="display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:#94a3b8; margin-top:4px; font-family:'JetBrains Mono',monospace;">
+                    <span>Clicks: <b style="color:#38bdf8;">{s_clicks:,}</b></span>
+                    <span>Impressions: <b style="color:#c084fc;">{s_imps:,}</b></span>
+                    <span>CTR: <b style="color:#34d399;">{s_ctr}%</b></span>
+                    <span>Avg Pos: <b style="color:#fbbf24;">{s_pos}</b></span>
+                    <span>Share: <b style="color:#f8fafc;">{s_share}%</b></span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -2374,8 +2489,12 @@ elif page in ["🎯 Top Keywords & Queries", "🔍 Keywords"]:
                 c_b1, c_b2 = st.columns(2)
                 with c_b1:
                     b_pie = pd.DataFrame({'Type': ['Branded', 'Non-Branded'], 'Clicks': [b_metrics['branded_clicks'], b_metrics['non_branded_clicks']]})
-                    fig_b = px.pie(b_pie, values='Clicks', names='Type', color_discrete_sequence=['#10b981', '#1a73e8'])
-                    fig_b.update_layout(paper_bgcolor='#ffffff', font=dict(color='#202124'))
+                    fig_b = px.pie(b_pie, values='Clicks', names='Type', color_discrete_sequence=['#10b981', '#38bdf8'])
+                    fig_b.update_layout(
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        font=dict(color='#94a3b8', family="'Plus Jakarta Sans', sans-serif")
+                    )
                     st.plotly_chart(fig_b, use_container_width=True)
                 with c_b2:
                     st.write(f"**Branded Clicks:** {b_metrics['branded_clicks']:,}")
@@ -2416,8 +2535,22 @@ elif page in ["⚡ Core Web Vitals & Quick Wins", "⚡ Quick Wins"]:
         qw = get_quick_wins(df)
         if not qw.empty:
             st.success(f"🎯 Found {len(qw)} keywords ranking on Page 2 (pos 11-20) with >100 impressions!")
-            fig_qw = px.scatter(qw.head(40), x='position', y='impressions', size='clicks', color='ctr', hover_data=['query'], color_continuous_scale=['#1a73e8', '#5e35b1', '#e8710a'])
-            fig_qw.update_layout(paper_bgcolor='#ffffff', plot_bgcolor='#ffffff', font=dict(color='#202124'))
+            fig_qw = px.scatter(
+                qw.head(40),
+                x='position',
+                y='impressions',
+                size='clicks',
+                color='ctr',
+                hover_data=['query'],
+                color_continuous_scale=['#38bdf8', '#a855f7', '#f59e0b']
+            )
+            fig_qw.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(15, 23, 42, 0.45)',
+                font=dict(color='#94a3b8', family="'Plus Jakarta Sans', sans-serif"),
+                xaxis=dict(gridcolor='rgba(255, 255, 255, 0.05)', title="Ranking Position"),
+                yaxis=dict(gridcolor='rgba(255, 255, 255, 0.05)', title="Search Impressions")
+            )
             st.plotly_chart(fig_qw, use_container_width=True)
             st.dataframe(qw[['query', 'clicks', 'impressions', 'ctr', 'position']], use_container_width=True, height=400)
         else:
@@ -2590,10 +2723,15 @@ elif page == "📈 Custom CTR Curve":
         if not ctr_curve.empty:
             fig_curve = go.Figure()
             fig_curve.add_trace(go.Scatter(x=ctr_curve['serp_rank'], y=ctr_curve['actual_ctr'], name='Your Actual CTR %', line=dict(color='#10b981', width=3), mode='lines+markers'))
-            fig_curve.add_trace(go.Scatter(x=ctr_curve['serp_rank'], y=ctr_curve['benchmark_ctr'], name='Industry Benchmark CTR %', line=dict(color='#94a3b8', width=2, dash='dash'), mode='lines'))
-            fig_curve.update_layout(paper_bgcolor='#ffffff', plot_bgcolor='#ffffff', font=dict(color='#202124'),
-                                    xaxis=dict(title="SERP Rank (1 - 20)", gridcolor='#f1f3f4', dtick=1),
-                                    yaxis=dict(title="Click-Through Rate (%)", gridcolor='#f1f3f4'))
+            fig_curve.add_trace(go.Scatter(x=ctr_curve['serp_rank'], y=ctr_curve['benchmark_ctr'], name='Industry Benchmark CTR %', line=dict(color='#38bdf8', width=2, dash='dash'), mode='lines'))
+            fig_curve.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(15, 23, 42, 0.45)',
+                font=dict(color='#94a3b8', family="'Plus Jakarta Sans', sans-serif"),
+                xaxis=dict(title="SERP Rank (1 - 20)", gridcolor='rgba(255, 255, 255, 0.05)', dtick=1),
+                yaxis=dict(title="Click-Through Rate (%)", gridcolor='rgba(255, 255, 255, 0.05)'),
+                legend=dict(font=dict(color='#94a3b8'))
+            )
             st.plotly_chart(fig_curve, use_container_width=True)
             st.dataframe(ctr_curve[['serp_rank', 'actual_ctr', 'benchmark_ctr', 'total_clicks', 'total_impressions', 'ctr_performance']], use_container_width=True)
 
@@ -2720,8 +2858,12 @@ elif page in ["🎯 Search Intent & Regex", "🎯 Intent & Regex"]:
                 with c1:
                     intent_counts = intent_df['intent'].value_counts().reset_index()
                     intent_counts.columns = ['Intent', 'Count']
-                    fig_i = px.pie(intent_counts, values='Count', names='Intent', color_discrete_sequence=['#1a73e8', '#5e35b1', '#00897b', '#e8710a'])
-                    fig_i.update_layout(paper_bgcolor='#ffffff', font=dict(color='#202124'))
+                    fig_i = px.pie(intent_counts, values='Count', names='Intent', color_discrete_sequence=['#38bdf8', '#a855f7', '#10b981', '#f59e0b'])
+                    fig_i.update_layout(
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        font=dict(color='#94a3b8', family="'Plus Jakarta Sans', sans-serif")
+                    )
                     st.plotly_chart(fig_i, use_container_width=True)
                 with c2:
                     sel_intent = st.selectbox("Filter Intent", ['All'] + list(intent_df['intent'].unique()))
