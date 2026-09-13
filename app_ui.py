@@ -1,4 +1,6 @@
 import os
+os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 import sys
 import platform
 import uuid
@@ -556,7 +558,11 @@ if 'code' in query_params:
         st.query_params.clear()
         st.rerun()
     except Exception as e:
-        st.error(f"Web OAuth Error: {e}")
+        if 'Scope has changed' in str(e):
+            st.query_params.clear()
+            st.rerun()
+        else:
+            st.error(f"Web OAuth Error: {e}")
 
 # Auto-restore saved credentials ONLY for local desktop single-user usage (NEVER ON CLOUD!)
 is_cloud_app = (platform.system() == 'Linux') or ('STREAMLIT_SHARING_MODE' in os.environ) or ('STREAMLIT_SERVER_PORT' in os.environ)

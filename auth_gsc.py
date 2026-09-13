@@ -1,4 +1,6 @@
 import os
+os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 import pickle
 import json
 from google.auth.transport.requests import Request
@@ -64,6 +66,9 @@ def get_auth_url(redirect_uri: str, config: dict = None):
     Generates a web OAuth authorization URL for multi-user browser authentication.
     Google will redirect back to redirect_uri with ?code=...
     """
+    os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
     if not config:
         config = load_client_config()
     if not config:
@@ -77,8 +82,7 @@ def get_auth_url(redirect_uri: str, config: dict = None):
     )
     auth_url, state = flow.authorization_url(
         prompt='select_account consent',
-        access_type='offline',
-        include_granted_scopes='true'
+        access_type='offline'
     )
     return auth_url, state
 
@@ -86,6 +90,9 @@ def exchange_code(code: str, redirect_uri: str, config: dict = None):
     """
     Exchanges the authorization code returned by Google for a user's isolated credentials.
     """
+    os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
     if not config:
         config = load_client_config()
     if not config:
@@ -97,7 +104,17 @@ def exchange_code(code: str, redirect_uri: str, config: dict = None):
         redirect_uri=redirect_uri,
         autogenerate_code_verifier=False
     )
-    flow.fetch_token(code=code)
+    try:
+        flow.fetch_token(code=code)
+    except Warning:
+        # oauthlib raises Warning on scope additions; safely accept
+        pass
+    except Exception as ex:
+        if 'Scope has changed' in str(ex):
+            pass
+        else:
+            raise ex
+
     creds = flow.credentials
     # In cloud multi-user environment, NEVER persist token to disk, keep in session state only!
     if not is_cloud_environment():
