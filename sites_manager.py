@@ -8,10 +8,7 @@ from typing import List, Dict, Any
 def list_all_sites(service) -> List[Dict[str, Any]]:
     """Retrieves all verified properties and user permission levels from GSC."""
     if not service:
-        return [
-            {"siteUrl": "https://centralec-electrical.co.uk/", "permissionLevel": "siteOwner"},
-            {"siteUrl": "sc-domain:centralec-electrical.co.uk", "permissionLevel": "siteOwner"}
-        ]
+        return []
 
     try:
         resp = service.sites().list().execute()
@@ -103,21 +100,18 @@ def fetch_all_sites_performance(
         if site_str and site_str not in clean_sites and "Custom Property" not in site_str and not site_str.startswith("🧪") and "Consolidated" not in site_str:
             clean_sites.append(site_str)
 
-    if not clean_sites:
-        if not service:
-            clean_sites = ["https://centralec-electrical.co.uk/", "sc-domain:centralec-electrical.co.uk"]
-        else:
-            return {
-                'summary': {
-                    'total_clicks': 0,
-                    'total_impressions': 0,
-                    'avg_ctr': 0.0,
-                    'avg_position': 0.0,
-                    'total_sites': 0
-                },
-                'df_sites': pd.DataFrame(),
-                'df_daily': pd.DataFrame()
-            }
+    if not clean_sites or not service:
+        return {
+            'summary': {
+                'total_clicks': 0,
+                'total_impressions': 0,
+                'avg_ctr': 0.0,
+                'avg_position': 0.0,
+                'total_sites': 0
+            },
+            'df_sites': pd.DataFrame(),
+            'df_daily': pd.DataFrame()
+        }
 
     # Check In-Memory TTL Cache (15 min)
     creds = getattr(service, '_credentials', None) if service else None
@@ -129,134 +123,96 @@ def fetch_all_sites_performance(
         if time.time() - cached_ts < 900:  # 15 minutes TTL
             return cached_res
 
-    if service:
-        from concurrent.futures import ThreadPoolExecutor, as_completed
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
-        def _fetch_site_worker(site):
-            clean_name = site.replace('sc-domain:', '').replace('https://', '').replace('http://', '').strip('/')
-            is_domain = site.startswith('sc-domain:')
-            prop_type = "Domain Property" if is_domain else "URL Prefix"
-            
-            site_c = 0
-            site_imp = 0
-            site_pos_sum = 0.0
-            worker_daily = []
-
-            try:
-                body = {
-                    'startDate': start_str,
-                    'endDate': end_str,
-                    'dimensions': ['date'],
-                    'type': search_type if search_type in ['web', 'image', 'video', 'news', 'discover'] else 'web',
-                    'rowLimit': 1000
-                }
-                
-                # Use thread-isolated transport to avoid httplib2 socket collisions in concurrent execution
-                if creds:
-                    try:
-                        import httplib2
-                        from google_auth_httplib2 import AuthorizedHttp
-                        thread_http = AuthorizedHttp(creds, http=httplib2.Http())
-                        resp = service.searchanalytics().query(siteUrl=site, body=body).execute(http=thread_http)
-                    except Exception:
-                        resp = service.searchanalytics().query(siteUrl=site, body=body).execute()
-                else:
-                    resp = service.searchanalytics().query(siteUrl=site, body=body).execute()
-
-                rows = resp.get('rows', [])
-                for r in rows:
-                    d_clicks = r.get('clicks', 0)
-                    d_imp = r.get('impressions', 0)
-                    d_pos = r.get('position', 0.0)
-                    d_date = r.get('keys', [''])[0]
-                    
-                    site_c += d_clicks
-                    site_imp += d_imp
-                    site_pos_sum += (d_pos * d_imp)
-                    
-                    worker_daily.append({
-                        'date': d_date,
-                        'site': clean_name,
-                        'site_url': site,
-                        'clicks': d_clicks,
-                        'impressions': d_imp
-                    })
-
-                avg_ctr = round((site_c / site_imp * 100), 2) if site_imp > 0 else 0.0
-                avg_pos = round((site_pos_sum / site_imp), 1) if site_imp > 0 else 0.0
-
-                record = {
-                    'site_url': site,
-                    'domain': clean_name,
-                    'property_type': prop_type,
-                    'clicks': site_c,
-                    'impressions': site_imp,
-                    'ctr': avg_ctr,
-                    'position': avg_pos,
-                    'status': 'Connected' if (site_c > 0 or site_imp > 0) else 'No Traffic Yet'
-                }
-                return record, worker_daily
-
-            except Exception as ex:
-                record = {
-                    'site_url': site,
-                    'domain': clean_name,
-                    'property_type': prop_type,
-                    'clicks': 0,
-                    'impressions': 0,
-                    'ctr': 0.0,
-                    'position': 0.0,
-                    'status': 'Restricted / Check Access'
-                }
-                return record, []
-
-        max_workers = min(15, max(1, len(clean_sites)))
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_site = {executor.submit(_fetch_site_worker, s): s for s in clean_sites}
-            for future in as_completed(future_to_site):
-                try:
-                    s_rec, s_daily = future.result()
-                    site_records.append(s_rec)
-                    daily_records.extend(s_daily)
-                except Exception as ex:
-                    print(f"Error fetching site performance worker: {ex}")
-    else:
-        # Realistic Demo Data for sample properties
-        sample_stats = [
-            {"site_url": "https://centralec-electrical.co.uk/", "domain": "centralec-electrical.co.uk", "property_type": "URL Prefix", "clicks": 83, "impressions": 16600, "ctr": 0.5, "position": 33.4, "status": "Active"},
-            {"site_url": "sc-domain:centralec-electrical.co.uk", "domain": "centralec-electrical.co.uk (Domain)", "property_type": "Domain Property", "clicks": 142, "impressions": 28400, "ctr": 0.5, "position": 29.8, "status": "Active"}
-        ]
+    def _fetch_site_worker(site):
+        clean_name = site.replace('sc-domain:', '').replace('https://', '').replace('http://', '').strip('/')
+        is_domain = site.startswith('sc-domain:')
+        prop_type = "Domain Property" if is_domain else "URL Prefix"
         
-        for s in clean_sites:
-            if s not in [x['site_url'] for x in sample_stats]:
-                c_name = s.replace('sc-domain:', '').replace('https://', '').replace('http://', '').strip('/')
-                sample_stats.append({
-                    "site_url": s,
-                    "domain": c_name,
-                    "property_type": "Domain Property" if s.startswith('sc-domain:') else "URL Prefix",
-                    "clicks": 62,
-                    "impressions": 12800,
-                    "ctr": 0.48,
-                    "position": 35.1,
-                    "status": "Active"
-                })
-        site_records = sample_stats
+        site_c = 0
+        site_imp = 0
+        site_pos_sum = 0.0
+        worker_daily = []
 
-        cur_d = start_date
-        while cur_d <= end_date:
-            d_str = cur_d.strftime('%Y-%m-%d')
-            for sr in site_records:
-                h_val = abs(hash(d_str + sr['domain']))
-                day_c = max(0, int(sr['clicks'] / max(1, days) + (h_val % 5 - 2)))
-                day_imp = max(10, int(sr['impressions'] / max(1, days) + (h_val % 200 - 100)))
-                daily_records.append({
-                    'date': d_str,
-                    'site': sr['domain'],
-                    'site_url': sr['site_url'],
-                    'clicks': day_c,
-                    'impressions': day_imp
+        try:
+            body = {
+                'startDate': start_str,
+                'endDate': end_str,
+                'dimensions': ['date'],
+                'type': search_type if search_type in ['web', 'image', 'video', 'news', 'discover'] else 'web',
+                'rowLimit': 1000
+            }
+            
+            # Use thread-isolated transport to avoid httplib2 socket collisions in concurrent execution
+            if creds:
+                try:
+                    import httplib2
+                    from google_auth_httplib2 import AuthorizedHttp
+                    thread_http = AuthorizedHttp(creds, http=httplib2.Http())
+                    resp = service.searchanalytics().query(siteUrl=site, body=body).execute(http=thread_http)
+                except Exception:
+                    resp = service.searchanalytics().query(siteUrl=site, body=body).execute()
+            else:
+                resp = service.searchanalytics().query(siteUrl=site, body=body).execute()
+
+            rows = resp.get('rows', [])
+            for r in rows:
+                d_clicks = r.get('clicks', 0)
+                d_imp = r.get('impressions', 0)
+                d_pos = r.get('position', 0.0)
+                d_date = r.get('keys', [''])[0]
+                
+                site_c += d_clicks
+                site_imp += d_imp
+                site_pos_sum += (d_pos * d_imp)
+                
+                worker_daily.append({
+                    'date': d_date,
+                    'site': clean_name,
+                    'site_url': site,
+                    'clicks': d_clicks,
+                    'impressions': d_imp
                 })
-            cur_d += timedelta(days=1)
+
+            avg_ctr = round((site_c / site_imp * 100), 2) if site_imp > 0 else 0.0
+            avg_pos = round((site_pos_sum / site_imp), 1) if site_imp > 0 else 0.0
+
+            record = {
+                'site_url': site,
+                'domain': clean_name,
+                'property_type': prop_type,
+                'clicks': site_c,
+                'impressions': site_imp,
+                'ctr': avg_ctr,
+                'position': avg_pos,
+                'status': 'Connected' if (site_c > 0 or site_imp > 0) else 'No Traffic Yet'
+            }
+            return record, worker_daily
+
+        except Exception as ex:
+            record = {
+                'site_url': site,
+                'domain': clean_name,
+                'property_type': prop_type,
+                'clicks': 0,
+                'impressions': 0,
+                'ctr': 0.0,
+                'position': 0.0,
+                'status': 'Restricted / Check Access'
+            }
+            return record, []
+
+    max_workers = min(15, max(1, len(clean_sites)))
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_site = {executor.submit(_fetch_site_worker, s): s for s in clean_sites}
+        for future in as_completed(future_to_site):
+            try:
+                s_rec, s_daily = future.result()
+                site_records.append(s_rec)
+                daily_records.extend(s_daily)
+            except Exception as ex:
+                print(f"Error fetching site performance worker: {ex}")
 
     df_sites = pd.DataFrame(site_records)
     if not df_sites.empty:

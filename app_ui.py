@@ -91,7 +91,7 @@ from seo_engine import (
     get_content_decay, get_zombie_pages, get_brand_vs_nonbrand,
     get_device_breakdown, get_country_breakdown, get_top_pages,
     get_winning_keywords, get_high_impression_low_ctr,
-    generate_mock_gsc_data, parse_gsc_csv, generate_centralec_gsc_data
+    generate_mock_gsc_data, parse_gsc_csv
 )
 from report_generator import generate_pdf_report
 from alerts import get_unread_alerts
@@ -595,7 +595,7 @@ if not is_cloud_app and st.session_state.service is None:
 if 'df' not in st.session_state:
     st.session_state.df = pd.DataFrame()
 
-rt_metrics = get_site_realtime_metrics(st.session_state.current_site or "https://centralec-electrical.co.uk/")
+rt_metrics = get_site_realtime_metrics(st.session_state.current_site or "https://yourwebsite.com")
 live_site_users = rt_metrics["active_now"] if st.session_state.current_site else 0
 
 # Runtime auto-sync if connected but detailed data missing
@@ -799,7 +799,7 @@ with st.sidebar:
             portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
             site_options = [portfolio_label] + clean_active_sites + ["➕ Enter Custom Property URL"]
         else:
-            site_options = ["⚠️ Sign In with Google to Load Your Sites", "🧪 Demo Sample (centralec-electrical.co.uk)", "➕ Enter Custom Property URL"]
+            site_options = ["⚠️ Sign In with Google to Load Your Sites", "➕ Enter Custom Property URL"]
 
     def_idx = 0
     if st.session_state.current_site in site_options:
@@ -817,8 +817,6 @@ with st.sidebar:
         selected_site = st.text_input("Enter Property URL:", value="https://", key="txt_custom_property_url")
     elif selected_choice.startswith("🌐 [ALL SITES]"):
         selected_site = selected_choice
-    elif selected_choice.startswith("🧪 Demo Sample"):
-        selected_site = "https://centralec-electrical.co.uk/"
     elif selected_choice.startswith("⚠️") or selected_choice.startswith("("):
         selected_site = None
     else:
@@ -831,12 +829,6 @@ with st.sidebar:
                 st.session_state.portfolio_needs_refresh = True
         elif st.session_state.service:
             st.session_state.df = pd.DataFrame()
-        elif selected_site == "https://centralec-electrical.co.uk/":
-            _df_curr, _df_daily_curr, _df_daily_comp, _metrics = generate_centralec_gsc_data()
-            st.session_state.df = _df_curr
-            st.session_state.df_daily_curr = _df_daily_curr
-            st.session_state.df_daily_comp = _df_daily_comp
-            st.session_state.gsc_metrics = _metrics
 
     # 2C. Bulk Paste / Import Sites Tool
     with st.expander(f"📋 Bulk Paste / Import Sites ({total_p})", expanded=False):
@@ -1029,7 +1021,7 @@ current_site = st.session_state.current_site
 
 is_portfolio_mode = bool(current_site and current_site.startswith("🌐 [ALL SITES]"))
 real_active_sites = [s for s in st.session_state.sites if s and not s.startswith("🧪") and "Consolidated" not in s and "Custom Property" not in s]
-effective_site = real_active_sites[0] if (is_portfolio_mode and real_active_sites) else (current_site or "https://centralec-electrical.co.uk/")
+effective_site = real_active_sites[0] if (is_portfolio_mode and real_active_sites) else (current_site or (real_active_sites[0] if real_active_sites else ""))
 
 if is_portfolio_mode or page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
     if st.session_state.get('portfolio_data') is None or st.session_state.get('portfolio_needs_refresh', False):
@@ -1048,7 +1040,7 @@ if is_portfolio_mode or page in ["🌐 All Sites & Properties", "🌐 Properties
 # ----------------------------------------------------
 if page in ["📈 Performance", "📊 Overview"]:
     # 1. GSC Top Navigation Header
-    pill_site_text = f"Consolidated Portfolio ({len(real_active_sites)} verified properties)" if is_portfolio_mode else (current_site or 'https://centralec-electrical.co.uk/')
+    pill_site_text = f"Consolidated Portfolio ({len(real_active_sites)} verified properties)" if is_portfolio_mode else (current_site or (real_active_sites[0] if real_active_sites else "No Property Selected"))
     st.markdown(f"""
     <div class="gsc-top-bar">
         <div style="display:flex; align-items:center; gap:16px;">
@@ -1106,20 +1098,20 @@ if page in ["📈 Performance", "📊 Overview"]:
             with c2:
                 st.link_button("🔄 Switch Google Account (Sign In with Another Gmail)", auth_url, type="primary", use_container_width=True)
         st.stop()
-    elif not is_connected and not real_active_sites and not (current_site and current_site.startswith("https://centralec")):
+    elif not is_connected and not real_active_sites:
         st.markdown("""
         <div style="background:#e8f0fe; border:1.5px solid #1a73e8; border-radius:10px; padding:32px 24px; margin:20px 0; text-align:center;">
             <div style="font-size:40px; margin-bottom:10px;">🔐</div>
             <div style="font-size:20px; font-weight:700; color:#1a73e8;">Connect Your Google Search Console Account</div>
             <div style="font-size:14px; color:#3c4043; max-width:620px; margin:10px auto 20px auto; line-height:1.5;">
-                Please sign in with the Gmail account where your <b>20+ Search Console properties</b> are registered to view live data, or choose <b>🧪 Demo Sample</b> from the sidebar to preview the dashboard.
+                Please sign in with the Gmail account where your <b>Search Console properties</b> are registered to view live data.
             </div>
         </div>
         """, unsafe_allow_html=True)
         if auth_url:
             c1, c2, c3 = st.columns([1, 2, 1])
             with c2:
-                st.link_button("🌐 Sign in with Google (Load All 20+ Sites)", auth_url, type="primary", use_container_width=True)
+                st.link_button("🌐 Sign in with Google (Load All Sites)", auth_url, type="primary", use_container_width=True)
         st.stop()
 
     # 2. GSC Performance Header
@@ -1333,7 +1325,7 @@ if page in ["📈 Performance", "📊 Overview"]:
             <span class="gsc-pulse-dot"></span>
             <span style="font-weight:600; color:#202124; font-size:13px;">Live Site Visitors:</span>
             <span style="color:#137333; font-weight:700; font-size:13px;">{live_site_users} Active Users browsing right now</span>
-            <span style="color:#5f6368; font-size:12px;">on {current_site or 'centralec-electrical.co.uk'} • {rt_metrics['users_last_30m']} in last 30m</span>
+            <span style="color:#5f6368; font-size:12px;">on {current_site or (real_active_sites[0] if real_active_sites else 'selected property')} • {rt_metrics['users_last_30m']} in last 30m</span>
         </div>
         <div style="display:flex; align-items:center; gap:12px; font-size:12px; color:#5f6368;">
             <span>👥 <b>{active_dash_users}</b> viewing dashboard</span>
@@ -1663,7 +1655,7 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         </div>
         <div class="gsc-search-pill">
             <span style="color:#5f6368; font-size:15px;">🔍</span>
-            <span style="color:#3c4043; font-size:13px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Inspect any URL in "{current_site or 'https://centralec-electrical.co.uk/'}"</span>
+            <span style="color:#3c4043; font-size:13px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Inspect any URL in "{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}"</span>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
             <div class="gsc-live-badge" title="Live active visitors browsing your website right now">
@@ -1698,7 +1690,7 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
                 <span>Real-Time Active Visitors &amp; Site Usage</span>
             </div>
             <div style="font-size:13px; color:#5f6368; margin-top:4px;">
-                Live visitor activity on <b style="color:#1a73e8;">{current_site or 'https://centralec-electrical.co.uk/'}</b> and connected dashboard sessions.
+                Live visitor activity on <b style="color:#1a73e8;">{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}</b> and connected dashboard sessions.
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1920,7 +1912,7 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         st.markdown("""
         ---
         **Or, enable direct site tracking without complex setup:**  
-        Add this 3-line lightweight script to the `<head>` or footer of your website (`centralec-electrical.co.uk`) to stream live visitors directly into this dashboard:
+        Add this 3-line lightweight script to the `<head>` or footer of your website to stream live visitors directly into this dashboard:
         ```html
         <script>
           // Lightweight Real-time Ping for Dashboard
