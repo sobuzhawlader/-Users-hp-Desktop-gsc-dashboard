@@ -76,14 +76,113 @@ def get_quick_wins(df):
     ].sort_values('impressions', ascending=False).head(50)
 
 def get_cannibalization(df):
-    """Finds keywords where multiple distinct pages compete for ranking."""
+    """Finds keywords where multiple distinct pages compete for ranking with rich severity and action insights."""
     if df.empty or 'query' not in df.columns or 'page' not in df.columns:
         return pd.DataFrame()
 
-    grouped = df.groupby('query')['page'].nunique().reset_index()
-    grouped.columns = ['query', 'page_count']
-    cannibalized = grouped[grouped['page_count'] > 1]
-    return cannibalized.sort_values('page_count', ascending=False).head(50)
+    return get_cannibalization_matrix(df)
+
+def get_cannibalization_matrix(df):
+    """Comprehensive keyword cannibalization matrix with severity and resolution recommendations."""
+    if df.empty or 'query' not in df.columns or 'page' not in df.columns:
+        return pd.DataFrame()
+
+    # Aggregate by query and page
+    qp = df.groupby(['query', 'page']).agg(
+        clicks=('clicks', 'sum'),
+        impressions=('impressions', 'sum'),
+        position=('position', 'mean')
+    ).reset_index()
+
+    # Count pages per query
+    counts = qp.groupby('query')['page'].count().reset_index()
+    counts.columns = ['query', 'page_count']
+    multi_queries = counts[counts['page_count'] > 1]
+
+    if multi_queries.empty:
+        return pd.DataFrame()
+
+    # Filter qp to only multi-page queries
+    qp_multi = qp[qp['query'].isin(multi_queries['query'])].copy()
+
+    records = []
+    for query, group in qp_multi.groupby('query'):
+        group_sorted = group.sort_values(by=['clicks', 'impressions'], ascending=[False, False])
+        page_count = len(group)
+        total_clicks = int(group['clicks'].sum())
+        total_impressions = int(group['impressions'].sum())
+        best_pos = round(group['position'].min(), 1)
+        worst_pos = round(group['position'].max(), 1)
+        pos_spread = round(worst_pos - best_pos, 1)
+
+        dominant_row = group_sorted.iloc[0]
+        dominant_url = dominant_row['page']
+        dominant_clicks = int(dominant_row['clicks'])
+        
+        competing_urls = group_sorted['page'].tolist()
+        
+        # Severity calculation
+        if page_count >= 3 or (pos_spread <= 5 and total_impressions >= 100):
+            severity = "🔴 High"
+            severity_order = 1
+        elif page_count == 2 and (pos_spread <= 10 or total_clicks >= 5):
+            severity = "🟡 Medium"
+            severity_order = 2
+        else:
+            severity = "🟢 Low"
+            severity_order = 3
+
+        # Resolution recommendation
+        dom_share = (dominant_clicks / total_clicks) if total_clicks > 0 else 0.5
+        if dom_share >= 0.8:
+            recommendation = f"Add Canonical or 301 Redirect secondary pages to dominant URL: {dominant_url}"
+        elif pos_spread <= 4:
+            recommendation = "Consolidate content: Merge thin content into primary page and de-optimize secondary."
+        else:
+            recommendation = "Differentiate search intent and internal links between conflicting URLs."
+
+        records.append({
+            'query': query,
+            'page_count': page_count,
+            'severity': severity,
+            'severity_order': severity_order,
+            'total_clicks': total_clicks,
+            'total_impressions': total_impressions,
+            'best_pos': best_pos,
+            'worst_pos': worst_pos,
+            'dominant_url': dominant_url,
+            'competing_urls': ", ".join(competing_urls[:3]) + (f" (+{page_count - 3} more)" if page_count > 3 else ""),
+            'recommended_action': recommendation
+        })
+
+    matrix_df = pd.DataFrame(records)
+    if not matrix_df.empty:
+        matrix_df = matrix_df.sort_values(
+            by=['severity_order', 'total_impressions', 'total_clicks'], 
+            ascending=[True, False, False]
+        ).drop(columns=['severity_order'])
+
+    return matrix_df.head(100)
+
+def get_cannibalization_breakdown(df, query):
+    """Returns detailed per-page metrics for a specific cannibalized query."""
+    if df.empty or 'query' not in df.columns or 'page' not in df.columns:
+        return pd.DataFrame()
+
+    q_df = df[df['query'].astype(str).str.lower() == str(query).lower()]
+    if q_df.empty:
+        return pd.DataFrame()
+
+    res = q_df.groupby('page').agg(
+        clicks=('clicks', 'sum'),
+        impressions=('impressions', 'sum'),
+        position=('position', 'mean')
+    ).reset_index()
+
+    res['ctr'] = ((res['clicks'] / res['impressions']) * 100).round(2)
+    res['position'] = res['position'].round(1)
+    return res.sort_values(by=['clicks', 'impressions'], ascending=[False, False])
+
 
 def get_search_intent(df):
     """Classifies search intent using pattern matching on query terms."""

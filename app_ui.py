@@ -86,15 +86,20 @@ if fetch_search_appearance is None:
 
 from database import init_db, save_data, load_data, load_alerts
 from seo_engine import (
-    get_overview, get_quick_wins, get_cannibalization,
+    get_overview, get_quick_wins, get_cannibalization, get_cannibalization_matrix, get_cannibalization_breakdown,
     get_search_intent, get_long_tail_keywords, get_zero_click_keywords,
     get_content_decay, get_zombie_pages, get_brand_vs_nonbrand,
     get_device_breakdown, get_country_breakdown, get_top_pages,
     get_winning_keywords, get_high_impression_low_ctr,
     generate_mock_gsc_data, parse_gsc_csv
 )
-from report_generator import generate_pdf_report
+from report_generator import generate_pdf_report, generate_whitelabel_pdf_report
 from alerts import get_unread_alerts
+from telegram_alerter import send_telegram_notification, test_telegram_connection, analyze_gsc_anomalies
+from crawler_auditor import crawl_website, audit_core_web_vitals
+from ai_meta_generator import generate_high_ctr_metadata, generate_schema_jsonld
+from keyword_clustering import cluster_keywords
+from wp_publisher import test_wp_connection, get_wp_posts, update_wp_post_metadata, publish_wp_article
 
 # Advanced Engines
 from inspection_engine import inspect_single_url, inspect_bulk_urls
@@ -993,7 +998,7 @@ with st.sidebar:
 
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
-    # 3. Authentic Google Search Console Navigation Menu (100% GSC API Scope)
+    # 3. Authentic Google Search Console Navigation Menu (100% GSC API Scope + Enterprise Suite)
     page = st.radio("Navigation", [
         "📈 Performance",
         "🟢 Real-Time Active Users",
@@ -1004,6 +1009,13 @@ with st.sidebar:
         "🗺️ Sitemaps Manager",
         "⚡ Core Web Vitals & Quick Wins",
         "🎯 Top Keywords & Queries",
+        "⚔️ Keyword Cannibalization",
+        "🧩 Semantic Keyword Clusters",
+        "🕷️ Technical On-Page Crawler",
+        "✨ AI Meta & Schema Studio",
+        "🔌 WordPress 1-Click Sync",
+        "🚨 24/7 Anomaly & Telegram Bot",
+        "💼 White-Label Client Portal",
         "📉 Algo Update Impact",
         "📈 Custom CTR Curve",
         "🪵 Log Reconciliation",
@@ -1257,9 +1269,9 @@ if page in ["📈 Performance", "📊 Overview"]:
     # Interactive GSC Search Type & Date Filters
     f_col1, f_col2, f_col3 = st.columns([5, 4, 3])
     with f_col1:
-        search_type_opt = st.pills("Search type", ["Web", "Discover", "Google News", "Image", "Video"], default="Web", key="perf_search_type_pill")
+        search_type_opt = st.radio("Search type", ["Web", "Discover", "Google News", "Image", "Video"], index=0, horizontal=True, key="perf_search_type_pill")
     with f_col2:
-        date_chip_opt = st.pills("Date range", ["24 hours", "7 days", "28 days", "3 months", "Compare"], default="3 months", key="perf_date_range_pill")
+        date_chip_opt = st.radio("Date range", ["24 hours", "7 days", "28 days", "3 months", "Compare"], index=3, horizontal=True, key="perf_date_range_pill")
     with f_col3:
         fresh_toggle = st.checkbox("⚡ Fresh Data (Hourly)", value=False, key="perf_fresh_toggle", help="Include latest hourly and unfinalized same-day data via GSC dataState='all'")
 
@@ -3009,17 +3021,69 @@ elif page in ["⚙️ Settings & Google Connection", "⚙️ Settings & Connecti
         st.success(f"✅ Generated `{wf_path}` and `{audit_path}`! Commit and push to GitHub to activate.")
 
 # ----------------------------------------------------
-# 13. Alerts
+# 13. 24/7 Anomaly Detection & Free Telegram Bot
 # ----------------------------------------------------
-elif page == "🚨 Alerts":
-    st.markdown("<div class='section-header'>🚨 Recorded Alerts</div>", unsafe_allow_html=True)
+elif page in ["🚨 24/7 Anomaly & Telegram Bot", "🚨 Alerts"]:
+    st.markdown("""
+    <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(239, 68, 68, 0.3); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #ef4444, #f59e0b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">🚨 24/7 SEARCH ANOMALY DETECTION & TELEGRAM BOT</div>
+                <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">Autonomous search anomaly monitoring & instant alerts for traffic drops, position slumps, and CTR opportunities via official free Telegram Bot API.</div>
+            </div>
+            <div style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#ef4444; font-weight:700;">● ZERO-COST TELEMETRY</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_tg1, col_tg2 = st.columns([1, 1])
+    with col_tg1:
+        st.markdown("#### 🤖 Telegram Bot Configuration (100% Free)")
+        st.caption("Create a free bot with [@BotFather](https://t.me/BotFather) on Telegram and get your chat ID from [@userinfobot](https://t.me/userinfobot).")
+        tg_token = st.text_input("Telegram Bot Token", type="password", placeholder="e.g. 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ", key="tg_cfg_bot_token")
+        tg_chat_id = st.text_input("Telegram Chat ID / Channel ID", placeholder="e.g. 987654321 or -100123456789", key="tg_cfg_chat_id")
+        
+        if st.button("⚡ Send Test Ping to Telegram", use_container_width=True, type="primary", key="btn_test_tg_ping"):
+            if not tg_token.strip() or not tg_chat_id.strip():
+                st.warning("Please enter both your Telegram Bot Token and Chat ID.")
+            else:
+                with st.spinner("Connecting to Telegram Bot API..."):
+                    res = test_telegram_connection(tg_token, tg_chat_id)
+                    if res.get("success"):
+                        st.success("✅ Telegram Ping Dispatched Successfully! Check your Telegram app.")
+                    else:
+                        st.error(f"❌ Telegram Error: {res.get('error')}")
+
+    with col_tg2:
+        st.markdown("#### ⚡ Real-Time Anomaly Scanner")
+        st.caption("Scans current Search Console property data against traffic thresholds to detect urgent drops or quick-win spikes.")
+        if df.empty:
+            st.info("👈 Please fetch or load Search Console data from the sidebar first.")
+        else:
+            scan_site = current_site or "My Website"
+            if st.button("🔍 Run Instant Anomaly Scan", use_container_width=True, key="btn_run_anomaly_scan"):
+                with st.spinner("Analyzing performance variance..."):
+                    anomalies = analyze_gsc_anomalies(df, pd.DataFrame(), scan_site, bot_token=tg_token, chat_id=tg_chat_id)
+                    if anomalies:
+                        st.warning(f"⚠️ Detected {len(anomalies)} telemetry anomalies or opportunities!")
+                        for an in anomalies:
+                            sev = an.get('severity', 'INFO')
+                            st.markdown(f"""
+                            <div style="background:rgba(30, 41, 59, 0.6); border-left:4px solid {'#ef4444' if sev=='CRITICAL' else '#f59e0b'}; border-radius:6px; padding:10px 14px; margin-bottom:8px;">
+                                <div style="font-size:13px; font-weight:700; color:#f8fafc;">{an.get('title')}</div>
+                                <div style="font-size:11.5px; color:#cbd5e1; margin-top:2px;">{an.get('message')}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    else:
+                        st.success("✅ No urgent anomalies detected. Search traffic is stable within baseline thresholds.")
+
+    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+    st.markdown("#### 📜 Recorded Incident & Alert History")
     alerts_df = get_unread_alerts(current_site)
     if alerts_df.empty:
-        st.success("✅ No active alerts.")
+        st.info("No recorded alerts in local database yet. Run an anomaly scan or automated audit above to log alerts.")
     else:
-        st.warning(f"⚠️ {len(alerts_df)} unread alerts recorded.")
-        for _, a in alerts_df.iterrows():
-            st.markdown(f"<div class='alert-warning'><b>{a.get('alert_type')}</b><br>{a.get('message')}<br><small>{a.get('created_at')}</small></div>", unsafe_allow_html=True)
+        st.dataframe(alerts_df, use_container_width=True, height=260)
 
 # ----------------------------------------------------
 # 14. Reports & Export
@@ -3048,3 +3112,613 @@ elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
             top_p = get_top_pages(df)
             if not top_p.empty:
                 st.download_button("📥 Download Top Pages (CSV)", top_p.to_csv(index=False), "top_pages_export.csv", "text/csv", use_container_width=True)
+
+# ----------------------------------------------------
+# 15. Keyword Cannibalization Matrix & Resolution Engine
+# ----------------------------------------------------
+elif page == "⚔️ Keyword Cannibalization":
+    st.markdown("""
+    <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(244, 63, 94, 0.3); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #f43f5e, #fbbf24); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">⚔️ KEYWORD CANNIBALIZATION MATRIX & RESOLUTION ENGINE</div>
+                <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">Detect multi-page ranking conflicts where 2 or more of your URLs compete for the exact same Google query, splitting clicks and authority.</div>
+            </div>
+            <div style="background:rgba(244,63,94,0.15); border:1px solid rgba(244,63,94,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#f43f5e; font-weight:700;">● RANK RECOVERY</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if df.empty:
+        st.info("👈 Please fetch Search Console data or load a saved snapshot from the sidebar first.")
+    else:
+        matrix_df = get_cannibalization_matrix(df)
+        if matrix_df.empty:
+            st.success("🎉 Outstanding! No keyword cannibalization detected. Each search query maps cleanly to a distinct landing page.")
+        else:
+            high_count = len(matrix_df[matrix_df['severity'].str.contains("High", na=False)])
+            med_count = len(matrix_df[matrix_df['severity'].str.contains("Medium", na=False)])
+            total_conflict_queries = len(matrix_df)
+            total_conflict_impressions = int(matrix_df['total_impressions'].sum())
+
+            kpi_c1, kpi_c2, kpi_c3, kpi_c4 = st.columns(4)
+            with kpi_c1:
+                st.markdown(f"""
+                <div class="gsc-scorecard">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">CONFLICT QUERIES</div>
+                    <div style="font-size:26px; font-weight:800; color:#f8fafc; margin-top:4px;">{total_conflict_queries:,}</div>
+                    <div style="font-size:11px; color:#f43f5e; margin-top:2px;">Queries with 2+ URLs</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with kpi_c2:
+                st.markdown(f"""
+                <div class="gsc-scorecard">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">HIGH SEVERITY</div>
+                    <div style="font-size:26px; font-weight:800; color:#ef4444; margin-top:4px;">{high_count}</div>
+                    <div style="font-size:11px; color:#ef4444; margin-top:2px;">Critical rank dilution</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with kpi_c3:
+                st.markdown(f"""
+                <div class="gsc-scorecard">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">MEDIUM SEVERITY</div>
+                    <div style="font-size:26px; font-weight:800; color:#fbbf24; margin-top:4px;">{med_count}</div>
+                    <div style="font-size:11px; color:#fbbf24; margin-top:2px;">Moderate traffic split</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with kpi_c4:
+                st.markdown(f"""
+                <div class="gsc-scorecard">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">AFFECTED IMPRESSIONS</div>
+                    <div style="font-size:26px; font-weight:800; color:#38bdf8; margin-top:4px;">{total_conflict_impressions:,}</div>
+                    <div style="font-size:11px; color:#38bdf8; margin-top:2px;">Consolidation opportunity</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+            filter_sev = st.multiselect("Filter by Severity:", ["🔴 High", "🟡 Medium", "🟢 Low"], default=["🔴 High", "🟡 Medium"], key="cb_filter_cannibal_sev")
+            filtered_matrix = matrix_df[matrix_df['severity'].isin(filter_sev)] if filter_sev else matrix_df
+
+            st.dataframe(
+                filtered_matrix[['severity', 'query', 'page_count', 'total_clicks', 'total_impressions', 'best_pos', 'worst_pos', 'dominant_url', 'recommended_action']],
+                use_container_width=True,
+                height=350
+            )
+
+            # Drill-down selector
+            st.markdown("#### 🔬 Detailed Conflict Drilldown & Competing URLs")
+            query_list = filtered_matrix['query'].tolist()
+            selected_cq = st.selectbox("Inspect Cannibalized Query:", query_list, key="sb_inspect_cannibal_query")
+            if selected_cq:
+                bd_df = get_cannibalization_breakdown(df, selected_cq)
+                if not bd_df.empty:
+                    st.caption(f"Showing all {len(bd_df)} distinct pages ranking for query **'{selected_cq}'**:")
+                    st.dataframe(bd_df, use_container_width=True)
+                    rec_row = filtered_matrix[filtered_matrix['query'] == selected_cq].iloc[0]
+                    st.markdown(f"""
+                    <div style="background:rgba(30, 58, 138, 0.25); border:1px solid rgba(56, 189, 248, 0.4); border-radius:8px; padding:12px 16px; margin-top:10px;">
+                        <div style="font-size:11px; font-family:'JetBrains Mono',monospace; color:#38bdf8; font-weight:700; text-transform:uppercase;">💡 RECOMMENDED RESOLUTION ENGINE ACTION</div>
+                        <div style="font-size:13.5px; color:#f8fafc; margin-top:4px; font-weight:600;">{rec_row.get('recommended_action')}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            st.download_button("📥 Export Cannibalization Matrix (CSV)", matrix_df.to_csv(index=False), "keyword_cannibalization_matrix.csv", "text/csv", use_container_width=True)
+
+# ----------------------------------------------------
+# 16. Semantic Keyword Clustering Engine
+# ----------------------------------------------------
+elif page == "🧩 Semantic Keyword Clusters":
+    st.markdown("""
+    <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(139, 92, 246, 0.35); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #8b5cf6, #38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">🧩 SEMANTIC KEYWORD CLUSTERING & TOPIC SILOS</div>
+                <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">NLP-driven semantic topic clustering. Groups search queries into topical silos, calculates aggregate cluster impressions, and pinpoints unranked content gaps.</div>
+            </div>
+            <div style="background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#a78bfa; font-weight:700;">● NLP TOPIC SILOS</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if df.empty:
+        st.info("👈 Please fetch Search Console data or load a saved snapshot from the sidebar first.")
+    else:
+        with st.spinner("Processing NLP semantic token clusters..."):
+            summary_clusters, detailed_clusters = cluster_keywords(df)
+
+        if summary_clusters.empty:
+            st.warning("No clusters could be formed from the current dataset.")
+        else:
+            n_clusters = len(summary_clusters)
+            tot_clustered_kw = int(summary_clusters['Total Keywords'].sum())
+            top_cluster_name = summary_clusters.iloc[0]['Cluster Theme']
+            top_cluster_impr = int(summary_clusters.iloc[0]['Total Impressions'])
+
+            cl_c1, cl_c2, cl_c3, cl_c4 = st.columns(4)
+            with cl_c1:
+                st.markdown(f"""
+                <div class="gsc-scorecard">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">TOTAL TOPIC SILOS</div>
+                    <div style="font-size:26px; font-weight:800; color:#f8fafc; margin-top:4px;">{n_clusters}</div>
+                    <div style="font-size:11px; color:#a78bfa; margin-top:2px;">Semantic clusters</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with cl_c2:
+                st.markdown(f"""
+                <div class="gsc-scorecard">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">CLUSTERED QUERIES</div>
+                    <div style="font-size:26px; font-weight:800; color:#38bdf8; margin-top:4px;">{tot_clustered_kw:,}</div>
+                    <div style="font-size:11px; color:#38bdf8; margin-top:2px;">NLP mapped keywords</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with cl_c3:
+                st.markdown(f"""
+                <div class="gsc-scorecard">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">TOP TOPIC SILO</div>
+                    <div style="font-size:20px; font-weight:800; color:#10b981; margin-top:4px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{top_cluster_name}</div>
+                    <div style="font-size:11px; color:#10b981; margin-top:2px;">{top_cluster_impr:,} impressions</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with cl_c4:
+                st.markdown(f"""
+                <div class="gsc-scorecard">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">TOPIC DISTRIBUTION</div>
+                    <div style="font-size:26px; font-weight:800; color:#fbbf24; margin-top:4px;">100%</div>
+                    <div style="font-size:11px; color:#fbbf24; margin-top:2px;">Zero API Cost</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+            st.markdown("#### 📑 Topic Silo Master Summary")
+            st.dataframe(summary_clusters, use_container_width=True, height=350)
+
+            st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+            st.markdown("#### 🔍 Topic Silo Deep Dive & Keyword Membership")
+            avail_clusters = summary_clusters['Cluster Theme'].tolist()
+            chosen_cl = st.selectbox("Select Topic Silo:", avail_clusters, key="sb_cluster_drilldown_selector")
+            if chosen_cl:
+                cl_subset = detailed_clusters[detailed_clusters['cluster'] == chosen_cl]
+                st.dataframe(cl_subset.drop(columns=['cluster']), use_container_width=True)
+
+            col_exp_c1, col_exp_c2 = st.columns(2)
+            with col_exp_c1:
+                st.download_button("📥 Export Topic Summary (CSV)", summary_clusters.to_csv(index=False), "topic_clusters_summary.csv", "text/csv", use_container_width=True)
+            with col_exp_c2:
+                st.download_button("📥 Export All Clustered Keywords (CSV)", detailed_clusters.to_csv(index=False), "clustered_keywords_detailed.csv", "text/csv", use_container_width=True)
+
+# ----------------------------------------------------
+# 17. Technical On-Page Crawler & Core Web Vitals Auditor
+# ----------------------------------------------------
+elif page == "🕷️ Technical On-Page Crawler":
+    st.markdown("""
+    <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(16, 185, 129, 0.3); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #10b981, #38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">🕷️ TECHNICAL ON-PAGE CRAWLER & CORE WEB VITALS AUDITOR</div>
+                <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">Screaming Frog-style multi-threaded internal site crawler and Google PageSpeed Insights auditor (100% free, 0 subscription cost).</div>
+            </div>
+            <div style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#34d399; font-weight:700;">● ZERO SUBSCRIPTION</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    tab_cr1, tab_cr2 = st.tabs(["🕷️ Multi-Threaded Site Crawler", "⚡ Google PageSpeed & Core Web Vitals"])
+
+    with tab_cr1:
+        c_url_default = current_site if (current_site and not current_site.startswith("🌐") and not current_site.startswith("⚠️")) else "https://example.com"
+        col_cinp1, col_cinp2, col_cinp3 = st.columns([3, 1, 1])
+        with col_cinp1:
+            crawl_target = st.text_input("Root Website URL to Crawl:", value=c_url_default, key="txt_crawl_target_url")
+        with col_cinp2:
+            crawl_limit = st.slider("Max Pages Limit:", min_value=5, max_value=50, value=20, step=5, key="slider_crawl_limit")
+        with col_cinp3:
+            st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
+            start_crawl_btn = st.button("🚀 Start Crawl", use_container_width=True, type="primary", key="btn_start_crawl")
+
+        if start_crawl_btn:
+            with st.spinner(f"Crawling internal URLs on {crawl_target}..."):
+                crawl_df = crawl_website(crawl_target, max_pages=crawl_limit)
+                st.session_state['latest_crawl_df'] = crawl_df
+
+        latest_crawl = st.session_state.get('latest_crawl_df')
+        if latest_crawl is not None and not latest_crawl.empty:
+            p_total = len(latest_crawl)
+            p_200 = len(latest_crawl[latest_crawl['status_code'] == 200])
+            p_errors = len(latest_crawl[latest_crawl['status_code'] >= 400])
+            p_missing_desc = len(latest_crawl[latest_crawl['meta_desc'] == ''])
+            p_missing_h1 = len(latest_crawl[latest_crawl['h1_count'] == 0])
+            health_pct = round((p_200 / p_total) * 100, 1) if p_total > 0 else 100.0
+
+            cr_k1, cr_k2, cr_k3, cr_k4 = st.columns(4)
+            with cr_k1:
+                st.markdown(f"""
+                <div class="gsc-scorecard">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">PAGES CRAWLED</div>
+                    <div style="font-size:26px; font-weight:800; color:#f8fafc; margin-top:4px;">{p_total}</div>
+                    <div style="font-size:11px; color:#10b981; margin-top:2px;">{p_200} HTTP 200 OK</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with cr_k2:
+                st.markdown(f"""
+                <div class="gsc-scorecard">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">HEALTH SCORE</div>
+                    <div style="font-size:26px; font-weight:800; color:#38bdf8; margin-top:4px;">{health_pct}%</div>
+                    <div style="font-size:11px; color:#38bdf8; margin-top:2px;">Indexability health</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with cr_k3:
+                st.markdown(f"""
+                <div class="gsc-scorecard">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">BROKEN LINKS (404/500)</div>
+                    <div style="font-size:26px; font-weight:800; color:{'#ef4444' if p_errors>0 else '#10b981'}; margin-top:4px;">{p_errors}</div>
+                    <div style="font-size:11px; color:{'#ef4444' if p_errors>0 else '#10b981'}; margin-top:2px;">Requires immediate fix</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with cr_k4:
+                st.markdown(f"""
+                <div class="gsc-scorecard">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">MISSING META/H1</div>
+                    <div style="font-size:26px; font-weight:800; color:#fbbf24; margin-top:4px;">{p_missing_desc + p_missing_h1}</div>
+                    <div style="font-size:11px; color:#fbbf24; margin-top:2px;">On-page gap items</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+            st.dataframe(
+                latest_crawl[['url', 'status_code', 'latency_ms', 'title_len', 'desc_len', 'h1_count', 'images_no_alt', 'issues_display']],
+                use_container_width=True,
+                height=350
+            )
+            st.download_button("📥 Export Crawl Audit (CSV)", latest_crawl.to_csv(index=False), "technical_seo_crawl.csv", "text/csv", use_container_width=True)
+        else:
+            st.info("Enter a target website URL above and click '🚀 Start Crawl' to begin scanning.")
+
+    with tab_cr2:
+        st.markdown("#### ⚡ Google PageSpeed Insights & Real Core Web Vitals")
+        st.caption("Direct free integration with Google PageSpeed API (up to 25,000 requests/day, no billing).")
+        col_ps1, col_ps2, col_ps3 = st.columns([3, 1, 1])
+        with col_ps1:
+            ps_url = st.text_input("URL to Analyze:", value=c_url_default, key="txt_pagespeed_url")
+        with col_ps2:
+            ps_strat = st.selectbox("Device Strategy:", ["mobile", "desktop"], key="sb_pagespeed_strategy")
+        with col_ps3:
+            st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
+            ps_btn = st.button("⚡ Audit Web Vitals", use_container_width=True, type="primary", key="btn_run_pagespeed")
+
+        if ps_btn:
+            with st.spinner("Connecting to Google PageSpeed Insights API..."):
+                ps_data = audit_core_web_vitals(ps_url, strategy=ps_strat)
+                if ps_data.get("success"):
+                    scores = ps_data.get("scores", {})
+                    metrics = ps_data.get("metrics", {})
+                    opps = ps_data.get("opportunities", [])
+
+                    ps_k1, ps_k2, ps_k3, ps_k4 = st.columns(4)
+                    with ps_k1:
+                        sc = scores.get('performance', 0)
+                        col_sc = '#10b981' if sc>=90 else ('#fbbf24' if sc>=50 else '#ef4444')
+                        st.markdown(f"""
+                        <div class="gsc-scorecard">
+                            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">PERFORMANCE</div>
+                            <div style="font-size:28px; font-weight:800; color:{col_sc}; margin-top:4px;">{sc}/100</div>
+                            <div style="font-size:11px; color:{col_sc}; margin-top:2px;">Lighthouse Speed</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    with ps_k2:
+                        st.markdown(f"""
+                        <div class="gsc-scorecard">
+                            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">SEO SCORE</div>
+                            <div style="font-size:28px; font-weight:800; color:#38bdf8; margin-top:4px;">{scores.get('seo', 0)}/100</div>
+                            <div style="font-size:11px; color:#38bdf8; margin-top:2px;">Search Best Practice</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    with ps_k3:
+                        st.markdown(f"""
+                        <div class="gsc-scorecard">
+                            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">ACCESSIBILITY</div>
+                            <div style="font-size:28px; font-weight:800; color:#a78bfa; margin-top:4px;">{scores.get('accessibility', 0)}/100</div>
+                            <div style="font-size:11px; color:#a78bfa; margin-top:2px;">User Experience</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    with ps_k4:
+                        st.markdown(f"""
+                        <div class="gsc-scorecard">
+                            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">BEST PRACTICES</div>
+                            <div style="font-size:28px; font-weight:800; color:#34d399; margin-top:4px;">{scores.get('best_practices', 0)}/100</div>
+                            <div style="font-size:11px; color:#34d399; margin-top:2px;">Modern Web Code</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+                    st.markdown("##### ⏱️ Core Web Vitals Breakdown")
+                    cw_c1, cw_c2, cw_c3, cw_c4 = st.columns(4)
+                    with cw_c1:
+                        st.metric("Largest Contentful Paint (LCP)", metrics.get("lcp", "N/A"), help="Target: < 2.5s")
+                    with cw_c2:
+                        st.metric("Cumulative Layout Shift (CLS)", metrics.get("cls", "N/A"), help="Target: < 0.1")
+                    with cw_c3:
+                        st.metric("First Contentful Paint (FCP)", metrics.get("fcp", "N/A"))
+                    with cw_c4:
+                        st.metric("Total Blocking Time (TBT)", metrics.get("tbt", "N/A"))
+
+                    if opps:
+                        st.markdown("##### 🚀 Top Speed Opportunities")
+                        for op in opps:
+                            st.markdown(f"""
+                            <div style="background:rgba(30, 41, 59, 0.6); border-radius:6px; padding:10px 14px; margin-bottom:6px; display:flex; justify-content:space-between;">
+                                <span style="font-weight:600; color:#f8fafc;">{op.get('title')}</span>
+                                <span style="color:#fbbf24; font-weight:700; font-family:'JetBrains Mono',monospace;">{op.get('savings')}</span>
+                            </div>
+                            """, unsafe_allow_html=True)
+                else:
+                    st.error(f"PageSpeed error: {ps_data.get('error')}")
+
+# ----------------------------------------------------
+# 18. AI High-CTR Meta & JSON-LD Schema Studio
+# ----------------------------------------------------
+elif page == "✨ AI Meta & Schema Studio":
+    st.markdown("""
+    <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(245, 158, 11, 0.35); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #f59e0b, #ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">✨ AI HIGH-CTR META & JSON-LD SCHEMA STUDIO</div>
+                <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">Craft click-generating Meta Titles and Descriptions using proven CTR formulas or free Gemini AI, plus generate Google-validated JSON-LD Schema markups.</div>
+            </div>
+            <div style="background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#fbbf24; font-weight:700;">● CTR OPTIMIZER</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    tab_ai1, tab_ai2 = st.tabs(["⚡ High-CTR Title & Description Generator", "🏗️ JSON-LD Schema Generator"])
+
+    with tab_ai1:
+        col_gen1, col_gen2 = st.columns([2, 1])
+        with col_gen1:
+            kw_input = st.text_input("Target Keyword / Search Topic:", "python seo automation", key="txt_meta_kw_input")
+            brand_input = st.text_input("Website / Brand Name (optional):", "MyBrand", key="txt_meta_brand_input")
+        with col_gen2:
+            st.caption("Optional: Free Gemini API Key from [Google AI Studio](https://aistudio.google.com/) for creative AI copy (leave blank for fast offline algorithmic engine):")
+            gemini_key = st.text_input("Gemini Free API Key (optional):", type="password", key="txt_gemini_api_key")
+            gen_meta_btn = st.button("🚀 Generate High-CTR Meta", type="primary", use_container_width=True, key="btn_generate_meta")
+
+        if gen_meta_btn or kw_input:
+            variations = generate_high_ctr_metadata(kw_input, site_brand=brand_input, gemini_api_key=gemini_key)
+            st.markdown(f"#### 🏆 4 High-Converting CTR Variations for: `\"{kw_input}\"`")
+            for i, var in enumerate(variations, start=1):
+                t_len = var.get('title_length', len(var.get('title', '')))
+                d_len = var.get('desc_length', len(var.get('description', '')))
+                t_color = "#10b981" if 40 <= t_len <= 60 else "#fbbf24"
+                d_color = "#10b981" if 130 <= d_len <= 160 else "#fbbf24"
+
+                st.markdown(f"""
+                <div style="background:rgba(15, 23, 42, 0.6); border:1px solid rgba(56, 189, 248, 0.25); border-radius:10px; padding:16px; margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:13px; font-weight:700; color:#38bdf8;">{var.get('style')}</span>
+                        <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:4px; color:#94a3b8;">Formula: {var.get('ctr_formula')}</span>
+                    </div>
+                    <!-- Google SERP Snippet Preview -->
+                    <div style="background:#202124; border-radius:8px; padding:14px; margin-top:10px; font-family:Arial,sans-serif;">
+                        <div style="font-size:11px; color:#bdc1c6;">https://example.com › blog › {kw_input.lower().replace(' ', '-')}</div>
+                        <div style="font-size:17px; color:#8ab4f8; margin-top:2px; font-weight:400; cursor:pointer;">{var.get('title')}</div>
+                        <div style="font-size:13px; color:#bdc1c6; margin-top:4px; line-height:1.4;">{var.get('description')}</div>
+                    </div>
+                    <div style="display:flex; gap:16px; margin-top:10px; font-size:11.5px; font-family:'JetBrains Mono',monospace;">
+                        <span style="color:{t_color};">Title: {t_len} / 60 chars</span>
+                        <span style="color:{d_color};">Description: {d_len} / 160 chars</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+    with tab_ai2:
+        st.markdown("#### 🏗️ Valid Google-Approved JSON-LD Schema Generator")
+        st.caption("Generate rich snippet schema markup to earn FAQ accordions, rating stars, and knowledge graph cards in Google Search.")
+        schema_type = st.selectbox("Select Schema Type:", ["FAQPage", "Article", "HowTo", "Product", "LocalBusiness", "BreadcrumbList", "Organization"], key="sb_schema_type_choice")
+
+        if schema_type == "FAQPage":
+            st.markdown("**Add Frequently Asked Questions (Earn Accordion Rich Snippets in SERP):**")
+            q1 = st.text_input("Question 1:", "What is the best way to monitor Google Search Console?", key="txt_faq_q1")
+            a1 = st.text_area("Answer 1:", "Using an automated dashboard with instant anomaly detection and multi-property consolidation.", height=70, key="txt_faq_a1")
+            q2 = st.text_input("Question 2:", "Does this tool cost any money?", key="txt_faq_q2")
+            a2 = st.text_area("Answer 2:", "No, it is 100% free and utilizes native Google and WordPress APIs without paid subscriptions.", height=70, key="txt_faq_a2")
+            schema_data = {"qa_pairs": [(q1, a1), (q2, a2)]}
+        elif schema_type == "Article":
+            art_h = st.text_input("Article Headline:", "Ultimate Guide to Enterprise SEO Automation", key="txt_art_h")
+            art_desc = st.text_input("Article Summary:", "Master programmatic technical SEO workflows in Python.", key="txt_art_desc")
+            art_auth = st.text_input("Author Name:", "SEO Specialist", key="txt_art_auth")
+            art_pub = st.text_input("Publisher Name:", brand_input or "My Brand", key="txt_art_pub")
+            schema_data = {"headline": art_h, "description": art_desc, "author_name": art_auth, "publisher_name": art_pub}
+        else:
+            org_n = st.text_input("Entity / Product Name:", "Enterprise SEO Studio", key="txt_org_n")
+            org_u = st.text_input("Website URL:", "https://example.com", key="txt_org_u")
+            schema_data = {"name": org_n, "url": org_u}
+
+        generated_schema = generate_schema_jsonld(schema_type, schema_data)
+        st.markdown("##### 📋 Valid JSON-LD Code Block (Ready to paste into `<head>`):")
+        st.code(f'<script type="application/ld+json">\n{generated_schema}\n</script>', language="html")
+
+# ----------------------------------------------------
+# 19. WordPress REST API 1-Click Publishing & Meta Sync
+# ----------------------------------------------------
+elif page == "🔌 WordPress 1-Click Sync":
+    st.markdown("""
+    <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(2, 132, 199, 0.35); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #0284c7, #38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">🔌 WORDPRESS REST API 1-CLICK SYNC & PUBLISHER</div>
+                <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">Connect directly to your WordPress website using native Application Passwords (100% free, zero paid plugins). 1-click update meta titles & descriptions and publish SEO drafts.</div>
+            </div>
+            <div style="background:rgba(2,132,199,0.15); border:1px solid rgba(2,132,199,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#38bdf8; font-weight:700;">● WP NATIVE REST</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with st.expander("🔑 WordPress REST Connection Credentials", expanded=True):
+        st.caption("How to get Application Password: In WordPress Admin, go to **Users › Profile › Application Passwords**, type 'GSC Dashboard', and copy the generated 24-character key.")
+        col_wp1, col_wp2, col_wp3 = st.columns([2, 1, 1])
+        with col_wp1:
+            wp_site_url = st.text_input("WordPress Site URL:", value="https://", placeholder="https://mywordpresssite.com", key="txt_wp_site_url")
+        with col_wp2:
+            wp_user = st.text_input("WordPress Username:", placeholder="admin", key="txt_wp_username")
+        with col_wp3:
+            wp_app_pass = st.text_input("Application Password:", type="password", placeholder="xxxx xxxx xxxx xxxx", key="txt_wp_app_pass")
+
+        if st.button("⚡ Test WordPress Connection", type="primary", use_container_width=True, key="btn_test_wp_conn"):
+            if not wp_site_url.strip() or not wp_user.strip() or not wp_app_pass.strip():
+                st.warning("Please fill in your WordPress Site URL, Username, and Application Password.")
+            else:
+                with st.spinner("Connecting to WordPress REST API..."):
+                    test_res = test_wp_connection(wp_site_url, wp_user, wp_app_pass)
+                    if test_res.get("success"):
+                        st.success(f"✅ Successfully Connected to WordPress! Logged in as: **{test_res.get('user_name')}** (Roles: {', '.join(test_res.get('roles', []))})")
+                        st.session_state['wp_connected'] = True
+                    else:
+                        st.error(f"❌ Connection Failed: {test_res.get('error')}")
+
+    tab_wp1, tab_wp2 = st.tabs(["📝 1-Click Meta Title & Description Sync", "🚀 1-Click SEO Post/Draft Publisher"])
+
+    with tab_wp1:
+        st.markdown("#### 📝 Live Posts SEO Audit & 1-Click Meta Updater")
+        if st.button("🔄 Fetch Recent WordPress Posts", use_container_width=True, key="btn_fetch_wp_posts"):
+            if not wp_user.strip() or not wp_app_pass.strip():
+                st.info("Configure and test your WordPress connection above first.")
+            else:
+                with st.spinner("Fetching posts from WordPress..."):
+                    posts = get_wp_posts(wp_site_url, wp_user, wp_app_pass, per_page=15)
+                    st.session_state['wp_posts_cache'] = posts
+                    if posts:
+                        st.success(f"Loaded {len(posts)} recent posts!")
+                    else:
+                        st.warning("No posts returned or connection error.")
+
+        cached_posts = st.session_state.get('wp_posts_cache', [])
+        if cached_posts:
+            post_labels = [f"#{p['id']} - {p['title']} ({p['status']})" for p in cached_posts]
+            selected_p_label = st.selectbox("Select Post to Optimize:", post_labels, key="sb_select_wp_post")
+            selected_idx = post_labels.index(selected_p_label)
+            active_p = cached_posts[selected_idx]
+
+            col_u1, col_u2 = st.columns(2)
+            with col_u1:
+                new_t = st.text_input("New High-CTR Title:", value=active_p['title'], key="txt_wp_new_title")
+            with col_u2:
+                new_d = st.text_area("New Meta Description / Excerpt:", value=active_p.get('excerpt', ''), height=70, key="txt_wp_new_desc")
+
+            if st.button("💾 1-Click Update on WordPress", type="primary", use_container_width=True, key="btn_update_wp_post"):
+                with st.spinner("Pushing meta updates to WordPress REST API..."):
+                    up_res = update_wp_post_metadata(wp_site_url, wp_user, wp_app_pass, active_p['id'], new_t, new_d)
+                    if up_res.get("success"):
+                        st.success(f"✅ Successfully updated Post #{active_p['id']} on WordPress!")
+                    else:
+                        st.error(f"❌ Update failed: {up_res.get('error')}")
+
+    with tab_wp2:
+        st.markdown("#### 🚀 1-Click SEO Post / Case Study Publisher")
+        st.caption("Draft or publish comprehensive case studies and content directly to WordPress.")
+        new_post_t = st.text_input("Post Title:", placeholder="How We Grew Organic Traffic by 140% in 60 Days", key="txt_wp_new_art_title")
+        new_post_c = st.text_area("Article Content (HTML / Markdown):", placeholder="<p>Introduction to the SEO case study...</p>", height=200, key="txt_wp_new_art_content")
+        new_post_stat = st.selectbox("Publication Status:", ["draft", "publish"], index=0, key="sb_wp_post_status")
+
+        if st.button("📤 Publish Post to WordPress", type="primary", use_container_width=True, key="btn_publish_wp_article"):
+            if not new_post_t.strip() or not new_post_c.strip():
+                st.warning("Please provide both a Title and Content for your post.")
+            else:
+                with st.spinner("Publishing post via WordPress REST API..."):
+                    pub_res = publish_wp_article(wp_site_url, wp_user, wp_app_pass, new_post_t, new_post_c, status=new_post_stat)
+                    if pub_res.get("success"):
+                        st.success(f"✅ Post successfully created on WordPress! (Post ID: #{pub_res.get('post_id')}, Status: {pub_res.get('status')})")
+                    else:
+                        st.error(f"❌ Publishing failed: {pub_res.get('error')}")
+
+# ----------------------------------------------------
+# 20. White-Label Client Portal & Executive PDF Reporting
+# ----------------------------------------------------
+elif page == "💼 White-Label Client Portal":
+    st.markdown("""
+    <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(56, 189, 248, 0.35); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:20px; font-weight:800; background:linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">💼 WHITE-LABEL CLIENT PORTAL & EXECUTIVE REPORTING</div>
+                <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">Presentation-ready executive client interface. Brand with your agency name, customize reporting domain, and download multi-page executive client PDF audits.</div>
+            </div>
+            <div style="background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#38bdf8; font-weight:700;">● WHITE-LABEL AGENCY</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_wl1, col_wl2 = st.columns([1, 1])
+    with col_wl1:
+        agency_name = st.text_input("Your Agency Name:", value="Apex SEO Agency", key="txt_wl_agency_name")
+    with col_wl2:
+        client_name = st.text_input("Client Organization / Name:", value="Acme Corporation", key="txt_wl_client_name")
+
+    if df.empty:
+        st.info("👈 Please fetch Search Console data or load a saved property snapshot from the sidebar first.")
+    else:
+        overview_data = get_overview(df)
+        winning_kw = get_winning_keywords(df)
+        top_pg = get_top_pages(df)
+        q_wins = get_quick_wins(df)
+        can_matrix = get_cannibalization_matrix(df)
+
+        st.markdown(f"### 📊 Executive Client Brief: {client_name}")
+        wl_k1, wl_k2, wl_k3, wl_k4 = st.columns(4)
+        with wl_k1:
+            st.markdown(f"""
+            <div class="gsc-scorecard">
+                <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">TOTAL CLICKS</div>
+                <div style="font-size:26px; font-weight:800; color:#38bdf8; margin-top:4px;">{overview_data.get('total_clicks', 0):,}</div>
+                <div style="font-size:11px; color:#38bdf8; margin-top:2px;">Google Search Traffic</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with wl_k2:
+            st.markdown(f"""
+            <div class="gsc-scorecard">
+                <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">TOTAL IMPRESSIONS</div>
+                <div style="font-size:26px; font-weight:800; color:#818cf8; margin-top:4px;">{overview_data.get('total_impressions', 0):,}</div>
+                <div style="font-size:11px; color:#818cf8; margin-top:2px;">Brand Search Visibility</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with wl_k3:
+            st.markdown(f"""
+            <div class="gsc-scorecard">
+                <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">AVERAGE CTR</div>
+                <div style="font-size:26px; font-weight:800; color:#10b981; margin-top:4px;">{overview_data.get('avg_ctr', 0)}%</div>
+                <div style="font-size:11px; color:#10b981; margin-top:2px;">Search Click Rate</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with wl_k4:
+            st.markdown(f"""
+            <div class="gsc-scorecard">
+                <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">AVERAGE POSITION</div>
+                <div style="font-size:26px; font-weight:800; color:#fbbf24; margin-top:4px;">{overview_data.get('avg_position', 0)}</div>
+                <div style="font-size:11px; color:#fbbf24; margin-top:2px;">Overall Google Rank</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+        st.markdown("#### 🏆 Top Winning Keywords for Client")
+        st.dataframe(winning_kw.head(10)[['query', 'clicks', 'impressions', 'ctr', 'position']], use_container_width=True)
+
+        st.markdown("#### 📄 Top Landing Pages for Client")
+        st.dataframe(top_pg.head(10), use_container_width=True)
+
+        st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+        target_domain_rep = current_site or "Client Website"
+        if st.button("📥 Generate & Download Branded Executive PDF Report", type="primary", use_container_width=True, key="btn_download_wl_pdf"):
+            with st.spinner("Compiling White-Label Executive PDF Audit..."):
+                try:
+                    wl_pdf_file = generate_whitelabel_pdf_report(
+                        target_domain_rep,
+                        overview_data,
+                        winning_kw,
+                        top_pg,
+                        q_wins,
+                        can_matrix,
+                        agency_name=agency_name,
+                        client_name=client_name
+                    )
+                    with open(wl_pdf_file, 'rb') as f:
+                        st.download_button("⬇️ Click Here to Download PDF Report", f, file_name=os.path.basename(wl_pdf_file), mime='application/pdf', use_container_width=True)
+                    st.success("✅ Executive White-Label Report compiled successfully!")
+                except Exception as ex:
+                    st.error(f"PDF compilation error: {ex}")
