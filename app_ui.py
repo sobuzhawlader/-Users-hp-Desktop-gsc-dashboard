@@ -137,14 +137,14 @@ st.set_page_config(
 )
 
 # ==============================
-# Theme State & Mode Management
+# Theme State & Mode Management (Default: Light Mode)
 # ==============================
 if 'theme_mode' not in st.session_state:
     params = st.query_params
-    url_theme = params.get('theme', 'dark')
-    st.session_state.theme_mode = 'Light' if str(url_theme).lower() == 'light' else 'Dark'
+    url_theme = params.get('theme', 'light')
+    st.session_state.theme_mode = 'Dark' if str(url_theme).lower() == 'dark' else 'Light'
 
-is_dark = (st.session_state.get('theme_mode', 'Dark') == 'Dark')
+is_dark = (st.session_state.get('theme_mode', 'Light') == 'Dark')
 
 import plotly.io as pio
 pio.templates.default = "plotly_dark" if is_dark else "plotly_white"
@@ -1178,19 +1178,40 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # 1.1 Theme Mode Switcher Pill (Dark Mode vs Light Mode)
+    # 1.1 Authentic Theme Toggle Switch (Light vs Dark Mode)
+    theme_box_bg = "rgba(15, 23, 42, 0.6)" if is_dark else "#f1f3f4"
+    theme_box_border = "1px solid rgba(56, 189, 248, 0.25)" if is_dark else "1px solid #dadce0"
+    st.markdown(f"""
+    <div style="background:{theme_box_bg}; border:{theme_box_border}; border-radius:8px; padding:6px 12px; margin-bottom:6px;">
+        <div style="font-size:10px; font-weight:700; color:{'#38bdf8' if is_dark else '#1a73e8'}; font-family:'JetBrains Mono',monospace; letter-spacing:0.8px; text-transform:uppercase;">
+            THEME: {'🌙 DARK' if is_dark else '☀️ LIGHT (DEFAULT)'}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    theme_toggle_val = st.toggle(
+        "🌙 Dark Theme",
+        value=is_dark,
+        key="side_theme_toggle_switch",
+        help="Turn toggle ON for Dark Mode or OFF for Light Mode (Clean Google Search Console)"
+    )
+    if theme_toggle_val != is_dark:
+        st.session_state.theme_mode = 'Dark' if theme_toggle_val else 'Light'
+        st.query_params['theme'] = 'dark' if theme_toggle_val else 'light'
+        st.rerun()
+
     th_c1, th_c2 = st.columns(2)
     with th_c1:
-        if st.button("🌙 Dark", key="side_theme_btn_dark", use_container_width=True, type="primary" if is_dark else "secondary"):
-            if not is_dark:
-                st.session_state.theme_mode = 'Dark'
-                st.query_params['theme'] = 'dark'
-                st.rerun()
-    with th_c2:
         if st.button("☀️ Light", key="side_theme_btn_light", use_container_width=True, type="primary" if not is_dark else "secondary"):
             if is_dark:
                 st.session_state.theme_mode = 'Light'
                 st.query_params['theme'] = 'light'
+                st.rerun()
+    with th_c2:
+        if st.button("🌙 Dark", key="side_theme_btn_dark", use_container_width=True, type="primary" if is_dark else "secondary"):
+            if not is_dark:
+                st.session_state.theme_mode = 'Dark'
+                st.query_params['theme'] = 'dark'
                 st.rerun()
     st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
 
@@ -1643,15 +1664,27 @@ if is_portfolio_mode or page in ["🌐 All Sites & Properties", "🌐 Properties
             st.session_state.portfolio_needs_refresh = False
 
 # ----------------------------------------------------
-# 1. Performance Overview
+# GSC Top Navigation Bar Renderer (Theme Aware)
 # ----------------------------------------------------
-if page in ["📈 Performance", "📊 Overview"]:
-    # 1. GSC Top Navigation Header
-    pill_site_text = f"Consolidated Portfolio ({len(real_active_sites)} verified properties)" if is_portfolio_mode else (current_site or (real_active_sites[0] if real_active_sites else "No Property Selected"))
+def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, active_users: int):
+    brand_logo_title = (
+        '<span style="font-size:17px; font-weight:700; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">Search Console <span style="font-size:10px; font-weight:700; color:#38bdf8; -webkit-text-fill-color:#38bdf8; background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px; border:1px solid rgba(56,189,248,0.3); vertical-align:middle; margin-left:4px;">TECH VIBE</span></span>'
+        if is_dark_mode else
+        '<span style="font-size:18px; font-weight:500; color:#5f6368; letter-spacing:-0.2px;"><b style="color:#202124; font-weight:600;">Google</b> Search Console</span>'
+    )
+    search_icon_color = "#38bdf8" if is_dark_mode else "#5f6368"
+    search_text_color = "#cbd5e1" if is_dark_mode else "#5f6368"
+    kbd_bg = "rgba(255,255,255,0.08)" if is_dark_mode else "#e8eaed"
+    kbd_border = "rgba(255,255,255,0.1)" if is_dark_mode else "#dadce0"
+    kbd_color = "#94a3b8" if is_dark_mode else "#5f6368"
+    avatar_bg = "linear-gradient(135deg, #3b82f6, #8b5cf6)" if is_dark_mode else "#1a73e8"
+    avatar_shadow = "box-shadow:0 0 10px rgba(59,130,246,0.5);" if is_dark_mode else ""
+    icon_color = "#94a3b8" if is_dark_mode else "#5f6368"
+
     st.markdown(f"""
     <div class="gsc-top-bar">
         <div style="display:flex; align-items:center; gap:14px;">
-            <span style="font-size:20px; color:#94a3b8; cursor:pointer;">☰</span>
+            <span style="font-size:20px; color:{icon_color}; cursor:pointer;">☰</span>
             <div style="display:flex; align-items:center; gap:10px;">
                 <svg width="24" height="24" viewBox="0 0 48 48">
                     <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
@@ -1659,35 +1692,43 @@ if page in ["📈 Performance", "📊 Overview"]:
                     <path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
                     <path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
                 </svg>
-                <span style="font-size:17px; font-weight:700; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">Search Console <span style="font-size:10px; font-weight:700; color:#38bdf8; -webkit-text-fill-color:#38bdf8; background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px; border:1px solid rgba(56,189,248,0.3); vertical-align:middle; margin-left:4px;">TECH VIBE</span></span>
+                {brand_logo_title}
             </div>
         </div>
         <div class="gsc-search-pill">
-            <span style="color:#38bdf8; font-size:14px;">🔍</span>
-            <span style="color:#cbd5e1; font-size:12.5px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">Inspect any URL in "{pill_site_text}"</span>
-            <span style="font-size:10px; font-family:'JetBrains Mono', monospace; background:rgba(255,255,255,0.08); color:#94a3b8; padding:2px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.1);">⌘K</span>
+            <span style="color:{search_icon_color}; font-size:14px;">🔍</span>
+            <span style="color:{search_text_color}; font-size:12.5px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">Inspect any URL in "{site_label}"</span>
+            <span style="font-size:10px; font-family:'JetBrains Mono', monospace; background:{kbd_bg}; color:{kbd_color}; padding:2px 6px; border-radius:4px; border:1px solid {kbd_border};">⌘K</span>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
             <div class="gsc-live-badge" title="Live active visitors browsing your website right now">
                 <span class="gsc-pulse-dot"></span>
-                <span><b>{live_site_users}</b> ACTIVE</span>
+                <span><b>{live_users}</b> ACTIVE</span>
             </div>
             <div class="gsc-dash-badge" title="Users currently viewing this dashboard">
                 <span>👥</span>
-                <span><b>{active_dash_users}</b> ONLINE</span>
+                <span><b>{active_users}</b> ONLINE</span>
             </div>
             <div style="display:flex; align-items:center; gap:10px; margin-left:6px;">
-                <span style="color:#94a3b8; font-size:16px; cursor:pointer;" title="Help">❔</span>
-                <span style="color:#94a3b8; font-size:16px; cursor:pointer;" title="Feedback">💬</span>
+                <span style="color:{icon_color}; font-size:16px; cursor:pointer;" title="Help">❔</span>
+                <span style="color:{icon_color}; font-size:16px; cursor:pointer;" title="Feedback">💬</span>
                 <div style="position:relative; cursor:pointer;">
-                    <span style="color:#94a3b8; font-size:16px;">🔔</span>
+                    <span style="color:{icon_color}; font-size:16px;">🔔</span>
                     <span style="position:absolute; top:-4px; right:-6px; background:#ef4444; color:white; font-size:9px; font-weight:bold; border-radius:50%; width:14px; height:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 8px #ef4444;">0</span>
                 </div>
-                <div style="width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #8b5cf6); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; box-shadow:0 0 10px rgba(59,130,246,0.5);">S</div>
+                <div style="width:28px; height:28px; border-radius:50%; background:{avatar_bg}; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; {avatar_shadow}">S</div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+# ----------------------------------------------------
+# 1. Performance Overview
+# ----------------------------------------------------
+if page in ["📈 Performance", "📊 Overview"]:
+    # 1. GSC Top Navigation Header
+    pill_site_text = f"Consolidated Portfolio ({len(real_active_sites)} verified properties)" if is_portfolio_mode else (current_site or (real_active_sites[0] if real_active_sites else "No Property Selected"))
+    render_gsc_top_bar(pill_site_text, is_dark, live_site_users, active_dash_users)
 
     if is_connected and not real_active_sites:
         user_e = st.session_state.get('user_email') or 'your Google Account'
@@ -1735,10 +1776,10 @@ if page in ["📈 Performance", "📊 Overview"]:
             <div style="font-size:22px; font-weight:700; color:{text_theme_color}; margin-bottom:2px; letter-spacing:-0.3px;">Performance on Search Results</div>
             """, unsafe_allow_html=True)
     with hdr_c2:
-        theme_btn_label = "☀️ Light Mode" if is_dark else "🌙 Dark Mode"
-        if st.button(theme_btn_label, key="btn_top_theme_toggle", use_container_width=True, help="Toggle between Light Mode & Dark Mode"):
-            st.session_state.theme_mode = 'Light' if is_dark else 'Dark'
-            st.query_params['theme'] = 'light' if st.session_state.theme_mode == 'Light' else 'dark'
+        top_toggle = st.toggle("🌙 Dark Theme", value=is_dark, key="top_hdr_theme_toggle", help="Turn ON for Cyber Dark Mode or OFF for Clean Google Search Console Light Mode")
+        if top_toggle != is_dark:
+            st.session_state.theme_mode = 'Dark' if top_toggle else 'Light'
+            st.query_params['theme'] = 'dark' if top_toggle else 'light'
             st.rerun()
     with hdr_c3:
         if is_portfolio_mode and st.session_state.get('portfolio_data'):
@@ -1800,25 +1841,48 @@ if page in ["📈 Performance", "📊 Overview"]:
     comp_imps_disp = fmt_gsc_num(comp_imps)
 
     # 2.5 Prominent Live Active Users Banner
+    if is_dark:
+        live_banner_bg = "linear-gradient(90deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%)"
+        live_banner_border = "1px solid rgba(16, 185, 129, 0.35)"
+        live_banner_box_shadow = "0 4px 20px rgba(0,0,0,0.3)"
+        live_title_color = "#34d399"
+        live_main_color = "#f8fafc"
+        live_sub_color = "#94a3b8"
+        live_chip_bg = "rgba(15, 23, 42, 0.85)"
+        live_chip_border1 = "1px solid rgba(56, 189, 248, 0.25)"
+        live_chip_border2 = "1px solid rgba(168, 85, 247, 0.25)"
+        live_chip_label = "#64748b"
+    else:
+        live_banner_bg = "linear-gradient(90deg, #e6f4ea 0%, #ffffff 100%)"
+        live_banner_border = "1px solid #ceead6"
+        live_banner_box_shadow = "0 1px 3px rgba(60,64,67,0.12)"
+        live_title_color = "#137333"
+        live_main_color = "#202124"
+        live_sub_color = "#5f6368"
+        live_chip_bg = "#ffffff"
+        live_chip_border1 = "1px solid #dadce0"
+        live_chip_border2 = "1px solid #dadce0"
+        live_chip_label = "#5f6368"
+
     st.markdown(f"""
-    <div style="background: linear-gradient(90deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1px solid rgba(16, 185, 129, 0.35); border-left: 4px solid #10b981; border-radius: 10px; padding: 14px 20px; margin: 10px 0 18px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+    <div style="background: {live_banner_bg}; border: {live_banner_border}; border-left: 4px solid #10b981; border-radius: 10px; padding: 14px 20px; margin: 10px 0 18px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow: {live_banner_box_shadow};">
         <div style="display:flex; align-items:center; gap:14px;">
             <span class="gsc-pulse-dot" style="width:13px; height:13px;"></span>
             <div>
-                <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:#34d399; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">LIVE REAL-TIME TELEMETRY</div>
-                <div style="font-size:24px; font-weight:700; color:#f8fafc; line-height:1.2; font-family:'Plus Jakarta Sans',sans-serif;">
+                <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:{live_title_color}; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">LIVE REAL-TIME TELEMETRY</div>
+                <div style="font-size:24px; font-weight:700; color:{live_main_color}; line-height:1.2; font-family:'Plus Jakarta Sans',sans-serif;">
                     <span style="color:#10b981; font-family:'JetBrains Mono',monospace;">{live_site_users}</span> Active Visitors
-                    <span style="font-size:12px; font-weight:400; color:#94a3b8; margin-left:8px; font-family:'JetBrains Mono',monospace;">— Currently on {pill_site_text}</span>
+                    <span style="font-size:12px; font-weight:400; color:{live_sub_color}; margin-left:8px; font-family:'JetBrains Mono',monospace;">— Currently on {pill_site_text}</span>
                 </div>
             </div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
-            <div style="background:rgba(15, 23, 42, 0.85); border:1px solid rgba(56, 189, 248, 0.25); border-radius:8px; padding:6px 14px; text-align:center;">
-                <div style="font-size:10px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; font-family:'JetBrains Mono',monospace;">PAST 30 MINS</div>
+            <div style="background:{live_chip_bg}; border:{live_chip_border1}; border-radius:8px; padding:6px 14px; text-align:center;">
+                <div style="font-size:10px; font-weight:600; color:{live_chip_label}; text-transform:uppercase; letter-spacing:0.5px; font-family:'JetBrains Mono',monospace;">PAST 30 MINS</div>
                 <div style="font-size:15px; font-weight:700; color:#38bdf8; font-family:'JetBrains Mono',monospace;">⏱️ {rt_metrics['users_last_30m']}</div>
             </div>
-            <div style="background:rgba(15, 23, 42, 0.85); border:1px solid rgba(168, 85, 247, 0.25); border-radius:8px; padding:6px 14px; text-align:center;">
-                <div style="font-size:10px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; font-family:'JetBrains Mono',monospace;">DASH SESSIONS</div>
+            <div style="background:{live_chip_bg}; border:{live_chip_border2}; border-radius:8px; padding:6px 14px; text-align:center;">
+                <div style="font-size:10px; font-weight:600; color:{live_chip_label}; text-transform:uppercase; letter-spacing:0.5px; font-family:'JetBrains Mono',monospace;">DASH SESSIONS</div>
                 <div style="font-size:15px; font-weight:700; color:#c084fc; font-family:'JetBrains Mono',monospace;">👥 {active_dash_users} online</div>
             </div>
         </div>
@@ -1826,13 +1890,25 @@ if page in ["📈 Performance", "📊 Overview"]:
     """, unsafe_allow_html=True)
 
     if is_portfolio_mode:
+        if is_dark:
+            pf_banner_bg = "linear-gradient(90deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.7) 100%)"
+            pf_banner_border = "1px solid rgba(56, 189, 248, 0.25)"
+            pf_banner_text = "#cbd5e1"
+            pf_banner_link = "#38bdf8"
+            pf_banner_hi = "#f8fafc"
+        else:
+            pf_banner_bg = "#e8f0fe"
+            pf_banner_border = "1px solid #d2e3fc"
+            pf_banner_text = "#3c4043"
+            pf_banner_link = "#1a73e8"
+            pf_banner_hi = "#202124"
         st.markdown(f"""
-        <div style="background:linear-gradient(90deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.7) 100%); border:1px solid rgba(56, 189, 248, 0.25); border-left:4px solid #38bdf8; border-radius:8px; padding:12px 18px; margin: 0 0 16px 0; font-size:13px; color:#cbd5e1; display:flex; justify-content:space-between; align-items:center;">
+        <div style="background:{pf_banner_bg}; border:{pf_banner_border}; border-left:4px solid #1a73e8; border-radius:8px; padding:12px 18px; margin: 0 0 16px 0; font-size:13px; color:{pf_banner_text}; display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <b style="color:#38bdf8;">🌐 CONSOLIDATED PORTFOLIO ACTIVE:</b> Viewing combined performance across all <b style="color:#f8fafc;">{len(real_active_sites)}</b> verified properties for <b style="color:#f8fafc;">{st.session_state.get('user_email') or 'your account'}</b>.
+                <b style="color:{pf_banner_link};">🌐 CONSOLIDATED PORTFOLIO ACTIVE:</b> Viewing combined performance across all <b style="color:{pf_banner_hi};">{len(real_active_sites)}</b> verified properties for <b style="color:{pf_banner_hi};">{st.session_state.get('user_email') or 'your account'}</b>.
             </div>
             <div>
-                <a href="#portfolio-table" style="color:#38bdf8; font-weight:600; text-decoration:none;">View Site Breakdown ▾</a>
+                <a href="#portfolio-table" style="color:{pf_banner_link}; font-weight:600; text-decoration:none;">View Site Breakdown ▾</a>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -2386,46 +2462,8 @@ if page in ["📈 Performance", "📊 Overview"]:
 # ----------------------------------------------------
 elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
     # 1. GSC Top Bar
-    st.markdown(f"""
-    <div class="gsc-top-bar">
-        <div style="display:flex; align-items:center; gap:14px;">
-            <span style="font-size:20px; color:#94a3b8; cursor:pointer;">☰</span>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <svg width="24" height="24" viewBox="0 0 48 48">
-                    <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                    <path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                    <path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                    <path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
-                </svg>
-                <span style="font-size:17px; font-weight:700; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">Search Console <span style="font-size:10px; font-weight:700; color:#38bdf8; -webkit-text-fill-color:#38bdf8; background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px; border:1px solid rgba(56,189,248,0.3); vertical-align:middle; margin-left:4px;">TECH VIBE</span></span>
-            </div>
-        </div>
-        <div class="gsc-search-pill">
-            <span style="color:#38bdf8; font-size:14px;">🔍</span>
-            <span style="color:#cbd5e1; font-size:12.5px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">Inspect any URL in "{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}"</span>
-            <span style="font-size:10px; font-family:'JetBrains Mono', monospace; background:rgba(255,255,255,0.08); color:#94a3b8; padding:2px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.1);">⌘K</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-            <div class="gsc-live-badge" title="Live active visitors browsing your website right now">
-                <span class="gsc-pulse-dot"></span>
-                <span><b>{live_site_users}</b> ACTIVE</span>
-            </div>
-            <div class="gsc-dash-badge" title="Users currently viewing this dashboard">
-                <span>👥</span>
-                <span><b>{active_dash_users}</b> ONLINE</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:10px; margin-left:6px;">
-                <span style="color:#94a3b8; font-size:16px; cursor:pointer;" title="Help">❔</span>
-                <span style="color:#94a3b8; font-size:16px; cursor:pointer;" title="Feedback">💬</span>
-                <div style="position:relative; cursor:pointer;">
-                    <span style="color:#94a3b8; font-size:16px;">🔔</span>
-                    <span style="position:absolute; top:-4px; right:-6px; background:#ef4444; color:white; font-size:9px; font-weight:bold; border-radius:50%; width:14px; height:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 8px #ef4444;">0</span>
-                </div>
-                <div style="width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg, #38bdf8, #818cf8); color:#080c14; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; font-family:'JetBrains Mono', monospace;">AG</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    rt_site_label = current_site or (real_active_sites[0] if real_active_sites else 'selected property')
+    render_gsc_top_bar(rt_site_label, is_dark, live_site_users, active_dash_users)
 
     # 2. Header & Live Controls
     hdr_c1, hdr_c2 = st.columns([3, 1])
