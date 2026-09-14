@@ -1632,16 +1632,16 @@ with st.sidebar:
             auth_font = ""
 
         st.markdown(f"""
-        <div style="background:{auth_side_bg}; border:{auth_side_border}; border-radius:8px; padding:12px 14px; margin-bottom:10px; {auth_side_shadow}">
+        <div style="background:{auth_side_bg}; border:{auth_side_border}; border-radius:10px; padding:12px 14px; margin-bottom:10px; {auth_side_shadow}">
             <div style="font-size:11px; font-weight:700; color:{auth_side_title_col}; text-transform:uppercase; letter-spacing:0.5px; {auth_font}">Google Search Console</div>
-            <div style="font-size:12px; color:{auth_side_text_col}; margin-top:4px; line-height:1.4;">Sign in to view live telemetry across your <b style="color:{auth_side_bold_col};">Search Console properties</b>.</div>
+            <div style="font-size:12px; color:{auth_side_text_col}; margin-top:3px; line-height:1.4;">Sign in to load your verified properties.</div>
         </div>
         """, unsafe_allow_html=True)
 
         if auth_url:
-            st.link_button("🌐 Sign in with Google (Load All Sites)", auth_url, type="primary", use_container_width=True)
+            st.link_button("🌐 Sign in with Google", auth_url, type="primary", use_container_width=True)
 
-        if st.button("🧪 Explore All Features (Demo Mode)", key="side_btn_demo_explore", use_container_width=True, help="Load 90-day search data to explore and test all 23 dashboard features without signing in"):
+        if st.button("🧪 Explore Demo Mode", key="side_btn_demo_explore", use_container_width=True, help="Load 90-day search data to test all 23 dashboard features without signing in"):
             demo_site = "sc-domain:example-enterprise.com"
             st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
             st.session_state.sites_detailed = [
@@ -1651,44 +1651,7 @@ with st.sidebar:
             st.session_state.current_site = demo_site
             st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
             st.session_state.portfolio_needs_refresh = True
-            st.success("Loaded demo dataset! Exploring all 23 features...")
             st.rerun()
-
-        with st.expander("🔑 Direct Auth / Paste OAuth Code", expanded=False):
-            st.caption("Authenticate locally or paste the code returned by Google:")
-            if st.button("🖥️ Run Local OAuth (Port 8501/8080)", key="btn_local_oauth_run", use_container_width=True):
-                with st.spinner("Authorizing in browser..."):
-                    try:
-                        creds = authenticate_local(port=8501)
-                        if creds:
-                            st.session_state.service = get_gsc_service(creds)
-                            st.session_state.service_v1 = get_searchconsole_v1_service(creds)
-                            st.session_state.user_creds = creds
-                            st.session_state.sites_detailed = get_sites_detailed(st.session_state.service)
-                            st.session_state.sites = [s['siteUrl'] for s in st.session_state.sites_detailed if 'siteUrl' in s]
-                            st.session_state.user_email = get_user_email(creds)
-                            st.session_state.portfolio_needs_refresh = True
-                            st.success(f"Connected! {len(st.session_state.sites)} properties loaded.")
-                            st.rerun()
-                    except Exception as ex:
-                        st.error(f"Local auth error: {ex}")
-            manual_code = st.text_input("Paste Google Auth Code (?code=...):", key="manual_oauth_code_top")
-            if st.button("📥 Submit Code", key="btn_submit_manual_code_top", use_container_width=True):
-                if manual_code.strip():
-                    try:
-                        redirect_uri = resolve_redirect_uri(cfg)
-                        creds = exchange_code(manual_code.strip(), redirect_uri, config=cfg)
-                        st.session_state.service = get_gsc_service(creds)
-                        st.session_state.service_v1 = get_searchconsole_v1_service(creds)
-                        st.session_state.user_creds = creds
-                        st.session_state.sites_detailed = get_sites_detailed(st.session_state.service)
-                        st.session_state.sites = [s['siteUrl'] for s in st.session_state.sites_detailed if 'siteUrl' in s]
-                        st.session_state.user_email = get_user_email(creds)
-                        st.session_state.portfolio_needs_refresh = True
-                        st.success(f"Connected! Loaded {len(st.session_state.sites)} properties.")
-                        st.rerun()
-                    except Exception as ex:
-                        st.error(f"Code exchange error: {ex}")
 
     # 2B. The Red-Marked Property Dropdown (Containing user's real sites)
     if is_connected:
@@ -2130,47 +2093,32 @@ if page in ["📈 Performance", "📊 Overview"]:
                 st.link_button("🔄 Switch Google Account (Sign In with Another Gmail)", auth_url, type="primary", use_container_width=True)
         st.stop()
     elif not is_connected and not real_active_sites:
-        if is_dark:
-            auth_main_bg = "linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.9) 100%)"
-            auth_main_border = "1px solid rgba(56, 189, 248, 0.35)"
-            auth_main_title = '<div style="font-size:22px; font-weight:800; background:linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Connect Your Google Search Console Account</div>'
-            auth_main_text = "#94a3b8"
-            auth_main_icon = '<div style="font-size:44px; margin-bottom:10px; filter:drop-shadow(0 0 12px rgba(56,189,248,0.5));">🔐</div>'
-            auth_main_shadow = "box-shadow:0 8px 32px rgba(0,0,0,0.5);"
-        else:
-            auth_main_bg = "#ffffff"
-            auth_main_border = "1px solid #dadce0"
-            auth_main_title = '<div style="font-size:22px; font-weight:600; color:#202124;">Sign in to Google Search Console</div>'
-            auth_main_text = "#5f6368"
-            auth_main_icon = '''
-            <div style="display:flex; justify-content:center; margin-bottom:14px;">
-                <svg width="48" height="48" viewBox="0 0 48 48">
-                    <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                    <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                    <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                    <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
-                </svg>
-            </div>
-            '''
-            auth_main_shadow = "box-shadow:0 2px 8px rgba(60,64,67,0.08);"
+        col_pad1, col_center, col_pad2 = st.columns([1, 2.2, 1])
+        with col_center:
+            card_bg = "#ffffff" if not is_dark else "linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%)"
+            card_border = "#dadce0" if not is_dark else "rgba(56, 189, 248, 0.3)"
+            card_title_col = "#202124" if not is_dark else "#f8fafc"
+            card_sub_col = "#5f6368" if not is_dark else "#94a3b8"
 
-        st.markdown(f"""
-        <div style="background:{auth_main_bg}; border:{auth_main_border}; border-radius:12px; padding:36px 24px; margin:24px auto; max-width:620px; text-align:center; {auth_main_shadow}">
-            {auth_main_icon}
-            {auth_main_title}
-            <div style="font-size:14px; color:{auth_main_text}; max-width:520px; margin:10px auto 24px auto; line-height:1.6;">
-                Authenticate with your verified Google account to load live search telemetry, impressions, clicks, keyword rankings, and index status across all your properties.
+            st.markdown(f"""
+            <div style="background:{card_bg}; border:1px solid {card_border}; border-radius:16px; padding:36px 28px; margin:40px auto 20px auto; text-align:center; box-shadow:0 2px 12px rgba(60,64,67,0.08);">
+                <div style="display:flex; justify-content:center; margin-bottom:16px;">
+                    <svg width="44" height="44" viewBox="0 0 48 48">
+                        <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                        <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                        <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                        <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                    </svg>
+                </div>
+                <div style="font-size:22px; font-weight:600; color:{card_title_col}; letter-spacing:-0.2px; margin-bottom:8px;">Sign in with Google</div>
+                <div style="font-size:13.5px; color:{card_sub_col}; line-height:1.5; margin-bottom:20px;">Connect your Search Console account to load your verified sites & search telemetry.</div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
-        c_l1, c_l2 = st.columns(2)
-        with c_l1:
+            """, unsafe_allow_html=True)
+
             if auth_url:
-                st.link_button("🌐 Sign in with Google (All Sites)", auth_url, type="primary", use_container_width=True)
-            else:
-                st.button("🌐 Sign in with Google", disabled=True, use_container_width=True)
-        with c_l2:
-            if st.button("🧪 Explore 23 Features with Demo Data", key="btn_login_demo_explore", type="secondary", use_container_width=True, help="Load realistic 90-day search telemetry to explore and test all 23 features without signing in"):
+                st.link_button("🌐 Continue with Google", auth_url, type="primary", use_container_width=True)
+
+            if st.button("🧪 Explore Demo Dashboard", key="btn_login_demo_explore", use_container_width=True, help="Load sample data to preview all 23 dashboard features"):
                 demo_site = "sc-domain:example-enterprise.com"
                 st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
                 st.session_state.sites_detailed = [
