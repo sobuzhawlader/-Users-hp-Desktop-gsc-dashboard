@@ -461,41 +461,62 @@ if is_dark:
         border-color: rgba(56, 189, 248, 0.35);
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.12);
     }
-    .gsc-card {
-        padding: 16px 18px;
-        min-height: 160px;
+    .gsc-scorecard-card {
+        padding: 14px 18px 12px 18px;
+        min-height: 92px;
         position: relative;
-        border-radius: 0px;
-    }
-    .gsc-card-users-on {
-        background: linear-gradient(180deg, rgba(16, 185, 129, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
-        border-top: 3px solid #10b981 !important;
-        color: #f1f5f9 !important;
+        border-radius: 0 0 8px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: none;
+        transition: all 0.2s ease;
     }
     .gsc-card-clicks-on {
-        background: linear-gradient(180deg, rgba(56, 189, 248, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
-        border-top: 3px solid #38bdf8 !important;
-        color: #f1f5f9 !important;
+        background: linear-gradient(180deg, rgba(56, 189, 248, 0.14) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        border-color: rgba(56, 189, 248, 0.35) !important;
+        border-top: none !important;
     }
     .gsc-card-imps-on {
-        background: linear-gradient(180deg, rgba(168, 85, 247, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
-        border-top: 3px solid #a855f7 !important;
-        color: #f1f5f9 !important;
+        background: linear-gradient(180deg, rgba(168, 85, 247, 0.14) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        border-color: rgba(168, 85, 247, 0.35) !important;
+        border-top: none !important;
     }
     .gsc-card-ctr-on {
-        background: linear-gradient(180deg, rgba(20, 184, 166, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
-        border-top: 3px solid #14b8a6 !important;
-        color: #f1f5f9 !important;
+        background: linear-gradient(180deg, rgba(20, 184, 166, 0.14) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        border-color: rgba(20, 184, 166, 0.35) !important;
+        border-top: none !important;
     }
     .gsc-card-pos-on {
-        background: linear-gradient(180deg, rgba(245, 158, 11, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
-        border-top: 3px solid #f59e0b !important;
-        color: #f1f5f9 !important;
+        background: linear-gradient(180deg, rgba(245, 158, 11, 0.14) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        border-color: rgba(245, 158, 11, 0.35) !important;
+        border-top: none !important;
     }
     .gsc-card-off {
-        background: rgba(15, 23, 42, 0.5) !important;
+        background: rgba(15, 23, 42, 0.4) !important;
         color: #64748b !important;
-        border-top: 3px solid transparent !important;
+        opacity: 0.65;
+        border-top: none !important;
+    }
+    .gsc-card-trend-pill {
+        margin-top: 6px;
+        font-size: 11.5px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    div[data-testid="column"]:has(button[key^="btn_toggle_sc_"]) .stButton > button {
+        border-bottom-left-radius: 0px !important;
+        border-bottom-right-radius: 0px !important;
+        border-top-left-radius: 8px !important;
+        border-top-right-radius: 8px !important;
+        margin-bottom: 0px !important;
+        border-bottom: none !important;
+        padding: 6px 12px !important;
+        font-weight: 700 !important;
+        font-size: 12px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        min-height: 38px !important;
     }
     
     .gsc-card-title {
@@ -1078,41 +1099,63 @@ else:
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
         border-color: #cbd5e1 !important;
     }
-    .gsc-card {
-        padding: 16px 18px;
-        min-height: 155px;
+    .gsc-scorecard-card {
+        padding: 14px 18px 12px 18px;
+        min-height: 92px;
         position: relative;
-        background: #ffffff !important;
-    }
-    .gsc-card-users-on {
-        background: #f0fdf4 !important;
-        border-top: 3px solid #10b981 !important;
-        color: #065f46 !important;
+        border-radius: 0 0 8px 8px;
+        background: #ffffff;
+        border: 1px solid #dadce0;
+        border-top: none;
+        transition: all 0.2s ease;
     }
     .gsc-card-clicks-on {
-        background: #eff6ff !important;
-        border-top: 3px solid #2563eb !important;
-        color: #1e40af !important;
+        background: #f8fbff !important;
+        border-color: #bfdbfe !important;
+        border-top: none !important;
     }
     .gsc-card-imps-on {
         background: #faf5ff !important;
-        border-top: 3px solid #9333ea !important;
-        color: #6b21a8 !important;
+        border-color: #e9d5ff !important;
+        border-top: none !important;
     }
     .gsc-card-ctr-on {
         background: #f0fdfa !important;
-        border-top: 3px solid #0d9488 !important;
-        color: #115e59 !important;
+        border-color: #99f6e4 !important;
+        border-top: none !important;
     }
     .gsc-card-pos-on {
         background: #fffbeb !important;
-        border-top: 3px solid #d97706 !important;
-        color: #92400e !important;
+        border-color: #fde68a !important;
+        border-top: none !important;
     }
     .gsc-card-off {
-        background: #ffffff !important;
+        background: #fafafa !important;
         color: #94a3b8 !important;
-        border-top: 3px solid transparent !important;
+        opacity: 0.65;
+        border-top: none !important;
+    }
+    .gsc-card-trend-pill {
+        margin-top: 6px;
+        font-size: 11.5px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    div[data-testid="column"]:has(button[key^="btn_toggle_sc_"]) .stButton > button {
+        border-bottom-left-radius: 0px !important;
+        border-bottom-right-radius: 0px !important;
+        border-top-left-radius: 8px !important;
+        border-top-right-radius: 8px !important;
+        margin-bottom: 0px !important;
+        border-bottom: none !important;
+        padding: 6px 12px !important;
+        font-weight: 700 !important;
+        font-size: 12px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        min-height: 38px !important;
     }
     
     .gsc-card-title {
@@ -2265,7 +2308,7 @@ with st.sidebar:
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
             <div style="display:flex; align-items:center; gap:8px;">
                 <span class="gsc-pulse-dot"></span>
-                <span style="font-size:11px; font-weight:700; color:{side_card_title}; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">LIVE TELEMETRY</span>
+                <span style="font-size:11px; font-weight:700; color:{side_card_title}; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">LIVE VISITORS</span>
             </div>
             <span style="font-size:11px; background:{side_badge_bg}; color:{side_badge_text}; border:{side_badge_border}; font-weight:700; padding:2px 8px; border-radius:12px; font-family:'JetBrains Mono',monospace;">
                 {live_site_users} ACTIVE
@@ -2274,7 +2317,7 @@ with st.sidebar:
         <div style="font-size:11px; color:{side_card_text}; line-height:1.6; font-family:'JetBrains Mono',monospace;">
             <div>🌐 Site: <b style="color:{side_val1};">{live_site_users}</b> online right now</div>
             <div>⏱️ Last 30m: <b style="color:{side_val2};">{rt_metrics.get('users_last_30m', 0)}</b> visitors</div>
-            <div>👥 Dashboard: <b style="color:{side_val3};">{active_dash_users}</b> session{'s' if active_dash_users > 1 else ''}</div>
+            <div>👥 Dashboard: <b style="color:{side_val3};">{active_dash_users}</b> active viewer{'s' if active_dash_users > 1 else ''}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -2413,13 +2456,13 @@ def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, act
         f'<span style="font-size:10px; font-family:\'JetBrains Mono\', monospace; background:{kbd_bg}; color:{kbd_color}; padding:2px 6px; border-radius:4px; border:1px solid {kbd_border};">⌘K</span>'
         f'</div>'
         f'<div style="display:flex; align-items:center; gap:8px;">'
-        f'<div class="gsc-live-badge" title="Live active visitors browsing your website right now">'
+        f'<div class="gsc-live-badge" title="Real-time active visitors browsing your website right now">'
         f'<span class="gsc-pulse-dot"></span>'
-        f'<span><b>{live_users}</b> ACTIVE</span>'
+        f'<span><b>{live_users}</b> LIVE VISITORS</span>'
         f'</div>'
-        f'<div class="gsc-dash-badge" title="Users currently viewing this dashboard">'
+        f'<div class="gsc-dash-badge" title="People currently viewing this dashboard">'
         f'<span>👥</span>'
-        f'<span><b>{active_users}</b> ONLINE</span>'
+        f'<span><b>{active_users}</b> ACTIVE VIEWERS</span>'
         f'</div>'
         f'<div style="display:flex; align-items:center; gap:10px; margin-left:6px;">'
         f'<span style="color:{icon_color}; font-size:16px; cursor:pointer;" title="Help">❔</span>'
@@ -2498,7 +2541,7 @@ if page in ["📈 Performance", "📊 Overview"]:
                 f'</svg>'
                 f'</div>'
                 f'<div style="font-size:22px; font-weight:700; color:{card_title_col}; letter-spacing:-0.2px; margin-bottom:8px;">Sign in with Google</div>'
-                f'<div style="font-size:13.5px; color:{card_sub_col}; line-height:1.5; margin-bottom:20px;">Connect your Search Console account to load your verified sites & search telemetry.</div>'
+                f'<div style="font-size:13.5px; color:{card_sub_col}; line-height:1.5; margin-bottom:20px;">Connect your Search Console account to load your verified sites & search performance data.</div>'
                 f'</div>'
             )
             st.markdown(login_card_html, unsafe_allow_html=True)
@@ -2586,30 +2629,32 @@ if page in ["📈 Performance", "📊 Overview"]:
         elif not df.empty:
             st.download_button("📥 EXPORT", df.to_csv(index=False), "gsc_performance_export.csv", "text/csv", use_container_width=True)
 
-    # Interactive GSC Search Type & Date Filters
-    f_col1, f_col2, f_col3 = st.columns([5, 4, 3])
+    # Compact Grouped Filter Controls
+    f_col1, f_col2, f_col3 = st.columns([1.5, 1.8, 1.3])
     with f_col1:
-        search_type_opt = st.radio("Search type", ["Web", "Discover", "Google News", "Image", "Video"], index=0, horizontal=True, key="perf_search_type_pill")
+        st.markdown(f"<div style='font-size:11px; font-weight:700; color:{'#94a3b8' if is_dark else '#5f6368'}; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.5px;'>🔍 SEARCH TYPE</div>", unsafe_allow_html=True)
+        search_type_opt = st.selectbox("Search type", ["Web", "Discover", "Google News", "Image", "Video"], index=0, key="perf_search_type_select", label_visibility="collapsed")
     with f_col2:
-        date_chip_opt = st.radio("Date range", ["24 hours", "7 days", "28 days", "3 months", "Compare"], index=3, horizontal=True, key="perf_date_range_pill")
+        st.markdown(f"<div style='font-size:11px; font-weight:700; color:{'#94a3b8' if is_dark else '#5f6368'}; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.5px;'>📅 DATE RANGE</div>", unsafe_allow_html=True)
+        date_chip_opt = st.selectbox("Date range", ["Last 3 months", "Last 28 days", "Last 7 days", "Last 24 hours", "Compare"], index=0, key="perf_date_range_select", label_visibility="collapsed")
     with f_col3:
-        fresh_toggle = st.checkbox("⚡ Fresh Data (Hourly)", value=False, key="perf_fresh_toggle", help="Include latest hourly and unfinalized same-day data via GSC dataState='all'")
+        st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
+        fresh_toggle = st.toggle("⚡ Fresh Data (Hourly)", value=False, key="perf_fresh_toggle", help="Include latest hourly and unfinalized same-day data via GSC dataState='all'")
 
     is_compare_mode = (date_chip_opt == "Compare")
     comp_type_choice = "Compare last 28 days to previous period"
     if is_compare_mode:
-        c_sub1, c_sub2 = st.columns([3, 1])
-        with c_sub1:
-            comp_type_choice = st.selectbox(
-                "Comparison Type",
-                [
-                    "Compare last 28 days to previous period",
-                    "Compare last 3 months to previous period",
-                    "Compare last 28 days year-over-year (YoY)"
-                ],
-                key="perf_comp_type_select",
-                label_visibility="collapsed"
-            )
+        st.markdown(f"<div style='font-size:11px; font-weight:700; color:{'#94a3b8' if is_dark else '#5f6368'}; text-transform:uppercase; margin-top:6px; margin-bottom:2px;'>📊 COMPARISON BASELINE</div>", unsafe_allow_html=True)
+        comp_type_choice = st.selectbox(
+            "Comparison Type",
+            [
+                "Compare last 28 days to previous period",
+                "Compare last 3 months to previous period",
+                "Compare last 28 days year-over-year (YoY)"
+            ],
+            key="perf_comp_type_select",
+            label_visibility="collapsed"
+        )
 
     # 1. Map Search Type
     stype_api_map = {"Web": "web", "Discover": "discover", "Google News": "googleNews", "Image": "image", "Video": "video"}
@@ -2627,7 +2672,7 @@ if page in ["📈 Performance", "📊 Overview"]:
     else:
         anchor_dt = today_dt
 
-    if date_chip_opt == "24 hours":
+    if date_chip_opt in ["24 hours", "Last 24 hours"]:
         days_window = 1
         period_label = "Last 24 hours"
         comp_label = "Previous 24 hours"
@@ -2635,7 +2680,7 @@ if page in ["📈 Performance", "📊 Overview"]:
         curr_end_dt = anchor_dt
         comp_start_dt = curr_start_dt - timedelta(days=1)
         comp_end_dt = curr_start_dt
-    elif date_chip_opt == "7 days":
+    elif date_chip_opt in ["7 days", "Last 7 days"]:
         days_window = 7
         period_label = "Last 7 days"
         comp_label = "Previous 7 days"
@@ -2643,7 +2688,7 @@ if page in ["📈 Performance", "📊 Overview"]:
         curr_end_dt = anchor_dt
         comp_start_dt = curr_start_dt - timedelta(days=7)
         comp_end_dt = curr_start_dt - timedelta(days=1)
-    elif date_chip_opt == "28 days":
+    elif date_chip_opt in ["28 days", "Last 28 days"]:
         days_window = 28
         period_label = "Last 28 days"
         comp_label = "Previous 28 days"
@@ -2651,7 +2696,7 @@ if page in ["📈 Performance", "📊 Overview"]:
         curr_end_dt = anchor_dt
         comp_start_dt = curr_start_dt - timedelta(days=28)
         comp_end_dt = curr_start_dt - timedelta(days=1)
-    elif date_chip_opt == "3 months":
+    elif date_chip_opt in ["3 months", "Last 3 months"]:
         days_window = 90
         period_label = "Last 3 months"
         comp_label = "Previous 3 months"
@@ -2813,60 +2858,7 @@ if page in ["📈 Performance", "📊 Overview"]:
             return f'<span class="{badge_cls}">▼ {abs(diff_pct)}%</span>'
         return '<span class="trend-badge-neutral">— 0%</span>'
 
-    # 2.5 Prominent Live Active Users Banner
-    if is_dark:
-        live_banner_bg = "linear-gradient(90deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%)"
-        live_banner_border = "1px solid rgba(16, 185, 129, 0.35)"
-        live_banner_box_shadow = "0 4px 20px rgba(0,0,0,0.3)"
-        live_title_color = "#34d399"
-        live_main_color = "#f8fafc"
-        live_sub_color = "#94a3b8"
-        live_chip_bg = "rgba(15, 23, 42, 0.85)"
-        live_chip_border1 = "1px solid rgba(56, 189, 248, 0.25)"
-        live_chip_border2 = "1px solid rgba(168, 85, 247, 0.25)"
-        live_chip_label = "#64748b"
-    else:
-        live_banner_bg = "linear-gradient(90deg, #e6f4ea 0%, #ffffff 100%)"
-        live_banner_border = "1px solid #ceead6"
-        live_banner_box_shadow = "0 1px 3px rgba(60,64,67,0.12)"
-        live_title_color = "#137333"
-        live_main_color = "#202124"
-        live_sub_color = "#5f6368"
-        live_chip_bg = "#ffffff"
-        live_chip_border1 = "1px solid #dadce0"
-        live_chip_border2 = "1px solid #dadce0"
-        live_chip_label = "#5f6368"
-
-    live_m30_col = "#38bdf8" if is_dark else "#1a73e8"
-    live_dash_col = "#c084fc" if is_dark else "#7627bb"
-    live_pulse_col = "#10b981" if is_dark else "#137333"
-    live_pulse_bar = "#10b981" if is_dark else "#137333"
-
-    st.markdown(f"""
-    <div style="background: {live_banner_bg}; border: {live_banner_border}; border-left: 4px solid {live_pulse_bar}; border-radius: 10px; padding: 14px 20px; margin: 10px 0 18px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow: {live_banner_box_shadow};">
-        <div style="display:flex; align-items:center; gap:14px;">
-            <span class="gsc-pulse-dot" style="width:13px; height:13px;"></span>
-            <div>
-                <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:{live_title_color}; letter-spacing:0.8px;">LIVE REAL-TIME TELEMETRY</div>
-                <div style="font-size:24px; font-weight:700; color:{live_main_color}; line-height:1.2;">
-                    <span style="color:{live_pulse_col}; font-weight:700;">{live_site_users}</span> Active Visitors
-                    <span style="font-size:12px; font-weight:400; color:{live_sub_color}; margin-left:8px;">— Currently on {pill_site_text}</span>
-                </div>
-            </div>
-        </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-            <div style="background:{live_chip_bg}; border:{live_chip_border1}; border-radius:8px; padding:6px 14px; text-align:center;">
-                <div style="font-size:10px; font-weight:600; color:{live_chip_label}; text-transform:uppercase; letter-spacing:0.5px;">PAST 30 MINS</div>
-                <div style="font-size:15px; font-weight:700; color:{live_m30_col};">⏱️ {rt_metrics['users_last_30m']}</div>
-            </div>
-            <div style="background:{live_chip_bg}; border:{live_chip_border2}; border-radius:8px; padding:6px 14px; text-align:center;">
-                <div style="font-size:10px; font-weight:600; color:{live_chip_label}; text-transform:uppercase; letter-spacing:0.5px;">DASH SESSIONS</div>
-                <div style="font-size:15px; font-weight:700; color:{live_dash_col};">👥 {active_dash_users} online</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
+    # 2.5 Portfolio Banner (when applicable)
     if is_portfolio_mode:
         if is_dark:
             pf_banner_bg = "linear-gradient(90deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.7) 100%)"
@@ -2881,7 +2873,7 @@ if page in ["📈 Performance", "📊 Overview"]:
             pf_banner_link = "#1a73e8"
             pf_banner_hi = "#202124"
         st.markdown(f"""
-        <div style="background:{pf_banner_bg}; border:{pf_banner_border}; border-left:4px solid #1a73e8; border-radius:8px; padding:12px 18px; margin: 0 0 16px 0; font-size:13px; color:{pf_banner_text}; display:flex; justify-content:space-between; align-items:center;">
+        <div style="background:{pf_banner_bg}; border:{pf_banner_border}; border-left:4px solid #1a73e8; border-radius:8px; padding:12px 18px; margin: 10px 0 16px 0; font-size:13px; color:{pf_banner_text}; display:flex; justify-content:space-between; align-items:center;">
             <div>
                 <b style="color:{pf_banner_link};">🌐 CONSOLIDATED PORTFOLIO ACTIVE:</b> Viewing combined performance across all <b style="color:{pf_banner_hi};">{len(real_active_sites)}</b> verified properties for <b style="color:{pf_banner_hi};">{st.session_state.get('user_email') or 'your account'}</b>.
             </div>
@@ -2891,138 +2883,95 @@ if page in ["📈 Performance", "📊 Overview"]:
         </div>
         """, unsafe_allow_html=True)
 
-    # 3. Authentic 5-Scorecard Connected Container with Toggles
-    chk_c0, chk_c1, chk_c2, chk_c3, chk_c4 = st.columns(5)
-    with chk_c0:
-        show_users = st.checkbox("Active users", value=True, key="gsc_chk_users")
-    with chk_c1:
-        show_clicks = st.checkbox("Total clicks", value=True, key="gsc_chk_clicks")
-    with chk_c2:
-        show_impressions = st.checkbox("Total impressions", value=True, key="gsc_chk_impressions")
-    with chk_c3:
-        show_ctr = st.checkbox("Average CTR", value=False, key="gsc_chk_ctr")
-    with chk_c4:
-        show_position = st.checkbox("Average position", value=False, key="gsc_chk_position")
+    # 3. Authentic 4-Scorecard Container with Integrated Click Toggles
+    if 'show_clicks' not in st.session_state:
+        st.session_state.show_clicks = True
+    if 'show_impressions' not in st.session_state:
+        st.session_state.show_impressions = True
+    if 'show_ctr' not in st.session_state:
+        st.session_state.show_ctr = False
+    if 'show_position' not in st.session_state:
+        st.session_state.show_position = False
 
-    # Render Connected Scorecards
-    sc_col0, sc_col1, sc_col2, sc_col3, sc_col4 = st.columns(5)
-    
-    with sc_col0:
-        card_class = "gsc-card-users-on" if show_users else "gsc-card-off"
-        check_icon = "☑" if show_users else "☐"
-        st.markdown(f"""
-        <div class="gsc-tile-wrapper">
-            <div class="gsc-card {card_class}">
-                <div class="gsc-card-title">{check_icon} Active users</div>
-                <div class="gsc-card-val-big">{live_site_users}</div>
-                <div class="gsc-card-sub"><span>Live on site right now</span><span style="font-weight:bold; font-size:14px;">🟢</span></div>
-                <div class="gsc-card-val-comp">{rt_metrics['users_last_30m']}</div>
-                <div class="gsc-card-sub"><span>Past 30 minutes</span><span>⏱️</span></div>
-                <div class="gsc-card-info-icon">?</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    show_clicks = st.session_state.show_clicks
+    show_impressions = st.session_state.show_impressions
+    show_ctr = st.session_state.show_ctr
+    show_position = st.session_state.show_position
 
+    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+    sc_col1, sc_col2, sc_col3, sc_col4 = st.columns(4)
+
+    # Card 1: Total Clicks
     with sc_col1:
-        card_class = "gsc-card-clicks-on" if show_clicks else "gsc-card-off"
-        check_icon = "☑" if show_clicks else "☐"
-        delta_clicks = calc_delta_badge(total_clicks, comp_clicks, True)
+        click_card_class = "gsc-card-clicks-on" if show_clicks else "gsc-card-off"
+        btn_click_icon = "✓" if show_clicks else "＋"
+        if st.button(f"{btn_click_icon} Total clicks", key="btn_toggle_sc_clicks", use_container_width=True, help="Click to toggle Clicks line on the chart below"):
+            st.session_state.show_clicks = not show_clicks
+            st.rerun()
+
+        delta_clicks_badge = calc_delta_badge(total_clicks, comp_clicks, True)
+        trend_clicks_html = f"{delta_clicks_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
+
         st.markdown(f"""
-        <div class="gsc-tile-wrapper">
-            <div class="gsc-card {card_class}">
-                <div class="gsc-card-title">{check_icon} Total clicks {delta_clicks}</div>
-                <div class="gsc-card-val-big">{total_clicks}</div>
-                <div class="gsc-card-sub"><span>{period_label}</span><span style="font-weight:bold; font-size:14px;">—</span></div>
-                <div class="gsc-card-val-comp">{comp_clicks}</div>
-                <div class="gsc-card-sub"><span>{comp_label}</span><span style="font-weight:bold; letter-spacing:2px;">- - -</span></div>
-                <div class="gsc-card-info-icon">?</div>
-            </div>
+        <div class="gsc-scorecard-card {click_card_class}">
+            <div class="gsc-card-val-big">{fmt_gsc_num(total_clicks)}</div>
+            <div class="gsc-card-trend-pill">{trend_clicks_html}</div>
         </div>
         """, unsafe_allow_html=True)
 
+    # Card 2: Total Impressions
     with sc_col2:
-        card_class = "gsc-card-imps-on" if show_impressions else "gsc-card-off"
-        check_icon = "☑" if show_impressions else "☐"
-        delta_imps = calc_delta_badge(total_imps, comp_imps, True)
+        imps_card_class = "gsc-card-imps-on" if show_impressions else "gsc-card-off"
+        btn_imps_icon = "✓" if show_impressions else "＋"
+        if st.button(f"{btn_imps_icon} Total impressions", key="btn_toggle_sc_imps", use_container_width=True, help="Click to toggle Impressions line on the chart below"):
+            st.session_state.show_impressions = not show_impressions
+            st.rerun()
+
+        delta_imps_badge = calc_delta_badge(total_imps, comp_imps, True)
+        trend_imps_html = f"{delta_imps_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
+
         st.markdown(f"""
-        <div class="gsc-tile-wrapper">
-            <div class="gsc-card {card_class}">
-                <div class="gsc-card-title">{check_icon} Total impressions {delta_imps}</div>
-                <div class="gsc-card-val-big">{imps_disp}</div>
-                <div class="gsc-card-sub"><span>{period_label}</span><span style="font-weight:bold; font-size:14px;">—</span></div>
-                <div class="gsc-card-val-comp">{comp_imps_disp}</div>
-                <div class="gsc-card-sub"><span>{comp_label}</span><span style="font-weight:bold; letter-spacing:2px;">- - -</span></div>
-                <div class="gsc-card-info-icon">?</div>
-            </div>
+        <div class="gsc-scorecard-card {imps_card_class}">
+            <div class="gsc-card-val-big">{imps_disp}</div>
+            <div class="gsc-card-trend-pill">{trend_imps_html}</div>
         </div>
         """, unsafe_allow_html=True)
 
+    # Card 3: Average CTR
     with sc_col3:
-        card_class = "gsc-card-ctr-on" if show_ctr else "gsc-card-off"
-        check_icon = "☑" if show_ctr else "☐"
-        delta_ctr = calc_delta_badge(avg_ctr, comp_ctr, True)
+        ctr_card_class = "gsc-card-ctr-on" if show_ctr else "gsc-card-off"
+        btn_ctr_icon = "✓" if show_ctr else "＋"
+        if st.button(f"{btn_ctr_icon} Average CTR", key="btn_toggle_sc_ctr", use_container_width=True, help="Click to toggle Average CTR line on the chart below"):
+            st.session_state.show_ctr = not show_ctr
+            st.rerun()
+
+        delta_ctr_badge = calc_delta_badge(avg_ctr, comp_ctr, True)
+        trend_ctr_html = f"{delta_ctr_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
+
         st.markdown(f"""
-        <div class="gsc-tile-wrapper">
-            <div class="gsc-card {card_class}">
-                <div class="gsc-card-title">{check_icon} Average CTR {delta_ctr}</div>
-                <div class="gsc-card-val-big">{avg_ctr}%</div>
-                <div class="gsc-card-sub"><span>{period_label}</span></div>
-                <div class="gsc-card-val-comp">{comp_ctr}%</div>
-                <div class="gsc-card-sub"><span>{comp_label}</span></div>
-                <div class="gsc-card-info-icon">?</div>
-            </div>
+        <div class="gsc-scorecard-card {ctr_card_class}">
+            <div class="gsc-card-val-big">{avg_ctr}%</div>
+            <div class="gsc-card-trend-pill">{trend_ctr_html}</div>
         </div>
         """, unsafe_allow_html=True)
 
+    # Card 4: Average Position
     with sc_col4:
-        card_class = "gsc-card-pos-on" if show_position else "gsc-card-off"
-        check_icon = "☑" if show_position else "☐"
-        delta_pos = calc_delta_badge(avg_pos, comp_pos, False)
+        pos_card_class = "gsc-card-pos-on" if show_position else "gsc-card-off"
+        btn_pos_icon = "✓" if show_position else "＋"
+        if st.button(f"{btn_pos_icon} Average position", key="btn_toggle_sc_pos", use_container_width=True, help="Click to toggle Average Position on the chart below"):
+            st.session_state.show_position = not show_position
+            st.rerun()
+
+        delta_pos_badge = calc_delta_badge(avg_pos, comp_pos, False)
+        trend_pos_html = f"{delta_pos_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
+
         st.markdown(f"""
-        <div class="gsc-tile-wrapper">
-            <div class="gsc-card {card_class}">
-                <div class="gsc-card-title">{check_icon} Average position {delta_pos}</div>
-                <div class="gsc-card-val-big">{avg_pos}</div>
-                <div class="gsc-card-sub"><span>{period_label}</span></div>
-                <div class="gsc-card-val-comp">{comp_pos}</div>
-                <div class="gsc-card-sub"><span>{comp_label}</span></div>
-                <div class="gsc-card-info-icon">?</div>
-            </div>
+        <div class="gsc-scorecard-card {pos_card_class}">
+            <div class="gsc-card-val-big">{avg_pos}</div>
+            <div class="gsc-card-trend-pill">{trend_pos_html}</div>
         </div>
         """, unsafe_allow_html=True)
-
-    # Live Real-Time Activity Bar
-    if is_dark:
-        rt_bar_bg = "linear-gradient(90deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%)"
-        rt_bar_border = "1px solid rgba(56, 189, 248, 0.25)"
-        rt_bar_shadow = "box-shadow:0 4px 15px rgba(0,0,0,0.3);"
-        rt_bar_title = "#f8fafc"
-        rt_bar_badge_text = "#34d399"
-        rt_bar_sub = "#94a3b8"
-        rt_bar_hi = "#38bdf8"
-    else:
-        rt_bar_bg = "#ffffff"
-        rt_bar_border = "1px solid #dadce0"
-        rt_bar_shadow = "box-shadow:0 1px 3px rgba(60,64,67,0.1);"
-        rt_bar_title = "#202124"
-        rt_bar_badge_text = "#137333"
-        rt_bar_sub = "#5f6368"
-        rt_bar_hi = "#1a73e8"
-
-    st.markdown(f"""
-    <div style="background:{rt_bar_bg}; border:{rt_bar_border}; border-radius:10px; padding:10px 16px; margin: 12px 0 6px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; {rt_bar_shadow}">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <span class="gsc-pulse-dot"></span>
-            <span style="font-weight:700; color:{rt_bar_title}; font-size:13px; font-family:'JetBrains Mono',monospace;">LIVE SITE TELEMETRY:</span>
-            <span style="color:{rt_bar_badge_text}; font-weight:700; font-size:13px; font-family:'JetBrains Mono',monospace;">{live_site_users} Active Users browsing</span>
-            <span style="color:{rt_bar_sub}; font-size:12px;">on <b style="color:{rt_bar_hi};">{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}</b> • {rt_metrics['users_last_30m']} in last 30m</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:14px; font-size:12px; color:{rt_bar_sub}; font-family:'JetBrains Mono',monospace;">
-            <span>👥 <b style="color:{rt_bar_hi};">{active_dash_users}</b> viewing dashboard</span>
-            <span>⚡ <b style="color:{rt_bar_badge_text};">{rt_metrics['pageviews_per_min']}</b> views/min</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
 
     # Dropdown pill "Daily ▾"
     st.markdown("""
@@ -3104,6 +3053,21 @@ if page in ["📈 Performance", "📊 Overview"]:
         df_daily_comp = pd.DataFrame()
 
     if not df_daily_curr.empty:
+        # Ensure dates are datetime objects for proper calendar timeline formatting
+        if 'date' in df_daily_curr.columns:
+            df_daily_curr['date'] = pd.to_datetime(df_daily_curr['date'])
+        if not df_daily_comp.empty and 'date' in df_daily_comp.columns:
+            df_daily_comp['date'] = pd.to_datetime(df_daily_comp['date'])
+
+        # In comparison mode, overlay comparison period data onto the current calendar timeline
+        if not is_portfolio_mode and not df_daily_comp.empty:
+            n_pts = min(len(df_daily_curr), len(df_daily_comp))
+            comp_x = df_daily_curr['date'].iloc[:n_pts]
+            df_comp_plot = df_daily_comp.iloc[:n_pts].copy()
+        else:
+            comp_x = pd.Series(dtype='datetime64[ns]')
+            df_comp_plot = pd.DataFrame()
+
         use_secondary = show_impressions or show_position
         fig = make_subplots(specs=[[{"secondary_y": use_secondary}]])
 
@@ -3121,10 +3085,9 @@ if page in ["📈 Performance", "📊 Overview"]:
 
         # Trace 1: Current Clicks
         if show_clicks and 'clicks' in df_daily_curr.columns:
-            x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
             clicks_label = 'Total Combined Clicks' if is_portfolio_mode else 'Clicks'
             fig.add_trace(go.Scatter(
-                x=x_vals, y=df_daily_curr['clicks'], name=clicks_label,
+                x=df_daily_curr['date'], y=df_daily_curr['clicks'], name=clicks_label,
                 line=dict(color=clicks_col, width=2.8),
                 hoverinfo='y+name'
             ), secondary_y=False)
@@ -3134,7 +3097,7 @@ if page in ["📈 Performance", "📊 Overview"]:
             palette = ['#34d399', '#f43f5e', '#fbbf24', '#a855f7', '#06b6d4', '#f97316', '#64748b']
             for s_idx, s_dom in enumerate(df_all_daily['site'].unique()):
                 s_data = df_all_daily[df_all_daily['site'] == s_dom].sort_values('date')
-                x_sub = s_data['day_index'] if 'day_index' in s_data.columns else s_data['date']
+                x_sub = pd.to_datetime(s_data['date'])
                 fig.add_trace(go.Scatter(
                     x=x_sub, y=s_data['clicks'], name=f"● {s_dom}",
                     line=dict(color=palette[s_idx % len(palette)], width=1.6, dash='dot'),
@@ -3142,47 +3105,42 @@ if page in ["📈 Performance", "📊 Overview"]:
                 ), secondary_y=False)
 
         # Trace 2: Comp Clicks
-        if not is_portfolio_mode and show_clicks and not df_daily_comp.empty and 'clicks' in df_daily_comp.columns:
-            x_vals = df_daily_comp['day_index'] if 'day_index' in df_daily_comp.columns else df_daily_comp['date']
+        if not is_portfolio_mode and show_clicks and not df_comp_plot.empty and 'clicks' in df_comp_plot.columns:
             fig.add_trace(go.Scatter(
-                x=x_vals, y=df_daily_comp['clicks'], name='Clicks (Previous)',
+                x=comp_x, y=df_comp_plot['clicks'], name='Clicks (Previous)',
                 line=dict(color=comp_clicks_col, width=2.0, dash='dash'),
                 hoverinfo='y+name'
             ), secondary_y=False)
 
         # Trace 3: Current Impressions
         if show_impressions and 'impressions' in df_daily_curr.columns:
-            x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
             imps_label = 'Total Combined Impressions' if is_portfolio_mode else 'Impressions'
             fig.add_trace(go.Scatter(
-                x=x_vals, y=df_daily_curr['impressions'], name=imps_label,
+                x=df_daily_curr['date'], y=df_daily_curr['impressions'], name=imps_label,
                 line=dict(color=imps_col, width=2.4),
                 hoverinfo='y+name'
             ), secondary_y=True if use_secondary else False)
 
         # Trace 4: Comp Impressions
-        if not is_portfolio_mode and show_impressions and not df_daily_comp.empty and 'impressions' in df_daily_comp.columns:
-            x_vals = df_daily_comp['day_index'] if 'day_index' in df_daily_comp.columns else df_daily_comp['date']
+        if not is_portfolio_mode and show_impressions and not df_comp_plot.empty and 'impressions' in df_comp_plot.columns:
             fig.add_trace(go.Scatter(
-                x=x_vals, y=df_daily_comp['impressions'], name='Impressions (Previous)',
+                x=comp_x, y=df_comp_plot['impressions'], name='Impressions (Previous)',
                 line=dict(color=comp_imps_col, width=2.0, dash='dash'),
                 hoverinfo='y+name'
             ), secondary_y=True if use_secondary else False)
 
         # Trace 5: CTR
         if show_ctr and 'ctr' in df_daily_curr.columns:
-            x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
             fig.add_trace(go.Scatter(
-                x=x_vals, y=df_daily_curr['ctr'], name='CTR (%)',
+                x=df_daily_curr['date'], y=df_daily_curr['ctr'], name='CTR (%)',
                 line=dict(color=ctr_col, width=2.0),
                 hoverinfo='y+name'
             ), secondary_y=False)
 
         # Trace 6: Position
         if show_position and 'position' in df_daily_curr.columns:
-            x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
             fig.add_trace(go.Scatter(
-                x=x_vals, y=df_daily_curr['position'], name='Position',
+                x=df_daily_curr['date'], y=df_daily_curr['position'], name='Position',
                 line=dict(color=pos_col, width=2.2),
                 hoverinfo='y+name'
             ), secondary_y=True)
@@ -3198,7 +3156,8 @@ if page in ["📈 Performance", "📊 Overview"]:
             height=340
         )
         fig.update_xaxes(
-            showgrid=False, linecolor=chart_line_color, tickmode='linear', dtick=8,
+            showgrid=False, linecolor=chart_line_color,
+            tickformat='%b %d', hoverformat='%a, %b %d, %Y',
             title_text="", tickfont=dict(color=chart_font_color)
         )
         fig.update_yaxes(
@@ -3222,7 +3181,7 @@ if page in ["📈 Performance", "📊 Overview"]:
     <div class="gsc-ai-banner">
         <div style="display:flex; align-items:center; gap:12px;">
             <span style="color:#38bdf8; font-size:18px;">✨</span>
-            <span style="color:#cbd5e1; font-size:13px; font-weight:500;">Real-time AI telemetry: Monitor impressions &amp; click performance in Generative Search (SGE / AI Overviews).</span>
+            <span style="color:#cbd5e1; font-size:13px; font-weight:500;">Real-time AI Search Tracking: Monitor impressions &amp; click performance in Google AI Overviews (SGE).</span>
         </div>
         <span style="color:#38bdf8; font-size:13px; font-weight:700; cursor:pointer; text-shadow:0 0 10px rgba(56,189,248,0.5);">OPEN REPORT &gt;</span>
     </div>
