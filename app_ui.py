@@ -2672,6 +2672,15 @@ if page in ["📈 Performance", "📊 Overview"]:
     else:
         anchor_dt = today_dt
 
+    # Default boundaries fallback to guarantee variables are always defined
+    days_window = 90
+    period_label = "Last 3 months"
+    comp_label = "Previous 3 months"
+    curr_start_dt = anchor_dt - timedelta(days=90)
+    curr_end_dt = anchor_dt
+    comp_start_dt = curr_start_dt - timedelta(days=90)
+    comp_end_dt = curr_start_dt - timedelta(days=1)
+
     if date_chip_opt in ["24 hours", "Last 24 hours"]:
         days_window = 1
         period_label = "Last 24 hours"
@@ -2830,13 +2839,19 @@ if page in ["📈 Performance", "📊 Overview"]:
             comp_ctr = round(comp_clicks / comp_imps * 100, 1) if comp_imps > 0 else round(avg_ctr * 0.9, 1)
             comp_pos = round(avg_pos + 2.5, 1) if avg_pos > 0 else 0.0
 
-    # Format numbers (16.6K, 1.02K)
+    # Format numbers (16.6K, 1.02K) safely
     def fmt_gsc_num(val):
-        if val >= 1000000:
-            return f"{val/1000000:.1f}M"
-        elif val >= 1000:
-            return f"{val/1000:.2g}K" if val < 10000 else f"{val/1000:.1f}K"
-        return f"{val:,}"
+        if val is None or pd.isna(val):
+            return "0"
+        try:
+            val = float(val)
+            if val >= 1000000:
+                return f"{val/1000000:.1f}M"
+            elif val >= 1000:
+                return f"{val/1000:.2g}K" if val < 10000 else f"{val/1000:.1f}K"
+            return f"{int(val):,}"
+        except Exception:
+            return str(val)
 
     imps_disp = fmt_gsc_num(total_imps)
     comp_imps_disp = fmt_gsc_num(comp_imps)
@@ -2844,19 +2859,24 @@ if page in ["📈 Performance", "📊 Overview"]:
     def calc_delta_badge(curr, comp, higher_is_better=True):
         if not is_compare_mode:
             return ""
-        if comp == 0:
-            if curr > 0:
+        try:
+            curr_v = float(curr or 0)
+            comp_v = float(comp or 0)
+            if comp_v == 0:
+                if curr_v > 0:
+                    badge_cls = "trend-badge-up" if higher_is_better else "trend-badge-down"
+                    return f'<span class="{badge_cls}">▲ +100%</span>'
+                return '<span class="trend-badge-neutral">— 0%</span>'
+            diff_pct = round(((curr_v - comp_v) / comp_v) * 100, 1)
+            if diff_pct > 0:
                 badge_cls = "trend-badge-up" if higher_is_better else "trend-badge-down"
-                return f'<span class="{badge_cls}">▲ +100%</span>'
+                return f'<span class="{badge_cls}">▲ +{diff_pct}%</span>'
+            elif diff_pct < 0:
+                badge_cls = "trend-badge-down" if higher_is_better else "trend-badge-up"
+                return f'<span class="{badge_cls}">▼ {abs(diff_pct)}%</span>'
             return '<span class="trend-badge-neutral">— 0%</span>'
-        diff_pct = round(((curr - comp) / comp) * 100, 1)
-        if diff_pct > 0:
-            badge_cls = "trend-badge-up" if higher_is_better else "trend-badge-down"
-            return f'<span class="{badge_cls}">▲ +{diff_pct}%</span>'
-        elif diff_pct < 0:
-            badge_cls = "trend-badge-down" if higher_is_better else "trend-badge-up"
-            return f'<span class="{badge_cls}">▼ {abs(diff_pct)}%</span>'
-        return '<span class="trend-badge-neutral">— 0%</span>'
+        except Exception:
+            return ""
 
     # 2.5 Portfolio Banner (when applicable)
     if is_portfolio_mode:
@@ -2893,6 +2913,18 @@ if page in ["📈 Performance", "📊 Overview"]:
     if 'show_position' not in st.session_state:
         st.session_state.show_position = False
 
+    def toggle_sc_clicks():
+        st.session_state.show_clicks = not st.session_state.get('show_clicks', True)
+
+    def toggle_sc_imps():
+        st.session_state.show_impressions = not st.session_state.get('show_impressions', True)
+
+    def toggle_sc_ctr():
+        st.session_state.show_ctr = not st.session_state.get('show_ctr', False)
+
+    def toggle_sc_pos():
+        st.session_state.show_position = not st.session_state.get('show_position', False)
+
     show_clicks = st.session_state.show_clicks
     show_impressions = st.session_state.show_impressions
     show_ctr = st.session_state.show_ctr
@@ -2905,9 +2937,7 @@ if page in ["📈 Performance", "📊 Overview"]:
     with sc_col1:
         click_card_class = "gsc-card-clicks-on" if show_clicks else "gsc-card-off"
         btn_click_icon = "✓" if show_clicks else "＋"
-        if st.button(f"{btn_click_icon} Total clicks", key="btn_toggle_sc_clicks", use_container_width=True, help="Click to toggle Clicks line on the chart below"):
-            st.session_state.show_clicks = not show_clicks
-            st.rerun()
+        st.button(f"{btn_click_icon} Total clicks", key="btn_toggle_sc_clicks", on_click=toggle_sc_clicks, use_container_width=True, help="Click to toggle Clicks line on the chart below")
 
         delta_clicks_badge = calc_delta_badge(total_clicks, comp_clicks, True)
         trend_clicks_html = f"{delta_clicks_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
@@ -2923,9 +2953,7 @@ if page in ["📈 Performance", "📊 Overview"]:
     with sc_col2:
         imps_card_class = "gsc-card-imps-on" if show_impressions else "gsc-card-off"
         btn_imps_icon = "✓" if show_impressions else "＋"
-        if st.button(f"{btn_imps_icon} Total impressions", key="btn_toggle_sc_imps", use_container_width=True, help="Click to toggle Impressions line on the chart below"):
-            st.session_state.show_impressions = not show_impressions
-            st.rerun()
+        st.button(f"{btn_imps_icon} Total impressions", key="btn_toggle_sc_imps", on_click=toggle_sc_imps, use_container_width=True, help="Click to toggle Impressions line on the chart below")
 
         delta_imps_badge = calc_delta_badge(total_imps, comp_imps, True)
         trend_imps_html = f"{delta_imps_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
@@ -2941,16 +2969,14 @@ if page in ["📈 Performance", "📊 Overview"]:
     with sc_col3:
         ctr_card_class = "gsc-card-ctr-on" if show_ctr else "gsc-card-off"
         btn_ctr_icon = "✓" if show_ctr else "＋"
-        if st.button(f"{btn_ctr_icon} Average CTR", key="btn_toggle_sc_ctr", use_container_width=True, help="Click to toggle Average CTR line on the chart below"):
-            st.session_state.show_ctr = not show_ctr
-            st.rerun()
+        st.button(f"{btn_ctr_icon} Average CTR", key="btn_toggle_sc_ctr", on_click=toggle_sc_ctr, use_container_width=True, help="Click to toggle Average CTR line on the chart below")
 
         delta_ctr_badge = calc_delta_badge(avg_ctr, comp_ctr, True)
         trend_ctr_html = f"{delta_ctr_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
 
         st.markdown(f"""
         <div class="gsc-scorecard-card {ctr_card_class}">
-            <div class="gsc-card-val-big">{avg_ctr}%</div>
+            <div class="gsc-card-val-big">{avg_ctr or 0}%</div>
             <div class="gsc-card-trend-pill">{trend_ctr_html}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -2959,16 +2985,14 @@ if page in ["📈 Performance", "📊 Overview"]:
     with sc_col4:
         pos_card_class = "gsc-card-pos-on" if show_position else "gsc-card-off"
         btn_pos_icon = "✓" if show_position else "＋"
-        if st.button(f"{btn_pos_icon} Average position", key="btn_toggle_sc_pos", use_container_width=True, help="Click to toggle Average Position on the chart below"):
-            st.session_state.show_position = not show_position
-            st.rerun()
+        st.button(f"{btn_pos_icon} Average position", key="btn_toggle_sc_pos", on_click=toggle_sc_pos, use_container_width=True, help="Click to toggle Average Position on the chart below")
 
         delta_pos_badge = calc_delta_badge(avg_pos, comp_pos, False)
         trend_pos_html = f"{delta_pos_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
 
         st.markdown(f"""
         <div class="gsc-scorecard-card {pos_card_class}">
-            <div class="gsc-card-val-big">{avg_pos}</div>
+            <div class="gsc-card-val-big">{avg_pos or 0.0}</div>
             <div class="gsc-card-trend-pill">{trend_pos_html}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -3055,12 +3079,15 @@ if page in ["📈 Performance", "📊 Overview"]:
     if not df_daily_curr.empty:
         # Ensure dates are datetime objects for proper calendar timeline formatting
         if 'date' in df_daily_curr.columns:
-            df_daily_curr['date'] = pd.to_datetime(df_daily_curr['date'])
+            df_daily_curr['date'] = pd.to_datetime(df_daily_curr['date'], errors='coerce')
+        else:
+            df_daily_curr['date'] = pd.date_range(end=datetime.now().date(), periods=len(df_daily_curr), freq='D')
+
         if not df_daily_comp.empty and 'date' in df_daily_comp.columns:
-            df_daily_comp['date'] = pd.to_datetime(df_daily_comp['date'])
+            df_daily_comp['date'] = pd.to_datetime(df_daily_comp['date'], errors='coerce')
 
         # In comparison mode, overlay comparison period data onto the current calendar timeline
-        if not is_portfolio_mode and not df_daily_comp.empty:
+        if is_compare_mode and not is_portfolio_mode and not df_daily_comp.empty:
             n_pts = min(len(df_daily_curr), len(df_daily_comp))
             comp_x = df_daily_curr['date'].iloc[:n_pts]
             df_comp_plot = df_daily_comp.iloc[:n_pts].copy()
@@ -3093,11 +3120,12 @@ if page in ["📈 Performance", "📊 Overview"]:
             ), secondary_y=False)
 
         # Multi-site breakdown lines in portfolio mode
-        if is_portfolio_mode and show_clicks and not portfolio_obj.get('df_daily', pd.DataFrame()).empty:
+        df_all_daily = portfolio_obj.get('df_daily', pd.DataFrame())
+        if is_portfolio_mode and show_clicks and not df_all_daily.empty and 'site' in df_all_daily.columns:
             palette = ['#34d399', '#f43f5e', '#fbbf24', '#a855f7', '#06b6d4', '#f97316', '#64748b']
             for s_idx, s_dom in enumerate(df_all_daily['site'].unique()):
                 s_data = df_all_daily[df_all_daily['site'] == s_dom].sort_values('date')
-                x_sub = pd.to_datetime(s_data['date'])
+                x_sub = pd.to_datetime(s_data['date'], errors='coerce') if 'date' in s_data.columns else s_data.index
                 fig.add_trace(go.Scatter(
                     x=x_sub, y=s_data['clicks'], name=f"● {s_dom}",
                     line=dict(color=palette[s_idx % len(palette)], width=1.6, dash='dot'),
@@ -3105,7 +3133,7 @@ if page in ["📈 Performance", "📊 Overview"]:
                 ), secondary_y=False)
 
         # Trace 2: Comp Clicks
-        if not is_portfolio_mode and show_clicks and not df_comp_plot.empty and 'clicks' in df_comp_plot.columns:
+        if is_compare_mode and not is_portfolio_mode and show_clicks and not df_comp_plot.empty and 'clicks' in df_comp_plot.columns:
             fig.add_trace(go.Scatter(
                 x=comp_x, y=df_comp_plot['clicks'], name='Clicks (Previous)',
                 line=dict(color=comp_clicks_col, width=2.0, dash='dash'),
@@ -3122,7 +3150,7 @@ if page in ["📈 Performance", "📊 Overview"]:
             ), secondary_y=True if use_secondary else False)
 
         # Trace 4: Comp Impressions
-        if not is_portfolio_mode and show_impressions and not df_comp_plot.empty and 'impressions' in df_comp_plot.columns:
+        if is_compare_mode and not is_portfolio_mode and show_impressions and not df_comp_plot.empty and 'impressions' in df_comp_plot.columns:
             fig.add_trace(go.Scatter(
                 x=comp_x, y=df_comp_plot['impressions'], name='Impressions (Previous)',
                 line=dict(color=comp_imps_col, width=2.0, dash='dash'),
