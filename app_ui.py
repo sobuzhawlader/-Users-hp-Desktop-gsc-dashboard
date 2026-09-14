@@ -1705,6 +1705,31 @@ with st.sidebar:
         elif st.session_state.service:
             st.session_state.df = pd.DataFrame()
 
+    # 2B.1 Dedicated Quick Refresh & Sync Bar
+    c_sync_btn, c_live_btn = st.columns(2)
+    with c_sync_btn:
+        if st.button("🔄 Sync Sites", key="side_quick_sync_sites_btn", use_container_width=True, help="Re-sync all verified properties directly from Google Search Console"):
+            with st.spinner("Re-syncing sites from Google..."):
+                try:
+                    if st.session_state.service:
+                        fresh_sites = get_sites_detailed(st.session_state.service, force_refresh=True)
+                        st.session_state.sites_detailed = fresh_sites
+                        st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
+                    st.session_state.portfolio_needs_refresh = True
+                    if 'clear_portfolio_cache' in globals():
+                        clear_portfolio_cache()
+                    if 'clear_sites_cache' in globals():
+                        clear_sites_cache()
+                    st.session_state.df = pd.DataFrame()
+                    st.success("Properties synced!")
+                    st.rerun()
+                except Exception as ex:
+                    st.error(f"Sync error: {ex}")
+    with c_live_btn:
+        if st.button("⚡ Reload Data", key="side_quick_live_reload_btn", use_container_width=True, help="Reload page & fetch fresh data"):
+            st.session_state.portfolio_needs_refresh = True
+            st.rerun()
+
     # 2C. Bulk Paste / Import Sites Tool
     with st.expander(f"📋 Bulk Paste / Import Sites ({total_p})", expanded=False):
         st.caption("Paste your Search Console domain/URL properties (one per line):")
@@ -2115,7 +2140,7 @@ if page in ["📈 Performance", "📊 Overview"]:
         st.stop()
 
     # 2. GSC Performance Header
-    hdr_c1, hdr_c2, hdr_c3 = st.columns([3.6, 1.2, 1.2])
+    hdr_c1, hdr_c_refresh, hdr_c2, hdr_c3 = st.columns([3.2, 1.2, 1.0, 1.0])
     with hdr_c1:
         text_theme_color = "#f8fafc" if is_dark else "#202124"
         if is_portfolio_mode:
@@ -2126,6 +2151,23 @@ if page in ["📈 Performance", "📊 Overview"]:
             st.markdown(f"""
             <div style="font-size:22px; font-weight:700; color:{text_theme_color}; margin-bottom:2px; letter-spacing:-0.3px;">Performance on Search Results</div>
             """, unsafe_allow_html=True)
+    with hdr_c_refresh:
+        if st.button("🔄 Refresh Data", key="top_hdr_refresh_data_btn", use_container_width=True, help="Force fresh data from Google Search Console"):
+            with st.spinner("Refreshing Search Console data..."):
+                if is_portfolio_mode:
+                    st.session_state.portfolio_needs_refresh = True
+                    if 'clear_portfolio_cache' in globals():
+                        clear_portfolio_cache()
+                elif st.session_state.service and selected_site:
+                    try:
+                        st.session_state.df = pd.DataFrame()
+                        refreshed = fetch_gsc_data(st.session_state.service, selected_site, start_str, end_str)
+                        if not refreshed.empty:
+                            save_data(refreshed, selected_site)
+                            st.session_state.df = refreshed
+                    except Exception as e:
+                        st.error(f"Refresh error: {e}")
+                st.rerun()
     with hdr_c2:
         top_toggle = st.toggle("🌙 Dark Theme", value=is_dark, key="top_hdr_theme_toggle", help="Turn ON for Cyber Dark Mode or OFF for Clean Google Search Console Light Mode")
         if top_toggle != is_dark:
