@@ -156,11 +156,44 @@ pio.templates.default = "plotly_dark" if is_dark else "plotly_white"
 # ============================================================
 st.markdown("""
 <style>
-    /* Complete Elimination of Streamlit Cloud Toolbar, Fork Button, GitHub Link & Streamlit Badges */
-    header,
+    /* Clean Streamlit Header - Transparent & Non-blocking to preserve sidebar toggle */
     header[data-testid="stHeader"],
-    [data-testid="stHeader"],
-    [data-testid="stToolbar"],
+    [data-testid="stHeader"] {
+        background: transparent !important;
+        height: 2.8rem !important;
+        pointer-events: none !important;
+        z-index: 1000000 !important;
+    }
+
+    /* Native Streamlit sidebar toggle button MUST always be visible, clickable, and prioritized */
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="stSidebarCollapseButton"],
+    header[data-testid="stHeader"] button,
+    [data-testid="stHeader"] button {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        z-index: 1000001 !important;
+    }
+
+    /* Keep the collapsed sidebar button fixed cleanly on top-left */
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapsedControl"] {
+        position: fixed !important;
+        top: 12px !important;
+        left: 14px !important;
+    }
+
+    /* Sidebar Guarantee: Ensure sidebar is never hidden or zeroed by custom styles */
+    section[data-testid="stSidebar"] {
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    /* Hide ONLY unwanted Streamlit Cloud shell elements (Fork, GitHub, Status, Manage App, Badges) */
     [data-testid="stToolbarActions"],
     .stAppToolbar,
     #MainMenu,
@@ -190,21 +223,10 @@ st.markdown("""
         left: -9999px !important;
     }
 
-    /* Keep the sidebar expand toggle accessible */
-    [data-testid="stSidebarCollapsedControl"] {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        position: fixed !important;
-        top: 14px !important;
-        left: 14px !important;
-        z-index: 999999 !important;
-    }
-
     /* Remove empty header whitespace at top */
     .main .block-container,
     [data-testid="stAppViewContainer"] > section:first-child {
-        padding-top: 1.2rem !important;
+        padding-top: 1.0rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -343,8 +365,11 @@ if is_dark:
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px 20px;
-        background: rgba(12, 17, 29, 0.85);
+        padding: 10px 20px 10px 56px !important;
+        flex-wrap: wrap !important;
+        gap: 12px;
+        min-height: 52px;
+        background: rgba(12, 17, 29, 0.90);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border-bottom: 1px solid rgba(56, 189, 248, 0.2);
@@ -352,7 +377,7 @@ if is_dark:
         margin: -4rem -3rem 1.5rem -3rem;
         position: sticky;
         top: 0;
-        z-index: 999;
+        z-index: 998;
     }
     .gsc-search-pill {
         display: flex;
@@ -363,8 +388,10 @@ if is_dark:
         box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
         border-radius: 24px;
         padding: 7px 18px;
-        width: 48%;
-        max-width: 650px;
+        flex: 1 1 240px;
+        min-width: 180px;
+        max-width: 550px;
+        width: auto;
         color: #cbd5e1;
         font-size: 13px;
         transition: border-color 0.2s;
@@ -957,14 +984,17 @@ else:
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px 20px;
+        padding: 10px 20px 10px 56px !important;
+        flex-wrap: wrap !important;
+        gap: 12px;
+        min-height: 52px;
         background: #ffffff !important;
         border-bottom: 1px solid #dadce0 !important;
         box-shadow: 0 1px 3px rgba(60,64,67,0.12) !important;
         margin: -4rem -3rem 1.5rem -3rem;
         position: sticky;
         top: 0;
-        z-index: 999;
+        z-index: 998;
     }
     .gsc-search-pill {
         display: flex;
@@ -975,8 +1005,10 @@ else:
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.05) !important;
         border-radius: 24px;
         padding: 7px 18px;
-        width: 48%;
-        max-width: 650px;
+        flex: 1 1 240px;
+        min-width: 180px;
+        max-width: 550px;
+        width: auto;
         color: #3c4043 !important;
         font-size: 13px;
         transition: border-color 0.2s, background-color 0.2s;
@@ -1716,9 +1748,12 @@ with st.sidebar:
 
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
-    # 2. Property Selector Pill & Account Header (Matching GSC)
-    is_connected = bool(st.session_state.service)
-    clean_active_sites = [s for s in st.session_state.sites if s and not str(s).startswith("🌐") and "Custom Property" not in str(s) and not str(s).startswith("🧪") and not str(s).startswith("⚠️") and not str(s).startswith("(")]
+    # 2. PROMINENT GSC PROPERTY / SITE SELECTOR (Top of Sidebar)
+    is_authenticated = bool(st.session_state.get('authenticated')) or bool(st.session_state.get('service'))
+    clean_active_sites = [
+        s for s in st.session_state.sites 
+        if s and not str(s).startswith("🌐") and "Custom Property" not in str(s) and not str(s).startswith("🧪") and not str(s).startswith("⚠️") and not str(s).startswith("(")
+    ]
     total_p = len(clean_active_sites)
 
     cfg = load_client_config()
@@ -1730,220 +1765,47 @@ with st.sidebar:
         except Exception:
             pass
 
-    # 2A. Google Account Status / One-Click Connect Card directly above Property Dropdown
-    if is_connected:
-        user_mail_disp = st.session_state.get('user_email') or 'Connected Google Account'
-        if total_p > 0:
-            if is_dark:
-                sess_card_bg = "linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.8) 100%)"
-                sess_card_border = "1px solid rgba(56, 189, 248, 0.3)"
-                sess_card_title = "#38bdf8"
-                sess_badge_bg = "rgba(56, 189, 248, 0.2)"
-                sess_badge_border = "1px solid rgba(56,189,248,0.4)"
-                sess_badge_col = "#38bdf8"
-                sess_card_mail = "#f8fafc"
-                sess_card_sub = "#94a3b8"
-                sess_card_hi = "#38bdf8"
-            else:
-                sess_card_bg = "#ffffff"
-                sess_card_border = "1px solid #dadce0"
-                sess_card_title = "#1a73e8"
-                sess_badge_bg = "#e8f0fe"
-                sess_badge_border = "1px solid #d2e3fc"
-                sess_badge_col = "#1a73e8"
-                sess_card_mail = "#202124"
-                sess_card_sub = "#5f6368"
-                sess_card_hi = "#1a73e8"
-
-            st.markdown(f"""
-            <div style="background:{sess_card_bg}; border:{sess_card_border}; border-radius:10px; padding:12px 14px; margin-bottom:10px; box-shadow:0 1px 3px rgba(60,64,67,0.1);">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-size:10px; font-weight:700; color:{sess_card_title}; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">● CONNECTED SESSION</div>
-                    <span style="font-size:10px; background:{sess_badge_bg}; color:{sess_badge_col}; border:{sess_badge_border}; padding:1px 7px; border-radius:12px; font-weight:700; font-family:'JetBrains Mono',monospace;">{total_p} PROPERTIES</span>
-                </div>
-                <div style="font-size:13px; font-weight:600; color:{sess_card_mail}; margin-top:5px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
-                <div style="font-size:11px; color:{sess_card_sub}; margin-top:3px;">Consolidating <b style="color:{sess_card_hi};">{total_p}</b> verified search properties ▾</div>
-            </div>
-            """, unsafe_allow_html=True)
-            col_acc1, col_acc2 = st.columns(2)
-            with col_acc1:
-                if st.button("🔄 Sync Sites", use_container_width=True, key="top_btn_sync_gsc_sites", help="Re-sync all verified properties directly from Google Search Console API"):
-                    with st.spinner("Fetching latest properties from Google..."):
-                        try:
-                            fresh_sites = get_sites_detailed(st.session_state.service, force_refresh=True)
-                            st.session_state.sites_detailed = fresh_sites
-                            st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
-                            st.session_state.portfolio_needs_refresh = True
-                            if 'clear_portfolio_cache' in globals():
-                                clear_portfolio_cache()
-                            st.success(f"Synced {len(st.session_state.sites)} properties!")
-                            st.rerun()
-                        except Exception as ex:
-                            st.error(f"Sync error: {ex}")
-            with col_acc2:
-                if st.button("🔄 Switch Account", use_container_width=True, key="top_btn_switch_acc", help="Switch to another Google Account"):
-                    delete_saved_credentials()
-                    if 'clear_portfolio_cache' in globals():
-                        clear_portfolio_cache()
-                    if 'clear_sites_cache' in globals():
-                        clear_sites_cache()
-                    st.session_state.service = None
-                    st.session_state.service_v1 = None
-                    st.session_state.sites = []
-                    st.session_state.sites_detailed = []
-                    st.session_state.user_creds = None
-                    st.session_state.user_email = None
-                    st.session_state.current_site = None
-                    st.session_state.portfolio_data = None
-                    st.session_state.portfolio_needs_refresh = True
-                    st.session_state.df = pd.DataFrame()
-                    st.rerun()
-        else:
-            # Connected, but 0 sites found in this Gmail!
-            if is_dark:
-                sess0_bg = "linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%)"
-                sess0_border = "1px solid rgba(245, 158, 11, 0.35)"
-                sess0_title = "#fbbf24"
-                sess0_badge_bg = "rgba(245,158,11,0.2)"
-                sess0_badge_border = "1px solid rgba(245,158,11,0.4)"
-                sess0_badge_col = "#fbbf24"
-                sess0_mail = "#f8fafc"
-                sess0_sub = "#fcd34d"
-            else:
-                sess0_bg = "#fef7e0"
-                sess0_border = "1px solid #f9ab00"
-                sess0_title = "#b06000"
-                sess0_badge_bg = "#fff0c2"
-                sess0_badge_border = "1px solid #f9ab00"
-                sess0_badge_col = "#b06000"
-                sess0_mail = "#202124"
-                sess0_sub = "#5f6368"
-
-            st.markdown(f"""
-            <div style="background:{sess0_bg}; border:{sess0_border}; border-radius:10px; padding:12px 14px; margin-bottom:10px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-size:10px; font-weight:700; color:{sess0_title}; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">● SESSION ACTIVE</div>
-                    <span style="font-size:10px; background:{sess0_badge_bg}; color:{sess0_badge_col}; border:{sess0_badge_border}; padding:1px 7px; border-radius:12px; font-weight:700; font-family:'JetBrains Mono',monospace;">0 SITES</span>
-                </div>
-                <div style="font-size:13px; font-weight:600; color:{sess0_mail}; margin-top:5px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
-                <div style="font-size:11px; color:{sess0_sub}; margin-top:4px; line-height:1.4;">
-                    ⚠️ <b>0 properties found in Search Console.</b><br>
-                    If your 20+ sites are in another Gmail, switch accounts below:
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            if auth_url:
-                st.link_button("🔄 Switch Google Account (Choose Other Gmail)", auth_url, type="primary", use_container_width=True)
-            col_acc1, col_acc2 = st.columns(2)
-            with col_acc1:
-                if st.button("🔄 Re-Check Sites", use_container_width=True, key="top_btn_recheck_sites"):
-                    try:
-                        fresh_sites = get_sites_detailed(st.session_state.service, force_refresh=True)
-                        st.session_state.sites_detailed = fresh_sites
-                        st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
-                        st.session_state.portfolio_needs_refresh = True
-                        st.rerun()
-                    except Exception as ex:
-                        st.error(f"Check error: {ex}")
-            with col_acc2:
-                if st.button("🚪 Logout", use_container_width=True, key="top_btn_logout_empty"):
-                    delete_saved_credentials()
-                    if 'clear_portfolio_cache' in globals():
-                        clear_portfolio_cache()
-                    if 'clear_sites_cache' in globals():
-                        clear_sites_cache()
-                    st.session_state.service = None
-                    st.session_state.service_v1 = None
-                    st.session_state.sites = []
-                    st.session_state.sites_detailed = []
-                    st.session_state.user_creds = None
-                    st.session_state.user_email = None
-                    st.session_state.current_site = None
-                    st.session_state.portfolio_data = None
-                    st.session_state.portfolio_needs_refresh = True
-                    st.session_state.df = pd.DataFrame()
-                    st.rerun()
-
-    else:
-        # Not connected yet
-        if is_dark:
-            auth_side_bg = "linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%)"
-            auth_side_border = "1px solid rgba(56, 189, 248, 0.3)"
-            auth_side_title_col = "#38bdf8"
-            auth_side_text_col = "#94a3b8"
-            auth_side_bold_col = "#f8fafc"
-            auth_side_shadow = "box-shadow:0 0 15px rgba(56, 189, 248, 0.08);"
-            auth_font = "font-family:'JetBrains Mono',monospace;"
-        else:
-            auth_side_bg = "#ffffff"
-            auth_side_border = "1px solid #dadce0"
-            auth_side_title_col = "#1a73e8"
-            auth_side_text_col = "#5f6368"
-            auth_side_bold_col = "#202124"
-            auth_side_shadow = "box-shadow:0 1px 3px rgba(60,64,67,0.08);"
-            auth_font = ""
-
-        st.markdown(f"""
-        <div style="background:{auth_side_bg}; border:{auth_side_border}; border-radius:10px; padding:12px 14px; margin-bottom:10px; {auth_side_shadow}">
-            <div style="font-size:11px; font-weight:700; color:{auth_side_title_col}; text-transform:uppercase; letter-spacing:0.5px; {auth_font}">Google Search Console</div>
-            <div style="font-size:12px; color:{auth_side_text_col}; margin-top:3px; line-height:1.4;">Sign in to load your verified properties.</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        if auth_url:
-            st.link_button("🌐 Sign in with Google", auth_url, type="primary", use_container_width=True)
-            sec_col = "#94a3b8" if is_dark else "#5f6368"
-            st.markdown(f"""
-            <div style="font-size:10.5px; color:{sec_col}; line-height:1.35; margin:4px 0 8px 0; text-align:center;">
-                🔒 <b>Read-Only & In-Memory</b>: OAuth2 token held in volatile memory; never stored permanently or sold.
-            </div>
-            """, unsafe_allow_html=True)
-
-        if st.button("🧪 Explore Demo Mode", key="side_btn_demo_explore", use_container_width=True, help="Load 90-day search data to test all 23 dashboard features without signing in"):
-            demo_site = "sc-domain:example-enterprise.com"
-            st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
-            st.session_state.sites_detailed = [
-                {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
-                {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
-            ]
-            st.session_state.current_site = demo_site
-            st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
-            st.session_state.portfolio_needs_refresh = True
-            st.rerun()
-
-    # 2B. The Red-Marked Property Dropdown (Containing user's real sites)
-    if is_connected:
+    # Build Property Dropdown Options
+    if is_authenticated:
         if total_p > 0:
             portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
             site_options = [portfolio_label] + clean_active_sites + ["➕ Enter Custom Property URL"]
         else:
             site_options = ["(No Search Console properties in this Gmail)", "➕ Enter Custom Property URL"]
     else:
+        # Demo mode / Unauthenticated choices
+        demo_sites = [
+            "sc-domain:example-enterprise.com",
+            "https://example-shop.com",
+            "https://example-enterprise.com/blog/",
+            "🌐 [ALL SITES] Consolidated Portfolio (Demo)",
+            "➕ Enter Custom Property URL"
+        ]
         if clean_active_sites:
             portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
             site_options = [portfolio_label] + clean_active_sites + ["➕ Enter Custom Property URL"]
         else:
-            site_options = ["⚠️ Sign In with Google to Load Your Sites", "➕ Enter Custom Property URL"]
+            site_options = demo_sites
 
+    # Default index selection
     def_idx = 0
     if st.session_state.current_site in site_options:
         def_idx = site_options.index(st.session_state.current_site)
     elif clean_active_sites and clean_active_sites[0] in site_options:
         def_idx = site_options.index(clean_active_sites[0])
-    elif st.session_state.current_site and str(st.session_state.current_site).startswith("🌐 [ALL SITES]") and len(site_options) > 0 and site_options[0].startswith("🌐"):
+    elif not is_authenticated and len(site_options) > 0:
         def_idx = 0
 
-    dropdown_label = f"Select Property ({total_p} Sites Loaded ▾):" if total_p > 0 else "Select Property (Sign In ▾):"
-    dropdown_label_col = "#38bdf8" if is_dark else "#5f6368"
-    dropdown_font = "font-family:'JetBrains Mono',monospace;" if is_dark else "font-family:'Plus Jakarta Sans',sans-serif;"
-    st.markdown(f"<div style='font-size:11px; font-weight:600; color:{dropdown_label_col}; {dropdown_font} text-transform:uppercase; margin-top:10px; margin-bottom:4px; letter-spacing:0.5px;'>{dropdown_label}</div>", unsafe_allow_html=True)
+    dropdown_title = f"📁 SELECT PROPERTY ({total_p} SITES LOADED ▾):" if total_p > 0 else ("📁 SELECT PROPERTY (CONNECTED ▾):" if is_authenticated else "📁 SELECT PROPERTY (DEMO MODE ▾):")
+    dropdown_col = "#38bdf8" if is_dark else "#1a73e8"
+    st.markdown(f"<div style='font-size:11px; font-weight:700; color:{dropdown_col}; margin-top:6px; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.5px;'>{dropdown_title}</div>", unsafe_allow_html=True)
     selected_choice = st.selectbox("Property", site_options, index=def_idx, label_visibility="collapsed", key="sidebar_property_selector")
 
     if selected_choice == "➕ Enter Custom Property URL":
         selected_site = st.text_input("Enter Property URL:", value="https://", key="txt_custom_property_url")
     elif selected_choice.startswith("🌐 [ALL SITES]"):
         selected_site = selected_choice
-    elif selected_choice.startswith("⚠️") or selected_choice.startswith("("):
+    elif selected_choice.startswith("(") or selected_choice.startswith("⚠️"):
         selected_site = None
     else:
         selected_site = selected_choice
@@ -1955,8 +1817,83 @@ with st.sidebar:
                 st.session_state.portfolio_needs_refresh = True
         elif st.session_state.service:
             st.session_state.df = pd.DataFrame()
+        elif not is_authenticated:
+            st.session_state.df = generate_mock_gsc_data(selected_site, days=90)
+            st.session_state.portfolio_needs_refresh = True
+        st.rerun()
 
-    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+    # Clean Action Bar directly below Property Selector
+    col_sb_sync, col_sb_action = st.columns([1.2, 1.0])
+    with col_sb_sync:
+        if st.button("🔄 Sync Sites", key="sb_sync_refresh_sites_top", use_container_width=True, help="Re-sync all verified properties directly from Google Search Console"):
+            with st.spinner("Syncing properties..."):
+                try:
+                    if is_authenticated and st.session_state.service:
+                        fresh_sites = get_sites_detailed(st.session_state.service, force_refresh=True)
+                        st.session_state.sites_detailed = fresh_sites
+                        st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
+                        st.session_state.portfolio_needs_refresh = True
+                        if 'clear_portfolio_cache' in globals():
+                            clear_portfolio_cache()
+                        if 'clear_sites_cache' in globals():
+                            clear_sites_cache()
+                        st.session_state.df = pd.DataFrame()
+                        st.success(f"Synced {len(st.session_state.sites)} properties!")
+                        st.rerun()
+                    else:
+                        demo_site = st.session_state.current_site or "sc-domain:example-enterprise.com"
+                        st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+                        st.session_state.portfolio_needs_refresh = True
+                        st.success("Refreshed demo properties!")
+                        st.rerun()
+                except Exception as ex:
+                    st.error(f"Sync error: {ex}")
+
+    with col_sb_action:
+        if is_authenticated:
+            if st.button("🚪 Logout", key="sb_top_logout_btn", use_container_width=True, help="Disconnect Google Account"):
+                delete_saved_credentials()
+                if 'clear_portfolio_cache' in globals():
+                    clear_portfolio_cache()
+                if 'clear_sites_cache' in globals():
+                    clear_sites_cache()
+                st.session_state.service = None
+                st.session_state.service_v1 = None
+                st.session_state.authenticated = False
+                st.session_state.sites = []
+                st.session_state.sites_detailed = []
+                st.session_state.user_creds = None
+                st.session_state.user_email = None
+                st.session_state.current_site = None
+                st.session_state.portfolio_data = None
+                st.session_state.portfolio_needs_refresh = True
+                st.session_state.df = pd.DataFrame()
+                st.rerun()
+        else:
+            if auth_url:
+                st.link_button("🌐 Sign In", auth_url, type="primary", use_container_width=True)
+            else:
+                if st.button("🧪 Reset Demo", key="sb_btn_reset_demo_data", use_container_width=True):
+                    demo_site = "sc-domain:example-enterprise.com"
+                    st.session_state.current_site = demo_site
+                    st.session_state.sites = [demo_site, "https://example-shop.com", "https://example-enterprise.com/blog/"]
+                    st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+                    st.rerun()
+
+    # Compact Status Indicator
+    if is_authenticated:
+        user_mail = st.session_state.get('user_email') or 'Connected Account'
+        st.markdown(f"""
+        <div style="font-size:11px; color:{'#94a3b8' if is_dark else '#5f6368'}; margin:2px 0 8px 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{user_mail}">
+            🟢 <b>Session:</b> {user_mail} ({total_p} sites)
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+        <div style="font-size:11px; color:{'#34d399' if is_dark else '#137333'}; margin:2px 0 8px 0;">
+            🧪 <b>Demo Mode Active</b> (Sample properties loaded)
+        </div>
+        """, unsafe_allow_html=True)
 
     # ============================================================
     # 3. Authentic Google Search Console 5-Category Enterprise Navigation
@@ -2410,8 +2347,6 @@ def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, act
 
     top_bar_html = (
         f'<div class="gsc-top-bar">'
-        f'<div style="display:flex; align-items:center; gap:14px;">'
-        f'<span style="font-size:20px; color:{icon_color}; cursor:pointer;">☰</span>'
         f'<div style="display:flex; align-items:center; gap:10px;">'
         f'<svg width="24" height="24" viewBox="0 0 48 48">'
         f'<path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>'
@@ -2420,7 +2355,6 @@ def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, act
         f'<path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>'
         f'</svg>'
         f'{brand_logo_title}'
-        f'</div>'
         f'</div>'
         f'<div class="gsc-search-pill">'
         f'<span style="color:{search_icon_color}; font-size:14px;">🔍</span>'
@@ -3229,6 +3163,8 @@ if page in ["📈 Performance", "📊 Overview"]:
                 fig.update_yaxes(title_text="Impressions", secondary_y=True, showgrid=False, rangemode='tozero', tickfont=dict(color='#94a3b8'), title_font=dict(color='#94a3b8'))
 
         st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
 
     # 5. Generative AI Feature Banner
     st.markdown("""
@@ -4398,7 +4334,7 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
 elif page in ["🎯 Top Keywords & Queries", "🔍 Keywords"]:
     st.markdown("<div class='section-header'>🔍 Keyword Intelligence</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Please fetch data first.")
+        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
     else:
         t1, t2, t3, t4, t5 = st.tabs(["🏆 Top Ranking", "📏 Long Tail", "⚠️ Cannibalization", "🚫 Zero Clicks", "🏷️ Brand vs Non-Brand"])
         with t1:
@@ -4446,7 +4382,7 @@ elif page in ["🎯 Top Keywords & Queries", "🔍 Keywords"]:
 elif page in ["📄 Pages & Indexing", "📄 Pages"]:
     st.markdown("<div class='section-header'>📄 Page Level Performance</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Please fetch data first.")
+        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
     else:
         p1, p2, p3, p4 = st.tabs(["🏆 Top Pages", "📉 Content Decay", "🧟 Zombie Pages", "🎯 High Imp / Low CTR"])
         with p1:
@@ -4470,7 +4406,7 @@ elif page in ["📄 Pages & Indexing", "📄 Pages"]:
 elif page in ["⚡ Core Web Vitals & Quick Wins", "⚡ Quick Wins"]:
     st.markdown("<div class='section-header'>⚡ Quick Wins & Striking Distance Keywords</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Please fetch Search Console data first.")
+        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
     else:
         st.markdown("""
         **Striking Distance Optimization Engine**: Identifies search queries ranking between **positions 4.0 and 20.0** with substantial search impressions.
@@ -4774,7 +4710,7 @@ elif page == "📉 Algo Update Impact":
 elif page == "📈 Custom CTR Curve":
     st.markdown("<div class='section-header'>📈 Custom Empirical CTR Curve & Traffic Opportunity Forecaster</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Please fetch performance data first.")
+        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
     else:
         st.markdown("Builds your domain's **actual CTR curve by rank** and calculates predicted traffic gains if rankings improve.")
 
@@ -4849,7 +4785,7 @@ elif page in ["🗺️ Sitemaps", "🗺️ Sitemaps Manager"]:
 elif page == "🪵 Log Reconciliation":
     st.markdown("<div class='section-header'>🪵 Server Log & Crawl Reconciliation (Orphan & Waste Finder)</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Please fetch GSC performance data first.")
+        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
     else:
         st.markdown("""
         Cross-reference your live GSC data with **Screaming Frog Internal Crawl CSV** or **Server Access Logs** to detect:
@@ -4907,7 +4843,7 @@ elif page == "🪵 Log Reconciliation":
 elif page in ["🎯 Search Intent & Regex", "🎯 Intent & Regex"]:
     st.markdown("<div class='section-header'>🎯 Search Intent & RE2 Regex Explorer</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Please fetch data first.")
+        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
     else:
         t1, t2 = st.tabs(["🏷️ Intent Classification", "🧪 Custom RE2 Regex Filter"])
         with t1:
@@ -5033,7 +4969,7 @@ elif page in ["🚨 24/7 Anomaly & Telegram Bot", "🚨 Alerts"]:
         st.markdown("#### ⚡ Real-Time Anomaly Scanner")
         st.caption("Scans current Search Console property data against traffic thresholds to detect urgent drops or quick-win spikes.")
         if df.empty:
-            st.info("👈 Please fetch or load Search Console data from the sidebar first.")
+            st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
         else:
             scan_site = current_site or "My Website"
             if st.button("🔍 Run Instant Anomaly Scan", use_container_width=True, key="btn_run_anomaly_scan"):
@@ -5066,7 +5002,7 @@ elif page in ["🚨 24/7 Anomaly & Telegram Bot", "🚨 Alerts"]:
 elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
     st.markdown("<div class='section-header'>📤 Branded Client PDF & CSV Exports</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Please fetch data first.")
+        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
     else:
         c1, c2 = st.columns(2)
         with c1:
@@ -5105,7 +5041,7 @@ elif page == "⚔️ Keyword Cannibalization":
     """, unsafe_allow_html=True)
 
     if df.empty:
-        st.info("👈 Please fetch Search Console data or load a saved snapshot from the sidebar first.")
+        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
     else:
         matrix_df = get_cannibalization_matrix(df)
         if matrix_df.empty:
@@ -5196,7 +5132,7 @@ elif page == "🧩 Semantic Keyword Clusters":
     """, unsafe_allow_html=True)
 
     if df.empty:
-        st.info("👈 Please fetch Search Console data or load a saved snapshot from the sidebar first.")
+        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
     else:
         with st.spinner("Processing NLP semantic token clusters..."):
             summary_clusters, detailed_clusters = cluster_keywords(df)
@@ -5627,7 +5563,7 @@ elif page == "💼 White-Label Client Portal":
         client_name = st.text_input("Client Organization / Name:", value="Acme Corporation", key="txt_wl_client_name")
 
     if df.empty:
-        st.info("👈 Please fetch Search Console data or load a saved property snapshot from the sidebar first.")
+        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
     else:
         overview_data = get_overview(df)
         winning_kw = get_winning_keywords(df)
