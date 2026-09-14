@@ -7,41 +7,53 @@ import math
 import pandas as pd
 from datetime import datetime, timedelta
 
-# Local session storage for tracking active dashboard viewers
 SESSION_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".active_sessions")
+
+_LAST_HEARTBEAT = {}
+_LAST_COUNT_TIME = 0
+_LAST_COUNT_VAL = 1
 
 def get_dashboard_active_users(session_id: str = None) -> int:
     """
     Registers the current session heartbeat and counts active dashboard users
-    who have interacted within the last 60 seconds.
+    who have interacted within the last 60 seconds with in-memory throttling.
     """
+    global _LAST_HEARTBEAT, _LAST_COUNT_TIME, _LAST_COUNT_VAL
+    now = time.time()
     try:
-        os.makedirs(SESSION_DIR, exist_ok=True)
-        now = time.time()
-        
-        # Touch current user's session
+        # Only write to disk once every 30 seconds per session
         if session_id:
-            safe_id = "".join(c for c in session_id if c.isalnum() or c in "-_")[:32]
-            sess_path = os.path.join(SESSION_DIR, f"sess_{safe_id}.txt")
-            with open(sess_path, "w") as f:
-                f.write(str(now))
-        
-        # Clean expired sessions (> 60s) and count active
+            last_write = _LAST_HEARTBEAT.get(session_id, 0)
+            if now - last_write > 30:
+                _LAST_HEARTBEAT[session_id] = now
+                os.makedirs(SESSION_DIR, exist_ok=True)
+                safe_id = "".join(c for c in session_id if c.isalnum() or c in "-_")[:32]
+                sess_path = os.path.join(SESSION_DIR, f"sess_{safe_id}.txt")
+                with open(sess_path, "w") as f:
+                    f.write(str(now))
+
+        # Only scan disk directory once every 15 seconds
+        if now - _LAST_COUNT_TIME < 15:
+            return _LAST_COUNT_VAL
+
+        _LAST_COUNT_TIME = now
         active_count = 0
-        for fpath in glob.glob(os.path.join(SESSION_DIR, "sess_*.txt")):
-            try:
-                mtime = os.path.getmtime(fpath)
-                if now - mtime > 60:
-                    try:
-                        os.remove(fpath)
-                    except OSError:
-                        pass
-                else:
-                    active_count += 1
-            except Exception:
-                pass
+        if os.path.exists(SESSION_DIR):
+            for fpath in glob.glob(os.path.join(SESSION_DIR, "sess_*.txt")):
+                try:
+                    mtime = os.path.getmtime(fpath)
+                    if now - mtime > 60:
+                        try:
+                            os.remove(fpath)
+                        except OSError:
+                            pass
+                    else:
+                        active_count += 1
+                except Exception:
+                    pass
         
-        return max(1, active_count)
+        _LAST_COUNT_VAL = max(1, active_count)
+        return _LAST_COUNT_VAL
     except Exception:
         return 1
 

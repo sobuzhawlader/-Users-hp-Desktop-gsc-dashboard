@@ -2749,6 +2749,18 @@ def validate_gsc_property_url(url: str, active_property: str) -> tuple:
         return False, str(e)
 
 
+def render_light_chart(fig, **kwargs):
+    """Renders Plotly chart with minimal DOM overhead, disabling heavy toolbars for snappy loading."""
+    cfg = {'displayModeBar': False, 'responsive': True}
+    return st.plotly_chart(fig, use_container_width=True, config=cfg, **kwargs)
+
+
+@st.cache_data(show_spinner=False)
+def _to_csv_cached(df: pd.DataFrame) -> bytes:
+    """Caches CSV serialization so table pagination and filtering do not re-serialize on every rerun."""
+    return df.to_csv(index=False).encode('utf-8')
+
+
 def render_paginated_table(
     df: pd.DataFrame,
     key_prefix: str,
@@ -2796,7 +2808,7 @@ def render_paginated_table(
                 label_visibility="collapsed"
             )
         with c_export:
-            csv_data = df.to_csv(index=False).encode('utf-8')
+            csv_data = _to_csv_cached(df)
             st.download_button(
                 export_label,
                 csv_data,
@@ -2823,7 +2835,7 @@ def render_paginated_table(
                 label_visibility="collapsed"
             )
         with c_export:
-            csv_data = df.to_csv(index=False).encode('utf-8')
+            csv_data = _to_csv_cached(df)
             st.download_button(
                 export_label,
                 csv_data,
@@ -3780,7 +3792,7 @@ if page in ["📈 Performance", "📊 Overview"]:
             elif show_impressions:
                 fig.update_yaxes(title_text="Impressions", secondary_y=True, showgrid=False, rangemode='tozero', tickfont=dict(color='#94a3b8'), title_font=dict(color='#94a3b8'))
 
-        st.plotly_chart(fig, use_container_width=True)
+        render_light_chart(fig)
     else:
         st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
 
@@ -4360,7 +4372,7 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         ),
         showlegend=False
     )
-    st.plotly_chart(fig_rt, use_container_width=True)
+    render_light_chart(fig_rt)
     st.markdown("</div>", unsafe_allow_html=True)
 
     # 5. Two Columns: Active Pages & Traffic Sources vs Locations & Devices
@@ -4708,7 +4720,7 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
                 yaxis=dict(title="Clicks", showgrid=True, gridcolor='rgba(255, 255, 255, 0.05)', rangemode='tozero'),
                 yaxis2=dict(title="Impressions", overlaying='y', side='right', showgrid=False, rangemode='tozero')
             )
-            st.plotly_chart(fig_bar, use_container_width=True)
+            render_light_chart(fig_bar)
 
         with ch_c2:
             st.markdown("<div style='font-size:13.5px; font-weight:600; color:#f8fafc; margin-bottom:6px;'>Traffic Share Distribution (%)</div>", unsafe_allow_html=True)
@@ -4727,7 +4739,7 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
                 height=310,
                 showlegend=True
             )
-            st.plotly_chart(fig_pie, use_container_width=True)
+            render_light_chart(fig_pie)
 
         # Multi-line Daily Trend Chart
         if not df_all_daily.empty:
@@ -4751,7 +4763,7 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
             )
             fig_trend.update_xaxes(gridcolor='rgba(255, 255, 255, 0.05)')
             fig_trend.update_yaxes(title_text="Daily Clicks", showgrid=True, gridcolor='rgba(255, 255, 255, 0.05)')
-            st.plotly_chart(fig_trend, use_container_width=True)
+            render_light_chart(fig_trend)
 
     st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
 
@@ -4986,7 +4998,7 @@ elif page in ["🎯 Top Keywords & Queries", "🔍 Keywords"]:
                         plot_bgcolor='rgba(0,0,0,0)',
                         font=dict(color='#94a3b8', family="'Plus Jakarta Sans', sans-serif")
                     )
-                    st.plotly_chart(fig_b, use_container_width=True)
+                    render_light_chart(fig_b)
                 with c_b2:
                     st.write(f"**Branded Clicks:** {b_metrics['branded_clicks']:,}")
                     st.write(f"**Non-Branded Clicks:** {b_metrics['non_branded_clicks']:,}")
@@ -5143,7 +5155,7 @@ elif page in ["⚡ Core Web Vitals & Quick Wins", "⚡ Quick Wins"]:
                 height=380,
                 margin=dict(l=30, r=20, t=20, b=30)
             )
-            st.plotly_chart(fig_qw, use_container_width=True)
+            render_light_chart(fig_qw)
 
             st.dataframe(
                 qw[['query', 'position', 'impressions', 'clicks', 'ctr', 'Est. Upside', 'Opportunity Gap']].rename(columns={
@@ -5352,7 +5364,7 @@ elif page == "📈 Custom CTR Curve":
                 yaxis=dict(title="Click-Through Rate (%)", gridcolor='rgba(255, 255, 255, 0.05)'),
                 legend=dict(font=dict(color='#94a3b8'))
             )
-            st.plotly_chart(fig_curve, use_container_width=True)
+            render_light_chart(fig_curve)
             st.dataframe(ctr_curve[['serp_rank', 'actual_ctr', 'benchmark_ctr', 'total_clicks', 'total_impressions', 'ctr_performance']], use_container_width=True)
 
             st.markdown("---")
@@ -5487,7 +5499,7 @@ elif page in ["🎯 Search Intent & Regex", "🎯 Intent & Regex"]:
                         plot_bgcolor='rgba(0,0,0,0)',
                         font=dict(color='#94a3b8', family="'Plus Jakarta Sans', sans-serif")
                     )
-                    st.plotly_chart(fig_i, use_container_width=True)
+                    render_light_chart(fig_i)
                 with c2:
                     sel_intent = st.selectbox("Filter Intent", ['All'] + list(intent_df['intent'].unique()))
                     filtered_intent = intent_df if sel_intent == 'All' else intent_df[intent_df['intent'] == sel_intent]
