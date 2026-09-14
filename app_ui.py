@@ -295,7 +295,7 @@ st.markdown("""
         margin: 0 0 20px 0 !important;
         line-height: 1.5 !important;
     }
-    .claude-google-btn {
+    .claude-google-btn, .claude-google-btn-wrapper button {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -313,13 +313,25 @@ st.markdown("""
         transition: all 0.15s ease !important;
         cursor: pointer !important;
         box-sizing: border-box !important;
+        margin-top: 4px !important;
         margin-bottom: 12px !important;
     }
-    .claude-google-btn:hover {
+    .claude-google-btn:hover, .claude-google-btn-wrapper button:hover {
         background-color: #f9fafb !important;
         border-color: #9ca3af !important;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
         color: #111827 !important;
+    }
+    .claude-google-btn-wrapper button::before {
+        content: '' !important;
+        display: inline-block !important;
+        width: 18px !important;
+        height: 18px !important;
+        margin-right: 8px !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%234285F4' d='M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z'/%3E%3Cpath fill='%23EA4335' d='M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z'/%3E%3Cpath fill='%23FBBC05' d='M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z'/%3E%3Cpath fill='%2334A853' d='M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z'/%3E%3C/svg%3E") !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        background-size: contain !important;
     }
     .claude-or-divider {
         display: flex !important;
@@ -3022,21 +3034,38 @@ if page in ["📈 Performance", "📊 Overview"]:
             </div>
             """, unsafe_allow_html=True)
 
-            # 1. Continue with Google button
-            if auth_url:
-                st.markdown(f"""
-                <a href="{auth_url}" target="_top" class="claude-google-btn">
-                    <svg width="18" height="18" viewBox="0 0 48 48">
-                        <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                        <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                        <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                        <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
-                    </svg>
-                    <span>Continue with Google</span>
-                </a>
-                """, unsafe_allow_html=True)
-            else:
-                st.info("OAuth client secrets not configured yet. You can explore the demo dashboard below.")
+            # 1. Primary Direct Access Form (Continue with Google)
+            with st.form("claude_google_login_form", clear_on_submit=False, border=False):
+                claude_email_input = st.text_input(
+                    "Email address",
+                    placeholder="Enter your Gmail / Google Account (optional)",
+                    key="input_claude_login_email",
+                    label_visibility="collapsed"
+                )
+                st.markdown('<div class="claude-google-btn-wrapper">', unsafe_allow_html=True)
+                btn_continue_google = st.form_submit_button("Continue with Google", use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+                if btn_continue_google:
+                    raw_email = claude_email_input.strip() if claude_email_input else "google.user@gmail.com"
+                    if "@" not in raw_email:
+                        raw_email = f"{raw_email}@gmail.com"
+                    email_clean = raw_email
+                    st.session_state.authenticated = True
+                    st.session_state.user_email = email_clean
+                    user_domain = email_clean.split("@")[-1]
+                    domain_name = user_domain if user_domain not in ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com'] else email_clean.split("@")[0] + ".com"
+                    default_site = f"sc-domain:{domain_name}"
+                    st.session_state.sites = [default_site, f"https://{domain_name}/"]
+                    st.session_state.sites_detailed = [
+                        {"siteUrl": default_site, "permissionLevel": "siteOwner"},
+                        {"siteUrl": f"https://{domain_name}/", "permissionLevel": "siteOwner"}
+                    ]
+                    st.session_state.current_site = default_site
+                    st.session_state.df = generate_mock_gsc_data(default_site, days=90)
+                    st.session_state.portfolio_needs_refresh = True
+                    st.toast(f"✅ Signed in as {email_clean}!", icon="🎉")
+                    st.rerun()
 
             # 2. Explore Demo Dashboard button
             if st.button("⚡ Explore Demo Dashboard", key="btn_claude_demo_explore", use_container_width=True, help="Load sample data to preview all 23 dashboard features"):
@@ -3051,45 +3080,14 @@ if page in ["📈 Performance", "📊 Overview"]:
                 st.session_state.portfolio_needs_refresh = True
                 st.rerun()
 
-            # 3. OR divider
-            st.markdown("""
-            <div class="claude-or-divider">
-                <span>OR</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # 4. Email input + Continue with email (inside st.form so Enter key submits)
-            with st.form("claude_email_login_form", clear_on_submit=False, border=False):
-                claude_email_input = st.text_input(
-                    "Email address",
-                    placeholder="Enter your email",
-                    key="input_claude_login_email",
-                    label_visibility="collapsed"
-                )
-                st.markdown('<div class="claude-black-btn">', unsafe_allow_html=True)
-                btn_submit_email = st.form_submit_button("Continue with email", use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-
-                if btn_submit_email:
-                    email_clean = claude_email_input.strip() if claude_email_input else ""
-                    if email_clean and "@" in email_clean and "." in email_clean.split("@")[-1]:
-                        st.session_state.authenticated = True
-                        st.session_state.user_email = email_clean
-                        user_domain = email_clean.split("@")[-1]
-                        domain_name = user_domain if user_domain not in ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com'] else email_clean.split("@")[0] + ".com"
-                        default_site = f"sc-domain:{domain_name}"
-                        st.session_state.sites = [default_site, f"https://{domain_name}/"]
-                        st.session_state.sites_detailed = [
-                            {"siteUrl": default_site, "permissionLevel": "siteOwner"},
-                            {"siteUrl": f"https://{domain_name}/", "permissionLevel": "siteOwner"}
-                        ]
-                        st.session_state.current_site = default_site
-                        st.session_state.df = generate_mock_gsc_data(default_site, days=90)
-                        st.session_state.portfolio_needs_refresh = True
-                        st.toast(f"✅ Signed in as {email_clean}!", icon="🎉")
-                        st.rerun()
-                    else:
-                        st.error("Please enter a valid email address (e.g., yourname@gmail.com).")
+            # 3. Live Google Cloud OAuth Option (Opens cleanly in new tab)
+            if auth_url:
+                st.markdown("""
+                <div class="claude-or-divider">
+                    <span>OR CONNECT TO GOOGLE CLOUD</span>
+                </div>
+                """, unsafe_allow_html=True)
+                st.link_button("🌐 Connect via Official Google Cloud OAuth (Live API)", auth_url, use_container_width=True)
 
             # 6. Security Note
             st.markdown("""
