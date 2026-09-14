@@ -52,78 +52,43 @@ def delete_site_property(service, site_url: str) -> Dict[str, Any]:
 
 import time
 
+import time
+import streamlit as st
+
 _PORTFOLIO_CACHE = {}
 
 def clear_portfolio_cache():
     """Clears the multi-site portfolio in-memory cache."""
     global _PORTFOLIO_CACHE
     _PORTFOLIO_CACHE.clear()
+    try:
+        _fetch_all_sites_performance_cached.clear()
+    except Exception:
+        pass
 
-def fetch_all_sites_performance(
-    service,
-    sites_list: List[Any],
-    days: int = 28,
+@st.cache_data(ttl=3600, show_spinner=False)
+def _fetch_all_sites_performance_cached(
+    _service,
+    sites_tuple: tuple,
     search_type: str = 'web',
-    start_date_str: str = None,
-    end_date_str: str = None,
-    force_refresh: bool = False
+    start_str: str = "",
+    end_str: str = ""
 ) -> Dict[str, Any]:
-    """
-    Fetches aggregated and comparative Search Console performance data
-    across ALL websites/properties in the connected Google Account.
-    Runs API queries concurrently via ThreadPoolExecutor for high-speed parallel loading.
-    Returns:
-    - summary: aggregated clicks, impressions, avg CTR, avg position
-    - df_sites: comparative table ranking each site by clicks
-    - df_daily: daily timeseries for multi-site trend visualization
-    """
     import pandas as pd
     import numpy as np
-    from datetime import datetime, timedelta
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
-    if start_date_str and end_date_str:
-        start_str = start_date_str
-        end_str = end_date_str
-    else:
-        end_date = datetime.now() - timedelta(days=1)
-        start_date = end_date - timedelta(days=days)
-        start_str = start_date.strftime('%Y-%m-%d')
-        end_str = end_date.strftime('%Y-%m-%d')
-
-    site_records = []
-    daily_records = []
-
-    # Filter out empty or placeholder entries and accept dict or str
-    clean_sites = []
-    for s in sites_list:
-        site_str = s.get('siteUrl', '') if isinstance(s, dict) else str(s)
-        if site_str and site_str not in clean_sites and "Custom Property" not in site_str and not site_str.startswith("🧪") and "Consolidated" not in site_str:
-            clean_sites.append(site_str)
-
-    if not clean_sites or not service:
+    clean_sites = list(sites_tuple)
+    if not clean_sites or not _service:
         return {
-            'summary': {
-                'total_clicks': 0,
-                'total_impressions': 0,
-                'avg_ctr': 0.0,
-                'avg_position': 0.0,
-                'total_sites': 0
-            },
+            'summary': {'total_clicks': 0, 'total_impressions': 0, 'avg_ctr': 0.0, 'avg_position': 0.0, 'total_sites': 0},
             'df_sites': pd.DataFrame(),
             'df_daily': pd.DataFrame()
         }
 
-    # Check In-Memory TTL Cache (15 min)
-    creds = getattr(service, '_credentials', None) if service else None
-    cache_token = getattr(creds, 'token', '') or (str(id(service)) if service else 'offline')
-    cache_key = f"{cache_token}_{tuple(sorted(clean_sites))}_{start_str}_{end_str}_{search_type}"
-
-    if not force_refresh and cache_key in _PORTFOLIO_CACHE:
-        cached_ts, cached_res = _PORTFOLIO_CACHE[cache_key]
-        if time.time() - cached_ts < 900:  # 15 minutes TTL
-            return cached_res
-
-    from concurrent.futures import ThreadPoolExecutor, as_completed
+    creds = getattr(_service, '_credentials', None) if _service else None
+    site_records = []
+    daily_records = []
 
     def _fetch_site_worker(site):
         clean_name = site.replace('sc-domain:', '').replace('https://', '').replace('http://', '').strip('/')
@@ -249,6 +214,58 @@ def fetch_all_sites_performance(
         'df_daily': df_daily
     }
 
-    # Save to memory cache
-    _PORTFOLIO_CACHE[cache_key] = (time.time(), res)
     return res
+
+
+def fetch_all_sites_performance(
+    service,
+    sites_list: List[Any],
+    days: int = 28,
+    search_type: str = 'web',
+    start_date_str: str = None,
+    end_date_str: str = None,
+    force_refresh: bool = False
+) -> Dict[str, Any]:
+    """
+    Fetches aggregated and comparative Search Console performance data
+    across ALL websites/properties in the connected Google Account.
+    Cached via @st.cache_data for 3600 seconds with zero-flicker performance.
+    """
+    from datetime import datetime, timedelta
+    import pandas as pd
+
+    if start_date_str and end_date_str:
+        start_str = start_date_str
+        end_str = end_date_str
+    else:
+        end_date = datetime.now() - timedelta(days=1)
+        start_date = end_date - timedelta(days=days)
+        start_str = start_date.strftime('%Y-%m-%d')
+        end_str = end_date.strftime('%Y-%m-%d')
+
+    clean_sites = []
+    for s in sites_list:
+        site_str = s.get('siteUrl', '') if isinstance(s, dict) else str(s)
+        if site_str and site_str not in clean_sites and "Custom Property" not in site_str and not site_str.startswith("🧪") and "Consolidated" not in site_str:
+            clean_sites.append(site_str)
+
+    if not clean_sites or not service:
+        return {
+            'summary': {'total_clicks': 0, 'total_impressions': 0, 'avg_ctr': 0.0, 'avg_position': 0.0, 'total_sites': 0},
+            'df_sites': pd.DataFrame(),
+            'df_daily': pd.DataFrame()
+        }
+
+    if force_refresh:
+        try:
+            _fetch_all_sites_performance_cached.clear()
+        except Exception:
+            pass
+
+    return _fetch_all_sites_performance_cached(
+        _service=service,
+        sites_tuple=tuple(sorted(clean_sites)),
+        search_type=search_type,
+        start_str=start_str,
+        end_str=end_str
+    )

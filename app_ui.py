@@ -173,46 +173,40 @@ st.markdown("""
         height: 2.8rem !important;
     }
 
-    /* Native Streamlit sidebar toggle & reopen buttons MUST always be visible, clickable, and prioritized */
+    /* Native Streamlit sidebar toggle & reopen button explicitly visible with top priority */
     [data-testid="collapsedControl"],
     [data-testid="stSidebarCollapsedControl"],
     [data-testid="stSidebarCollapseButton"],
     [data-testid="stExpandSidebarButton"],
     div[class*="StyledOpenSidebarButton"],
-    div[class*="StyledOpenSidebarButton"] button,
     header[data-testid="stHeader"] button,
     [data-testid="stHeader"] button,
     [data-testid="stToolbar"] button {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
-        pointer-events: auto !important;
-        cursor: pointer !important;
-        z-index: 999999 !important;
-    }
-
-    /* Keep the collapsed sidebar button fixed cleanly on top-left */
-    [data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapsedControl"] {
+        z-index: 9999999 !important;
         position: fixed !important;
         top: 12px !important;
-        left: 14px !important;
-        z-index: 999999 !important;
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+        left: 12px !important;
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
         pointer-events: auto !important;
         cursor: pointer !important;
-        background: transparent !important;
     }
 
-    [data-testid="stExpandSidebarButton"] {
-        z-index: 999999 !important;
+    [data-testid="collapsedControl"] button,
+    [data-testid="stSidebarCollapsedControl"] button,
+    [data-testid="stExpandSidebarButton"],
+    div[class*="StyledOpenSidebarButton"] button {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
         pointer-events: auto !important;
         cursor: pointer !important;
+        color: #1e293b !important;
     }
 
     [data-testid="collapsedControl"] *,
@@ -227,6 +221,41 @@ st.markdown("""
         visibility: visible !important;
         opacity: 1 !important;
         transition: transform 0.3s ease, margin-left 0.3s ease, width 0.3s ease !important;
+    }
+
+    /* Mobile Responsive Scorecard Grid */
+    div[data-testid="stHorizontalBlock"]:has(.gsc-scorecard-card) {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+        gap: 12px !important;
+    }
+    @media (max-width: 768px) {
+        div[data-testid="stHorizontalBlock"]:has(.gsc-scorecard-card) {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+        }
+    }
+    @media (max-width: 480px) {
+        div[data-testid="stHorizontalBlock"]:has(.gsc-scorecard-card) {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
+    /* Table Horizontal Scroll & Sticky First Column */
+    .gsc-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+    .gsc-table-container table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .gsc-table-container th:first-child,
+    .gsc-table-container td:first-child {
+        position: sticky !important;
+        left: 0 !important;
+        z-index: 2 !important;
     }
 
     /* Hide ONLY unwanted Streamlit Cloud shell elements (Fork, GitHub, Status, Manage App, Badges) */
@@ -2459,6 +2488,178 @@ def render_empty_state_action(feature_title: str = "this report"):
                 st.rerun()
 
 
+import math
+from urllib.parse import urlparse
+
+def validate_gsc_property_url(url: str, active_property: str) -> tuple:
+    """
+    Validates that a URL is a well-formed HTTP/HTTPS URL and belongs to the active verified property.
+    Prevents unhandled tracebacks from arbitrary keywords or non-matching domains.
+    """
+    if not url or not isinstance(url, str):
+        return False, "Please enter a valid URL."
+    cleaned = url.strip()
+    if not (cleaned.startswith("http://") or cleaned.startswith("https://")):
+        return False, "URL must begin with http:// or https://"
+    try:
+        parsed = urlparse(cleaned)
+        netloc = parsed.netloc.split(':')[0].lower()
+        if not netloc or '.' not in netloc:
+            return False, "Invalid URL domain."
+
+        prop = (active_property or "").strip()
+        if prop and not prop.startswith("🧪") and "Consolidated" not in prop and "Custom" not in prop:
+            if prop.startswith("sc-domain:"):
+                prop_domain = prop.replace("sc-domain:", "").strip().lower()
+                if netloc != prop_domain and not netloc.endswith("." + prop_domain):
+                    return False, f"URL domain ({netloc}) does not match property ({prop_domain})."
+            elif prop.startswith("http://") or prop.startswith("https://"):
+                prop_netloc = urlparse(prop).netloc.split(':')[0].lower()
+                if netloc != prop_netloc and not netloc.endswith("." + prop_netloc):
+                    return False, f"URL domain ({netloc}) does not match property ({prop_netloc})."
+        return True, ""
+    except Exception as e:
+        return False, str(e)
+
+
+def render_paginated_table(
+    df: pd.DataFrame,
+    key_prefix: str,
+    search_col: str,
+    search_placeholder: str = "Filter rows...",
+    display_cols: Optional[List[str]] = None,
+    rename_cols: Optional[Dict[str, str]] = None,
+    export_filename: str = "gsc_data.csv",
+    export_label: str = "📥 Export (CSV)",
+    default_page_size: int = 50,
+    extra_widget_func = None,
+    extra_filter_func = None
+):
+    """
+    High-performance in-memory paginated table component with real-time text search,
+    rows-per-page dropdown (25, 50, 100), Prev/Next controls, and instant toast CSV export.
+    Prevents browser DOM lag for 1,000+ rows.
+    """
+    if df.empty:
+        st.info("No records available to display.")
+        return
+
+    search_key = f"{key_prefix}_search"
+    page_key = f"{key_prefix}_page"
+    size_key = f"{key_prefix}_page_size"
+    last_search_key = f"{key_prefix}_last_search"
+
+    if extra_widget_func:
+        c_search, c_extra, c_size, c_export = st.columns([3.0, 2.2, 1.2, 1.6])
+        with c_search:
+            search_query = st.text_input(
+                f"Filter {search_col}...",
+                key=search_key,
+                placeholder=search_placeholder,
+                label_visibility="collapsed"
+            )
+        with c_extra:
+            extra_val = extra_widget_func()
+        with c_size:
+            page_size = st.selectbox(
+                "Rows",
+                [25, 50, 100],
+                index=1 if default_page_size == 50 else (0 if default_page_size == 25 else 2),
+                key=size_key,
+                label_visibility="collapsed"
+            )
+        with c_export:
+            csv_data = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                export_label,
+                csv_data,
+                export_filename,
+                "text/csv",
+                use_container_width=True,
+                on_click=lambda: st.toast("✅ Data exported successfully as CSV!", icon="📥")
+            )
+    else:
+        c_search, c_size, c_export = st.columns([3.5, 1.2, 1.6])
+        with c_search:
+            search_query = st.text_input(
+                f"Filter {search_col}...",
+                key=search_key,
+                placeholder=search_placeholder,
+                label_visibility="collapsed"
+            )
+        with c_size:
+            page_size = st.selectbox(
+                "Rows",
+                [25, 50, 100],
+                index=1 if default_page_size == 50 else (0 if default_page_size == 25 else 2),
+                key=size_key,
+                label_visibility="collapsed"
+            )
+        with c_export:
+            csv_data = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                export_label,
+                csv_data,
+                export_filename,
+                "text/csv",
+                use_container_width=True,
+                on_click=lambda: st.toast("✅ Data exported successfully as CSV!", icon="📥")
+            )
+
+    # In-memory filtering
+    filtered_df = df.copy()
+    if extra_filter_func:
+        filtered_df = extra_filter_func(filtered_df)
+
+    if search_query and search_col in filtered_df.columns:
+        filtered_df = filtered_df[filtered_df[search_col].astype(str).str.contains(search_query, case=False, na=False)]
+
+    # Reset page on search change
+    if st.session_state.get(last_search_key) != search_query:
+        st.session_state[page_key] = 1
+        st.session_state[last_search_key] = search_query
+
+    total_rows = len(filtered_df)
+    total_pages = max(1, math.ceil(total_rows / page_size))
+    current_page = st.session_state.get(page_key, 1)
+    if current_page > total_pages:
+        current_page = total_pages
+        st.session_state[page_key] = current_page
+    elif current_page < 1:
+        current_page = 1
+        st.session_state[page_key] = 1
+
+    start_idx = (current_page - 1) * page_size
+    end_idx = min(start_idx + page_size, total_rows)
+    page_df = filtered_df.iloc[start_idx:end_idx]
+
+    cols_to_use = [c for c in display_cols if c in page_df.columns] if display_cols else list(page_df.columns)
+    render_df = page_df[cols_to_use]
+    if rename_cols:
+        render_df = render_df.rename(columns=rename_cols)
+
+    # Render dataframe
+    st.dataframe(render_df, use_container_width=True, height=min(450, 45 + max(len(render_df), 1) * 35))
+
+    # Pagination navigation controls
+    if total_pages > 1 or total_rows > 25:
+        p_prev, p_info, p_next = st.columns([1, 2.5, 1])
+        with p_prev:
+            if st.button("◀ Prev", key=f"{key_prefix}_btn_prev", disabled=(current_page <= 1), use_container_width=True):
+                st.session_state[page_key] = max(1, current_page - 1)
+                st.rerun()
+        with p_info:
+            row_info = f"Showing {start_idx + 1:,}–{end_idx:,} of {total_rows:,} rows (Page {current_page} of {total_pages})" if total_rows > 0 else "0 rows found"
+            st.markdown(
+                f"<div style='text-align:center; font-size:12.5px; color:#94a3b8; padding-top:6px; font-weight:500;'>{row_info}</div>",
+                unsafe_allow_html=True
+            )
+        with p_next:
+            if st.button("Next ▶", key=f"{key_prefix}_btn_next", disabled=(current_page >= total_pages), use_container_width=True):
+                st.session_state[page_key] = min(total_pages, current_page + 1)
+                st.rerun()
+
+
 # ----------------------------------------------------
 # GSC Top Navigation Bar Renderer (Theme Aware)
 # ----------------------------------------------------
@@ -2515,6 +2716,42 @@ def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, act
         f'</div>'
     )
     st.markdown(top_bar_html, unsafe_allow_html=True)
+
+    with st.expander(f"🔍 URL Inspector — {site_label}", expanded=False):
+        c_u1, c_u2 = st.columns([3.8, 1.2])
+        with c_u1:
+            u_input = st.text_input(
+                "Inspect URL in property",
+                placeholder=f"Enter exact URL (e.g. https://yourdomain.com/example-page)",
+                key=f"hdr_url_inspect_input_{site_label}",
+                label_visibility="collapsed"
+            )
+        with c_u2:
+            u_btn = st.button("🔎 Inspect Live", key=f"hdr_url_inspect_btn_{site_label}", type="primary", use_container_width=True)
+
+        if u_btn:
+            is_valid, err_msg = validate_gsc_property_url(u_input, site_label)
+            if not is_valid:
+                st.warning("⚠️ Please enter a valid URL belonging to this verified property (e.g., https://yourdomain.com/example-page).")
+            else:
+                with st.spinner("⏳ Fetching Search Console data... Please wait."):
+                    try:
+                        serv_v1 = st.session_state.get('service_v1')
+                        res = inspect_single_url(serv_v1, site_label, u_input)
+                        st.success(f"✅ Inspection Result for: `{u_input}`")
+                        c_r1, c_r2 = st.columns(2)
+                        with c_r1:
+                            st.markdown(f"**Index Verdict:** `{res.get('verdict')}`")
+                            st.markdown(f"**Coverage State:** {res.get('coverage_state')}")
+                            st.markdown(f"**Indexing Allowed:** `{res.get('indexing_state')}`")
+                            st.markdown(f"**Robots Directives:** `{res.get('robots_txt_state')}`")
+                        with c_r2:
+                            st.markdown(f"**User Canonical:** `{res.get('user_canonical')}`")
+                            st.markdown(f"**Google Canonical:** `{res.get('google_canonical')}`")
+                            st.markdown(f"**Canonical Status:** **{res.get('canonical_mismatch')}**")
+                            st.markdown(f"**Mobile Usability:** `{res.get('mobile_verdict')}`")
+                    except Exception as ex:
+                        st.error(f"URL inspection error: {ex}")
 
 # ----------------------------------------------------
 # 1. Performance Overview
@@ -2663,9 +2900,23 @@ if page in ["📈 Performance", "📊 Overview"]:
         if is_portfolio_mode and st.session_state.get('portfolio_data'):
             p_df_export = st.session_state.portfolio_data.get('df_sites', pd.DataFrame())
             if not p_df_export.empty:
-                st.download_button("📥 EXPORT", p_df_export.to_csv(index=False), "gsc_portfolio_export.csv", "text/csv", use_container_width=True)
+                st.download_button(
+                    "📥 EXPORT",
+                    p_df_export.to_csv(index=False),
+                    "gsc_portfolio_export.csv",
+                    "text/csv",
+                    use_container_width=True,
+                    on_click=lambda: st.toast("✅ Data exported successfully as CSV!", icon="📥")
+                )
         elif not df.empty:
-            st.download_button("📥 EXPORT", df.to_csv(index=False), "gsc_performance_export.csv", "text/csv", use_container_width=True)
+            st.download_button(
+                "📥 EXPORT",
+                df.to_csv(index=False),
+                "gsc_performance_export.csv",
+                "text/csv",
+                use_container_width=True,
+                on_click=lambda: st.toast("✅ Data exported successfully as CSV!", icon="📥")
+            )
 
     # Compact Grouped Filter Controls
     f_col1, f_col2, f_col3 = st.columns([1.5, 1.8, 1.3])
@@ -2782,7 +3033,7 @@ if page in ["📈 Performance", "📊 Overview"]:
     if service and effective_site and not effective_site.startswith("🧪") and "Consolidated" not in effective_site:
         if st.session_state.get('_last_active_perf_filter') != filter_sig:
             req_start_dt = comp_start_dt if is_compare_mode else curr_start_dt
-            with st.spinner(f"⚡ Fetching Search Console {search_type_opt} data for {period_label}..."):
+            with st.spinner("⏳ Fetching Search Console data... Please wait."):
                 try:
                     fetched_live = fetch_gsc_data(
                         service,
@@ -3324,12 +3575,6 @@ if page in ["📈 Performance", "📊 Overview"]:
 
     with gsc_t1:
         if not df_active_tab.empty and 'query' in df_active_tab.columns:
-            q_col1, q_col_qw, q_col2 = st.columns([3.0, 2.2, 1.4])
-            with q_col1:
-                q_search = st.text_input("Filter queries...", key="gsc_q_filter", placeholder="Filter by query...", label_visibility="collapsed")
-            with q_col_qw:
-                filter_striking = st.checkbox("⚡ Striking Distance (Pos 4-20)", value=False, key="chk_striking_distance", help="Filter queries ranking between position 4.0 and 20.0 with high impressions — prime targets for Page 1 optimization")
-            
             q_tmp = df_active_tab.copy()
             if 'position' in q_tmp.columns and 'impressions' in q_tmp.columns:
                 q_tmp['_pos_imp'] = q_tmp['position'] * q_tmp['impressions']
@@ -3352,8 +3597,11 @@ if page in ["📈 Performance", "📊 Overview"]:
                 q_df['position'] = 0.0
             q_df['ctr'] = np.where(q_df['impressions'] > 0, (q_df['clicks'] / q_df['impressions'] * 100).round(2), 0.0)
 
+            def striking_filter_widget():
+                return st.checkbox("⚡ Striking Distance (Pos 4-20)", value=False, key="chk_striking_distance", help="Filter queries ranking between position 4.0 and 20.0 with high impressions — prime targets for Page 1 optimization")
+
+            filter_striking = st.session_state.get("chk_striking_distance", False)
             if filter_striking:
-                # Positions 4.0 to 20.0 with high impressions
                 min_imp_threshold = max(20, int(q_df['impressions'].quantile(0.25))) if len(q_df) > 10 else 10
                 q_df = q_df[
                     (q_df['position'] >= 4.0) & 
@@ -3361,7 +3609,6 @@ if page in ["📈 Performance", "📊 Overview"]:
                     (q_df['impressions'] >= min_imp_threshold)
                 ].sort_values('impressions', ascending=False)
                 
-                # Estimated CTR upside if promoted to Top 3
                 q_df['Est. Upside (Top 3 Jump)'] = np.where(
                     q_df['position'] <= 10.0,
                     "+180% to +320% CTR",
@@ -3383,14 +3630,6 @@ if page in ["📈 Performance", "📊 Overview"]:
             else:
                 q_df = q_df.sort_values('clicks', ascending=False)
 
-            if q_search:
-                q_df = q_df[q_df['query'].str.contains(q_search, case=False, na=False)]
-
-            with q_col2:
-                q_csv = q_df.to_csv(index=False).encode('utf-8')
-                export_label = "📥 Export Striking (CSV)" if filter_striking else "📥 Export Queries (CSV)"
-                st.download_button(export_label, q_csv, "gsc_striking_distance.csv" if filter_striking else "gsc_queries.csv", "text/csv", use_container_width=True)
-
             disp_cols = ['query', 'clicks', 'impressions', 'ctr', 'position']
             rename_map = {
                 'query': 'Top queries', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
@@ -3399,9 +3638,16 @@ if page in ["📈 Performance", "📊 Overview"]:
                 disp_cols.append('Est. Upside (Top 3 Jump)')
                 rename_map['Est. Upside (Top 3 Jump)'] = 'Est. Upside (Top 3 Jump)'
 
-            st.dataframe(
-                q_df[disp_cols].rename(columns=rename_map),
-                use_container_width=True, height=420
+            render_paginated_table(
+                df=q_df,
+                key_prefix="gsc_perf_queries",
+                search_col="query",
+                search_placeholder="🔍 Filter queries instantly...",
+                display_cols=disp_cols,
+                rename_cols=rename_map,
+                export_filename="gsc_striking_distance.csv" if filter_striking else "gsc_queries.csv",
+                export_label="📥 Export Striking (CSV)" if filter_striking else "📥 Export Queries (CSV)",
+                extra_widget_func=striking_filter_widget
             )
         elif not df_active_tab.empty and 'query' not in df_active_tab.columns:
             st.info("💡 **Query breakdown is not available for this report type** (e.g. Google Discover and Google News do not disclose search query keywords per Google Search Console API specifications). Please switch to the **PAGES** or **COUNTRIES** tab.")
@@ -3436,9 +3682,6 @@ if page in ["📈 Performance", "📊 Overview"]:
 
     with gsc_t2:
         if not df_active_tab.empty and 'page' in df_active_tab.columns:
-            p_col1, p_col2 = st.columns([3, 1])
-            with p_col1:
-                p_search = st.text_input("Filter pages...", key="gsc_p_filter", placeholder="Filter by URL...", label_visibility="collapsed")
             p_tmp = df_active_tab.copy()
             if 'position' in p_tmp.columns and 'impressions' in p_tmp.columns:
                 p_tmp['_pos_imp'] = p_tmp['position'] * p_tmp['impressions']
@@ -3461,23 +3704,22 @@ if page in ["📈 Performance", "📊 Overview"]:
                 p_df['position'] = 0.0
             p_df['ctr'] = np.where(p_df['impressions'] > 0, (p_df['clicks'] / p_df['impressions'] * 100).round(2), 0.0)
             p_df = p_df.sort_values('clicks', ascending=False)
-            if p_search:
-                p_df = p_df[p_df['page'].str.contains(p_search, case=False, na=False)]
-            with p_col2:
-                p_csv = p_df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Export Pages (CSV)", p_csv, "gsc_pages.csv", "text/csv", use_container_width=True)
-            st.dataframe(
-                p_df[['page', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                    'page': 'Top pages', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
-                }),
-                use_container_width=True, height=420
+
+            render_paginated_table(
+                df=p_df,
+                key_prefix="gsc_perf_pages",
+                search_col="page",
+                search_placeholder="🔍 Filter pages by URL...",
+                display_cols=['page', 'clicks', 'impressions', 'ctr', 'position'],
+                rename_cols={'page': 'Top pages', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'},
+                export_filename="gsc_pages.csv",
+                export_label="📥 Export Pages (CSV)"
             )
         else:
             st.info("No page breakdown data available for this selection.")
 
     with gsc_t3:
         if not df_active_tab.empty and 'country' in df_active_tab.columns:
-            c_col1, c_col2 = st.columns([3, 1])
             c_tmp = df_active_tab.copy()
             if 'position' in c_tmp.columns and 'impressions' in c_tmp.columns:
                 c_tmp['_pos_imp'] = c_tmp['position'] * c_tmp['impressions']
@@ -3500,21 +3742,22 @@ if page in ["📈 Performance", "📊 Overview"]:
                 c_df['position'] = 0.0
             c_df['ctr'] = np.where(c_df['impressions'] > 0, (c_df['clicks'] / c_df['impressions'] * 100).round(2), 0.0)
             c_df = c_df.sort_values('clicks', ascending=False)
-            with c_col2:
-                c_csv = c_df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Export Countries (CSV)", c_csv, "gsc_countries.csv", "text/csv", use_container_width=True)
-            st.dataframe(
-                c_df[['country', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                    'country': 'Country', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
-                }),
-                use_container_width=True, height=420
+
+            render_paginated_table(
+                df=c_df,
+                key_prefix="gsc_perf_countries",
+                search_col="country",
+                search_placeholder="🔍 Filter country code...",
+                display_cols=['country', 'clicks', 'impressions', 'ctr', 'position'],
+                rename_cols={'country': 'Country', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'},
+                export_filename="gsc_countries.csv",
+                export_label="📥 Export Countries (CSV)"
             )
         else:
             st.info("No country breakdown data available for this selection.")
 
     with gsc_t4:
         if not df_active_tab.empty and 'device' in df_active_tab.columns:
-            d_col1, d_col2 = st.columns([3, 1])
             d_tmp = df_active_tab.copy()
             if 'position' in d_tmp.columns and 'impressions' in d_tmp.columns:
                 d_tmp['_pos_imp'] = d_tmp['position'] * d_tmp['impressions']
@@ -3537,14 +3780,16 @@ if page in ["📈 Performance", "📊 Overview"]:
                 d_df['position'] = 0.0
             d_df['ctr'] = np.where(d_df['impressions'] > 0, (d_df['clicks'] / d_df['impressions'] * 100).round(2), 0.0)
             d_df = d_df.sort_values('clicks', ascending=False)
-            with d_col2:
-                d_csv = d_df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Export Devices (CSV)", d_csv, "gsc_devices.csv", "text/csv", use_container_width=True)
-            st.dataframe(
-                d_df[['device', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                    'device': 'Device', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
-                }),
-                use_container_width=True, height=250
+
+            render_paginated_table(
+                df=d_df,
+                key_prefix="gsc_perf_devices",
+                search_col="device",
+                search_placeholder="🔍 Filter device...",
+                display_cols=['device', 'clicks', 'impressions', 'ctr', 'position'],
+                rename_cols={'device': 'Device', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'},
+                export_filename="gsc_devices.csv",
+                export_label="📥 Export Devices (CSV)"
             )
         else:
             st.info("No device breakdown data available for this selection.")
@@ -4645,8 +4890,12 @@ elif page in ["🔍 URL inspection & Schema", "🔍 URL inspection", "🔬 URL &
         target_url = st.text_input("Enter exact URL to inspect:", sample_url)
 
         if st.button("🔎 Inspect Live URL", use_container_width=True):
-            with st.spinner("Inspecting URL metadata and index state..."):
-                res = inspect_single_url(service_v1, effective_site, target_url)
+            is_valid, err_msg = validate_gsc_property_url(target_url, effective_site)
+            if not is_valid:
+                st.warning("⚠️ Please enter a valid URL belonging to this verified property (e.g., https://yourdomain.com/example-page).")
+            else:
+                with st.spinner("⏳ Fetching Search Console data... Please wait."):
+                    res = inspect_single_url(service_v1, effective_site, target_url)
                 c_res1, c_res2 = st.columns(2)
                 with c_res1:
                     st.markdown(f"**Index Verdict:** `{res.get('verdict')}`")

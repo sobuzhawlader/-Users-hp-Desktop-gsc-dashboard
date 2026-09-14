@@ -3,6 +3,7 @@ import time
 import json
 import requests
 import pandas as pd
+import streamlit as st
 from typing import Dict, Any, List
 from googleapiclient.errors import HttpError
 
@@ -131,13 +132,10 @@ def _inspect_via_live_crawler(site_url: str, inspection_url: str) -> Dict[str, A
         }
 
 
-def inspect_single_url(service_v1, site_url: str, inspection_url: str, lang: str = "en") -> Dict[str, Any]:
-    """
-    Executes an inspection request:
-    - If service_v1 is available, queries the official Google Search Console URL Inspection API.
-    - If service_v1 is None or encounters API failure, falls back to direct live HTTP crawling.
-    """
-    if not service_v1:
+@st.cache_data(ttl=1800, show_spinner=False)
+def _inspect_single_url_cached(_service_v1, site_url: str, inspection_url: str, lang: str = "en") -> Dict[str, Any]:
+    """Internal cached executor for GSC URL inspection."""
+    if not _service_v1:
         return _inspect_via_live_crawler(site_url, inspection_url)
 
     payload = {
@@ -149,7 +147,7 @@ def inspect_single_url(service_v1, site_url: str, inspection_url: str, lang: str
     retries = 2
     for attempt in range(retries):
         try:
-            response = service_v1.urlInspection().index().inspect(body=payload).execute()
+            response = _service_v1.urlInspection().index().inspect(body=payload).execute()
             result = response.get('inspectionResult', {})
             idx_res = result.get('indexStatusResult', {})
             mobile_res = result.get('mobileUsabilityResult', {})
@@ -168,9 +166,9 @@ def inspect_single_url(service_v1, site_url: str, inspection_url: str, lang: str
             # Canonical Mismatch
             is_mismatch = False
             if user_canon and google_canon:
-                norm_user = user_canon.strip().rstrip('/')
-                norm_google = google_canon.strip().rstrip('/')
-                if norm_user != norm_google:
+                norm_u = user_canon.rstrip('/').lower()
+                norm_g = google_canon.rstrip('/').lower()
+                if norm_u != norm_g:
                     is_mismatch = True
 
             return {
@@ -198,6 +196,23 @@ def inspect_single_url(service_v1, site_url: str, inspection_url: str, lang: str
             return _inspect_via_live_crawler(site_url, inspection_url)
 
     return _inspect_via_live_crawler(site_url, inspection_url)
+
+
+def inspect_single_url(service_v1, site_url: str, inspection_url: str, lang: str = "en") -> Dict[str, Any]:
+    """
+    Executes an inspection request:
+    - If service_v1 is available, queries the official Google Search Console URL Inspection API (cached 1800s).
+    - If service_v1 is None or encounters API failure, falls back to direct live HTTP crawling.
+    """
+    if not service_v1:
+        return _inspect_via_live_crawler(site_url, inspection_url)
+
+    return _inspect_single_url_cached(
+        _service_v1=service_v1,
+        site_url=site_url,
+        inspection_url=inspection_url,
+        lang=lang
+    )
 
 
 def inspect_bulk_urls(service_v1, site_url: str, urls_list: List[str], progress_callback=None) -> pd.DataFrame:
