@@ -5671,3 +5671,5 @@ elif page == "💼 White-Label Client Portal":
                     st.success("✅ Executive White-Label Report compiled successfully!")
                 except Exception as ex:
                     st.error(f"PDF compilation error: {ex}")
+else:
+    st.info(f"👉 Please select a feature from the sidebar navigation to view its report. (Active: {page})")
