@@ -178,46 +178,53 @@ if is_dark:
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label {
         background-color: transparent !important;
         border-radius: 8px !important;
-        padding: 7px 12px !important;
-        margin: 0 !important;
+        padding: 8px 12px !important;
+        margin: 1px 0 !important;
         cursor: pointer !important;
         transition: all 0.15s ease-in-out !important;
         display: flex !important;
         align-items: center !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label * {
+        opacity: 1 !important;
+        visibility: visible !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
-        background-color: rgba(56, 189, 248, 0.08) !important;
+        background-color: rgba(56, 189, 248, 0.1) !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] {
-        background: linear-gradient(90deg, rgba(56, 189, 248, 0.2) 0%, rgba(37, 99, 235, 0.05) 100%) !important;
-        border-left: 3px solid #38bdf8 !important;
+        background: linear-gradient(90deg, rgba(56, 189, 248, 0.22) 0%, rgba(37, 99, 235, 0.08) 100%) !important;
+        border-left: 4px solid #38bdf8 !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label span,
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-testid="stMarkdownContainer"] p {
-        color: #94a3b8 !important;
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label div {
+        color: #f1f5f9 !important;
         font-size: 13.5px !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
+        line-height: 1.4 !important;
         margin: 0 !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover span {
-        color: #f8fafc !important;
+        color: #38bdf8 !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] p,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] span,
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] [data-testid="stMarkdownContainer"] p {
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] div {
         color: #38bdf8 !important;
         font-weight: 700 !important;
     }
+    /* Hide the circular radio input safely without touching labels */
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] div[data-baseweb="radio"],
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label > div:not([data-testid="stMarkdownContainer"]) {
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
         display: none !important;
         width: 0 !important;
         height: 0 !important;
         opacity: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        position: absolute !important;
     }
 
     /* Main Page Filter Radio Buttons in Dark Mode */
@@ -675,7 +682,7 @@ else:
         border-right: 1px solid #dadce0 !important;
     }
     
-    /* Authentic Google Search Console Flat Sidebar Menu */
+    /* Authentic Google Search Console Flat Sidebar Menu - High Contrast & Crisp */
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
         gap: 1px !important;
     }
@@ -683,49 +690,55 @@ else:
         background-color: transparent !important;
         border: none !important;
         border-radius: 0 20px 20px 0 !important;
-        padding: 8px 12px 8px 14px !important;
+        padding: 9px 12px 9px 14px !important;
         margin: 1px 0 !important;
         cursor: pointer !important;
         transition: background-color 0.12s ease !important;
         display: flex !important;
         align-items: center !important;
         box-shadow: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label * {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label span,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label div {
+        color: #202124 !important; /* Authentic Google Search Console high-contrast text */
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        line-height: 1.4 !important;
+        margin: 0 !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
         background-color: #f1f3f4 !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover span {
+        color: #1a73e8 !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] {
         background: #e8f0fe !important;
         border-left: 4px solid #1a73e8 !important;
         border-radius: 0 20px 20px 0 !important;
     }
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label span,
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-testid="stMarkdownContainer"] p {
-        color: #3c4043 !important;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-        margin: 0 !important;
-    }
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p,
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover span {
-        color: #202124 !important;
-    }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] p,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] span,
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] [data-testid="stMarkdownContainer"] p {
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] div {
         color: #1a73e8 !important;
-        font-weight: 600 !important;
+        font-weight: 700 !important;
     }
-    /* 100% Bulletproof removal of radio circle indicator */
+    /* Hide the circular radio input safely without touching labels or text */
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] div[data-baseweb="radio"],
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label > div:not([data-testid="stMarkdownContainer"]) {
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
         display: none !important;
         width: 0 !important;
         height: 0 !important;
         opacity: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        position: absolute !important;
     }
 
     /* Main Page Filter Radio Buttons (Search Type & Date Range) */
@@ -1622,7 +1635,20 @@ with st.sidebar:
         """, unsafe_allow_html=True)
 
         if auth_url:
-            st.link_button("🌐 Sign in with Google (Load All 20+ Sites)", auth_url, type="primary", use_container_width=True)
+            st.link_button("🌐 Sign in with Google (Load All Sites)", auth_url, type="primary", use_container_width=True)
+
+        if st.button("🧪 Explore All Features (Demo Mode)", key="side_btn_demo_explore", use_container_width=True, help="Load 90-day search data to explore and test all 23 dashboard features without signing in"):
+            demo_site = "sc-domain:example-enterprise.com"
+            st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
+            st.session_state.sites_detailed = [
+                {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
+                {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
+            ]
+            st.session_state.current_site = demo_site
+            st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+            st.session_state.portfolio_needs_refresh = True
+            st.success("Loaded demo dataset! Exploring all 23 features...")
+            st.rerun()
 
         with st.expander("🔑 Direct Auth / Paste OAuth Code", expanded=False):
             st.caption("Authenticate locally or paste the code returned by Google:")
@@ -2133,10 +2159,24 @@ if page in ["📈 Performance", "📊 Overview"]:
             </div>
         </div>
         """, unsafe_allow_html=True)
-        if auth_url:
-            c1, c2, c3 = st.columns([1, 2, 1])
-            with c2:
-                st.link_button("🌐 Sign in with Google (Load All Properties)", auth_url, type="primary", use_container_width=True)
+        c_l1, c_l2 = st.columns(2)
+        with c_l1:
+            if auth_url:
+                st.link_button("🌐 Sign in with Google (All Sites)", auth_url, type="primary", use_container_width=True)
+            else:
+                st.button("🌐 Sign in with Google", disabled=True, use_container_width=True)
+        with c_l2:
+            if st.button("🧪 Explore 23 Features with Demo Data", key="btn_login_demo_explore", type="secondary", use_container_width=True, help="Load realistic 90-day search telemetry to explore and test all 23 features without signing in"):
+                demo_site = "sc-domain:example-enterprise.com"
+                st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
+                st.session_state.sites_detailed = [
+                    {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
+                    {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
+                ]
+                st.session_state.current_site = demo_site
+                st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+                st.session_state.portfolio_needs_refresh = True
+                st.rerun()
         st.stop()
 
     # 2. GSC Performance Header
