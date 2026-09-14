@@ -28,23 +28,52 @@ def get_overview(df):
         'avg_position': avg_pos
     }
 
-def get_winning_keywords(df):
-    """Aggregates queries across dates/pages and returns top ranking performers."""
-    if df.empty or 'query' not in df.columns:
+def _weighted_group(df, group_col):
+    """Aggregates df by group_col with true impression-weighted position and sums of clicks/impressions."""
+    if df.empty or group_col not in df.columns:
         return pd.DataFrame()
+    
+    df_c = df.copy()
+    has_pos = 'position' in df_c.columns and 'impressions' in df_c.columns
+    if has_pos:
+        df_c['_pos_imp'] = df_c['position'] * df_c['impressions']
+        agg_dict = {
+            'clicks': ('clicks', 'sum'),
+            'impressions': ('impressions', 'sum'),
+            '_pos_imp': ('_pos_imp', 'sum')
+        }
+    else:
+        agg_dict = {
+            'clicks': ('clicks', 'sum'),
+            'impressions': ('impressions', 'sum')
+        }
 
-    grouped = df.groupby('query').agg(
-        clicks=('clicks', 'sum'),
-        impressions=('impressions', 'sum'),
-        position=('position', 'mean')
-    ).reset_index()
-
+    grouped = df_c.groupby(group_col).agg(**agg_dict).reset_index()
     grouped['ctr'] = np.where(
         grouped['impressions'] > 0,
         (grouped['clicks'] / grouped['impressions'] * 100).round(2),
         0.0
     )
-    grouped['position'] = grouped['position'].round(1)
+    if has_pos:
+        grouped['position'] = np.where(
+            grouped['impressions'] > 0,
+            (grouped['_pos_imp'] / grouped['impressions']).round(1),
+            0.0
+        )
+        grouped.drop(columns=['_pos_imp'], inplace=True)
+    else:
+        grouped['position'] = 0.0
+
+    return grouped
+
+def get_winning_keywords(df):
+    """Aggregates queries across dates/pages and returns top ranking performers."""
+    if df.empty or 'query' not in df.columns:
+        return pd.DataFrame()
+
+    grouped = _weighted_group(df, 'query')
+    if grouped.empty:
+        return pd.DataFrame()
 
     return grouped[
         (grouped['position'] <= 10.4) & 
@@ -56,18 +85,9 @@ def get_quick_wins(df):
     if df.empty or 'query' not in df.columns:
         return pd.DataFrame()
 
-    grouped = df.groupby('query').agg(
-        clicks=('clicks', 'sum'),
-        impressions=('impressions', 'sum'),
-        position=('position', 'mean')
-    ).reset_index()
-
-    grouped['ctr'] = np.where(
-        grouped['impressions'] > 0,
-        (grouped['clicks'] / grouped['impressions'] * 100).round(2),
-        0.0
-    )
-    grouped['position'] = grouped['position'].round(1)
+    grouped = _weighted_group(df, 'query')
+    if grouped.empty:
+        return pd.DataFrame()
 
     return grouped[
         (grouped['position'] >= 10.5) & 
@@ -210,15 +230,11 @@ def get_long_tail_keywords(df):
     if df.empty or 'query' not in df.columns:
         return pd.DataFrame()
 
-    grouped = df.groupby('query').agg(
-        clicks=('clicks', 'sum'),
-        impressions=('impressions', 'sum'),
-        position=('position', 'mean')
-    ).reset_index()
+    grouped = _weighted_group(df, 'query')
+    if grouped.empty:
+        return pd.DataFrame()
 
     grouped['word_count'] = grouped['query'].astype(str).str.split().str.len()
-    grouped['position'] = grouped['position'].round(1)
-
     return grouped[grouped['word_count'] >= 4].sort_values('impressions', ascending=False).head(50)
 
 def get_zero_click_keywords(df):
@@ -226,13 +242,9 @@ def get_zero_click_keywords(df):
     if df.empty or 'query' not in df.columns:
         return pd.DataFrame()
 
-    grouped = df.groupby('query').agg(
-        clicks=('clicks', 'sum'),
-        impressions=('impressions', 'sum'),
-        position=('position', 'mean')
-    ).reset_index()
-
-    grouped['position'] = grouped['position'].round(1)
+    grouped = _weighted_group(df, 'query')
+    if grouped.empty:
+        return pd.DataFrame()
 
     return grouped[
         (grouped['clicks'] == 0) & 
@@ -314,11 +326,10 @@ def get_brand_vs_nonbrand(df, brand_keywords=None):
 def get_device_breakdown(df):
     if df.empty or 'device' not in df.columns:
         return pd.DataFrame()
-    return df.groupby('device').agg(
-        clicks=('clicks', 'sum'),
-        impressions=('impressions', 'sum'),
-        avg_position=('position', 'mean')
-    ).reset_index()
+    grouped = _weighted_group(df, 'device')
+    if not grouped.empty and 'position' in grouped.columns:
+        grouped.rename(columns={'position': 'avg_position'}, inplace=True)
+    return grouped
 
 def get_country_breakdown(df):
     if df.empty or 'country' not in df.columns:
@@ -333,18 +344,9 @@ def get_top_pages(df):
     if df.empty or 'page' not in df.columns:
         return pd.DataFrame()
 
-    grouped = df.groupby('page').agg(
-        clicks=('clicks', 'sum'),
-        impressions=('impressions', 'sum'),
-        position=('position', 'mean')
-    ).reset_index()
-
-    grouped['ctr'] = np.where(
-        grouped['impressions'] > 0,
-        (grouped['clicks'] / grouped['impressions'] * 100).round(2),
-        0.0
-    )
-    grouped['position'] = grouped['position'].round(1)
+    grouped = _weighted_group(df, 'page')
+    if grouped.empty:
+        return pd.DataFrame()
 
     return grouped.sort_values('clicks', ascending=False).head(50)
 
@@ -356,18 +358,9 @@ def get_high_impression_low_ctr(df):
     overview = get_overview(df)
     site_avg_ctr = overview['avg_ctr']
 
-    grouped = df.groupby('query').agg(
-        clicks=('clicks', 'sum'),
-        impressions=('impressions', 'sum'),
-        position=('position', 'mean')
-    ).reset_index()
-
-    grouped['ctr'] = np.where(
-        grouped['impressions'] > 0,
-        (grouped['clicks'] / grouped['impressions'] * 100).round(2),
-        0.0
-    )
-    grouped['position'] = grouped['position'].round(1)
+    grouped = _weighted_group(df, 'query')
+    if grouped.empty:
+        return pd.DataFrame()
 
     return grouped[
         (grouped['impressions'] >= 200) & 

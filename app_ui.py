@@ -2775,7 +2775,10 @@ if page in ["📈 Performance", "📊 Overview"]:
             total_clicks = int(df_curr_slice['clicks'].sum()) if 'clicks' in df_curr_slice.columns else 0
             total_imps = int(df_curr_slice['impressions'].sum()) if 'impressions' in df_curr_slice.columns else 0
             avg_ctr = round(total_clicks / total_imps * 100, 1) if total_imps > 0 else 0.0
-            avg_pos = round(df_curr_slice['position'].mean(), 1) if 'position' in df_curr_slice.columns else 0.0
+            if 'position' in df_curr_slice.columns and total_imps > 0:
+                avg_pos = round((df_curr_slice['position'] * df_curr_slice['impressions']).sum() / total_imps, 1)
+            else:
+                avg_pos = round(df_curr_slice['position'].mean(), 1) if 'position' in df_curr_slice.columns else 0.0
         else:
             metrics = st.session_state.get('gsc_metrics', {})
             total_clicks = metrics.get('total_clicks', 0)
@@ -2787,7 +2790,10 @@ if page in ["📈 Performance", "📊 Overview"]:
             comp_clicks = int(df_comp_slice['clicks'].sum()) if 'clicks' in df_comp_slice.columns else 0
             comp_imps = int(df_comp_slice['impressions'].sum()) if 'impressions' in df_comp_slice.columns else 0
             comp_ctr = round(comp_clicks / comp_imps * 100, 1) if comp_imps > 0 else 0.0
-            comp_pos = round(df_comp_slice['position'].mean(), 1) if 'position' in df_comp_slice.columns else 0.0
+            if 'position' in df_comp_slice.columns and comp_imps > 0:
+                comp_pos = round((df_comp_slice['position'] * df_comp_slice['impressions']).sum() / comp_imps, 1)
+            else:
+                comp_pos = round(df_comp_slice['position'].mean(), 1) if 'position' in df_comp_slice.columns else 0.0
         else:
             comp_clicks = max(0, int(total_clicks * 0.75))
             comp_imps = max(0, int(total_imps * 0.82))
@@ -3045,31 +3051,66 @@ if page in ["📈 Performance", "📊 Overview"]:
     df_daily_comp = st.session_state.get('df_daily_comp', pd.DataFrame())
 
     if is_portfolio_mode and not portfolio_obj.get('df_daily', pd.DataFrame()).empty:
-        df_all_daily = portfolio_obj['df_daily']
-        agg_map = {'clicks': ('clicks', 'sum'), 'impressions': ('impressions', 'sum')}
-        if 'position' in df_all_daily.columns:
-            agg_map['position'] = ('position', 'mean')
-        df_daily_curr = df_all_daily.groupby('date').agg(**agg_map).reset_index().sort_values('date')
+        df_all_daily = portfolio_obj['df_daily'].copy()
+        if 'position' in df_all_daily.columns and 'impressions' in df_all_daily.columns:
+            df_all_daily['_pos_imp'] = df_all_daily['position'] * df_all_daily['impressions']
+            df_daily_curr = df_all_daily.groupby('date').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                _pos_imp=('_pos_imp', 'sum')
+            ).reset_index().sort_values('date')
+            df_daily_curr['position'] = np.where(
+                df_daily_curr['impressions'] > 0,
+                (df_daily_curr['_pos_imp'] / df_daily_curr['impressions']).round(1),
+                0.0
+            )
+            df_daily_curr.drop(columns=['_pos_imp'], inplace=True)
+        else:
+            agg_map = {'clicks': ('clicks', 'sum'), 'impressions': ('impressions', 'sum')}
+            df_daily_curr = df_all_daily.groupby('date').agg(**agg_map).reset_index().sort_values('date')
         df_daily_curr['ctr'] = np.where(df_daily_curr['impressions'] > 0, (df_daily_curr['clicks'] / df_daily_curr['impressions'] * 100).round(2), 0.0)
-        if 'position' in df_daily_curr.columns:
-            df_daily_curr['position'] = df_daily_curr['position'].round(1)
         df_daily_curr['day_index'] = list(range(len(df_daily_curr)))
         df_daily_comp = pd.DataFrame()
     elif not df_curr_slice.empty and 'date' in df_curr_slice.columns:
-        agg_map = {'clicks': ('clicks', 'sum'), 'impressions': ('impressions', 'sum')}
-        if 'position' in df_curr_slice.columns:
-            agg_map['position'] = ('position', 'mean')
-        df_daily_curr = df_curr_slice.groupby('date').agg(**agg_map).reset_index().sort_values('date')
+        df_curr_tmp = df_curr_slice.copy()
+        if 'position' in df_curr_tmp.columns and 'impressions' in df_curr_tmp.columns:
+            df_curr_tmp['_pos_imp'] = df_curr_tmp['position'] * df_curr_tmp['impressions']
+            df_daily_curr = df_curr_tmp.groupby('date').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                _pos_imp=('_pos_imp', 'sum')
+            ).reset_index().sort_values('date')
+            df_daily_curr['position'] = np.where(
+                df_daily_curr['impressions'] > 0,
+                (df_daily_curr['_pos_imp'] / df_daily_curr['impressions']).round(1),
+                0.0
+            )
+            df_daily_curr.drop(columns=['_pos_imp'], inplace=True)
+        else:
+            agg_map = {'clicks': ('clicks', 'sum'), 'impressions': ('impressions', 'sum')}
+            df_daily_curr = df_curr_tmp.groupby('date').agg(**agg_map).reset_index().sort_values('date')
         df_daily_curr['ctr'] = np.where(df_daily_curr['impressions'] > 0, (df_daily_curr['clicks'] / df_daily_curr['impressions'] * 100).round(2), 0.0)
-        if 'position' in df_daily_curr.columns:
-            df_daily_curr['position'] = df_daily_curr['position'].round(1)
         df_daily_curr['day_index'] = list(range(len(df_daily_curr)))
 
         if is_compare_mode and not df_comp_slice.empty and 'date' in df_comp_slice.columns:
-            df_daily_comp = df_comp_slice.groupby('date').agg(**agg_map).reset_index().sort_values('date')
+            df_comp_tmp = df_comp_slice.copy()
+            if 'position' in df_comp_tmp.columns and 'impressions' in df_comp_tmp.columns:
+                df_comp_tmp['_pos_imp'] = df_comp_tmp['position'] * df_comp_tmp['impressions']
+                df_daily_comp = df_comp_tmp.groupby('date').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum'),
+                    _pos_imp=('_pos_imp', 'sum')
+                ).reset_index().sort_values('date')
+                df_daily_comp['position'] = np.where(
+                    df_daily_comp['impressions'] > 0,
+                    (df_daily_comp['_pos_imp'] / df_daily_comp['impressions']).round(1),
+                    0.0
+                )
+                df_daily_comp.drop(columns=['_pos_imp'], inplace=True)
+            else:
+                agg_map = {'clicks': ('clicks', 'sum'), 'impressions': ('impressions', 'sum')}
+                df_daily_comp = df_comp_tmp.groupby('date').agg(**agg_map).reset_index().sort_values('date')
             df_daily_comp['ctr'] = np.where(df_daily_comp['impressions'] > 0, (df_daily_comp['clicks'] / df_daily_comp['impressions'] * 100).round(2), 0.0)
-            if 'position' in df_daily_comp.columns:
-                df_daily_comp['position'] = df_daily_comp['position'].round(1)
             df_daily_comp['day_index'] = list(range(len(df_daily_comp)))
         else:
             df_daily_comp = pd.DataFrame()
@@ -3277,13 +3318,27 @@ if page in ["📈 Performance", "📊 Overview"]:
             with q_col_qw:
                 filter_striking = st.checkbox("⚡ Striking Distance (Pos 4-20)", value=False, key="chk_striking_distance", help="Filter queries ranking between position 4.0 and 20.0 with high impressions — prime targets for Page 1 optimization")
             
-            q_df = df_active_tab.groupby('query').agg(
-                clicks=('clicks', 'sum'),
-                impressions=('impressions', 'sum'),
-                position=('position', 'mean')
-            ).reset_index()
+            q_tmp = df_active_tab.copy()
+            if 'position' in q_tmp.columns and 'impressions' in q_tmp.columns:
+                q_tmp['_pos_imp'] = q_tmp['position'] * q_tmp['impressions']
+                q_df = q_tmp.groupby('query').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum'),
+                    _pos_imp=('_pos_imp', 'sum')
+                ).reset_index()
+                q_df['position'] = np.where(
+                    q_df['impressions'] > 0,
+                    (q_df['_pos_imp'] / q_df['impressions']).round(1),
+                    0.0
+                )
+                q_df.drop(columns=['_pos_imp'], inplace=True)
+            else:
+                q_df = q_tmp.groupby('query').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum')
+                ).reset_index()
+                q_df['position'] = 0.0
             q_df['ctr'] = np.where(q_df['impressions'] > 0, (q_df['clicks'] / q_df['impressions'] * 100).round(2), 0.0)
-            q_df['position'] = q_df['position'].round(1)
 
             if filter_striking:
                 # Positions 4.0 to 20.0 with high impressions
@@ -3372,13 +3427,27 @@ if page in ["📈 Performance", "📊 Overview"]:
             p_col1, p_col2 = st.columns([3, 1])
             with p_col1:
                 p_search = st.text_input("Filter pages...", key="gsc_p_filter", placeholder="Filter by URL...", label_visibility="collapsed")
-            p_df = df_active_tab.groupby('page').agg(
-                clicks=('clicks', 'sum'),
-                impressions=('impressions', 'sum'),
-                position=('position', 'mean')
-            ).reset_index()
+            p_tmp = df_active_tab.copy()
+            if 'position' in p_tmp.columns and 'impressions' in p_tmp.columns:
+                p_tmp['_pos_imp'] = p_tmp['position'] * p_tmp['impressions']
+                p_df = p_tmp.groupby('page').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum'),
+                    _pos_imp=('_pos_imp', 'sum')
+                ).reset_index()
+                p_df['position'] = np.where(
+                    p_df['impressions'] > 0,
+                    (p_df['_pos_imp'] / p_df['impressions']).round(1),
+                    0.0
+                )
+                p_df.drop(columns=['_pos_imp'], inplace=True)
+            else:
+                p_df = p_tmp.groupby('page').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum')
+                ).reset_index()
+                p_df['position'] = 0.0
             p_df['ctr'] = np.where(p_df['impressions'] > 0, (p_df['clicks'] / p_df['impressions'] * 100).round(2), 0.0)
-            p_df['position'] = p_df['position'].round(1)
             p_df = p_df.sort_values('clicks', ascending=False)
             if p_search:
                 p_df = p_df[p_df['page'].str.contains(p_search, case=False, na=False)]
@@ -3397,13 +3466,27 @@ if page in ["📈 Performance", "📊 Overview"]:
     with gsc_t3:
         if not df_active_tab.empty and 'country' in df_active_tab.columns:
             c_col1, c_col2 = st.columns([3, 1])
-            c_df = df_active_tab.groupby('country').agg(
-                clicks=('clicks', 'sum'),
-                impressions=('impressions', 'sum'),
-                position=('position', 'mean')
-            ).reset_index()
+            c_tmp = df_active_tab.copy()
+            if 'position' in c_tmp.columns and 'impressions' in c_tmp.columns:
+                c_tmp['_pos_imp'] = c_tmp['position'] * c_tmp['impressions']
+                c_df = c_tmp.groupby('country').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum'),
+                    _pos_imp=('_pos_imp', 'sum')
+                ).reset_index()
+                c_df['position'] = np.where(
+                    c_df['impressions'] > 0,
+                    (c_df['_pos_imp'] / c_df['impressions']).round(1),
+                    0.0
+                )
+                c_df.drop(columns=['_pos_imp'], inplace=True)
+            else:
+                c_df = c_tmp.groupby('country').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum')
+                ).reset_index()
+                c_df['position'] = 0.0
             c_df['ctr'] = np.where(c_df['impressions'] > 0, (c_df['clicks'] / c_df['impressions'] * 100).round(2), 0.0)
-            c_df['position'] = c_df['position'].round(1)
             c_df = c_df.sort_values('clicks', ascending=False)
             with c_col2:
                 c_csv = c_df.to_csv(index=False).encode('utf-8')
@@ -3420,13 +3503,27 @@ if page in ["📈 Performance", "📊 Overview"]:
     with gsc_t4:
         if not df_active_tab.empty and 'device' in df_active_tab.columns:
             d_col1, d_col2 = st.columns([3, 1])
-            d_df = df_active_tab.groupby('device').agg(
-                clicks=('clicks', 'sum'),
-                impressions=('impressions', 'sum'),
-                position=('position', 'mean')
-            ).reset_index()
+            d_tmp = df_active_tab.copy()
+            if 'position' in d_tmp.columns and 'impressions' in d_tmp.columns:
+                d_tmp['_pos_imp'] = d_tmp['position'] * d_tmp['impressions']
+                d_df = d_tmp.groupby('device').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum'),
+                    _pos_imp=('_pos_imp', 'sum')
+                ).reset_index()
+                d_df['position'] = np.where(
+                    d_df['impressions'] > 0,
+                    (d_df['_pos_imp'] / d_df['impressions']).round(1),
+                    0.0
+                )
+                d_df.drop(columns=['_pos_imp'], inplace=True)
+            else:
+                d_df = d_tmp.groupby('device').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum')
+                ).reset_index()
+                d_df['position'] = 0.0
             d_df['ctr'] = np.where(d_df['impressions'] > 0, (d_df['clicks'] / d_df['impressions'] * 100).round(2), 0.0)
-            d_df['position'] = d_df['position'].round(1)
             d_df = d_df.sort_values('clicks', ascending=False)
             with d_col2:
                 d_csv = d_df.to_csv(index=False).encode('utf-8')
@@ -3463,13 +3560,27 @@ if page in ["📈 Performance", "📊 Overview"]:
                     st.warning("Please connect Google Account and select a site.")
 
         if 'searchAppearance' in df.columns and not df.empty:
-            sa_df = df.groupby('searchAppearance').agg(
-                clicks=('clicks', 'sum'),
-                impressions=('impressions', 'sum'),
-                position=('position', 'mean')
-            ).reset_index()
+            sa_tmp = df.copy()
+            if 'position' in sa_tmp.columns and 'impressions' in sa_tmp.columns:
+                sa_tmp['_pos_imp'] = sa_tmp['position'] * sa_tmp['impressions']
+                sa_df = sa_tmp.groupby('searchAppearance').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum'),
+                    _pos_imp=('_pos_imp', 'sum')
+                ).reset_index()
+                sa_df['position'] = np.where(
+                    sa_df['impressions'] > 0,
+                    (sa_df['_pos_imp'] / sa_df['impressions']).round(1),
+                    0.0
+                )
+                sa_df.drop(columns=['_pos_imp'], inplace=True)
+            else:
+                sa_df = sa_tmp.groupby('searchAppearance').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum')
+                ).reset_index()
+                sa_df['position'] = 0.0
             sa_df['ctr'] = np.where(sa_df['impressions'] > 0, (sa_df['clicks'] / sa_df['impressions'] * 100).round(2), 0.0)
-            sa_df['position'] = sa_df['position'].round(1)
             sa_df = sa_df.sort_values('clicks', ascending=False)
             st.dataframe(
                 sa_df.rename(columns={
@@ -3506,13 +3617,27 @@ if page in ["📈 Performance", "📊 Overview"]:
                 use_container_width=True, height=420
             )
         elif not df.empty and 'date' in df.columns:
-            date_df = df.groupby('date').agg(
-                clicks=('clicks', 'sum'),
-                impressions=('impressions', 'sum'),
-                position=('position', 'mean')
-            ).reset_index().sort_values('date')
+            date_tmp = df.copy()
+            if 'position' in date_tmp.columns and 'impressions' in date_tmp.columns:
+                date_tmp['_pos_imp'] = date_tmp['position'] * date_tmp['impressions']
+                date_df = date_tmp.groupby('date').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum'),
+                    _pos_imp=('_pos_imp', 'sum')
+                ).reset_index().sort_values('date')
+                date_df['position'] = np.where(
+                    date_df['impressions'] > 0,
+                    (date_df['_pos_imp'] / date_df['impressions']).round(1),
+                    0.0
+                )
+                date_df.drop(columns=['_pos_imp'], inplace=True)
+            else:
+                date_df = date_tmp.groupby('date').agg(
+                    clicks=('clicks', 'sum'),
+                    impressions=('impressions', 'sum')
+                ).reset_index().sort_values('date')
+                date_df['position'] = 0.0
             date_df['ctr'] = np.where(date_df['impressions'] > 0, (date_df['clicks'] / date_df['impressions'] * 100).round(2), 0.0)
-            date_df['position'] = date_df['position'].round(1)
             st.dataframe(
                 date_df.rename(columns={'date': 'Date', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'}),
                 use_container_width=True, height=420
@@ -4358,13 +4483,27 @@ elif page in ["⚡ Core Web Vitals & Quick Wins", "⚡ Quick Wins"]:
         with ctrl_c2:
             min_imp = st.number_input("Minimum Impressions:", min_value=10, max_value=50000, value=50, step=10, key="qw_min_imp_num")
 
-        grouped = df.groupby('query').agg(
-            clicks=('clicks', 'sum'),
-            impressions=('impressions', 'sum'),
-            position=('position', 'mean')
-        ).reset_index()
+        df_tmp = df.copy()
+        if 'position' in df_tmp.columns and 'impressions' in df_tmp.columns:
+            df_tmp['_pos_imp'] = df_tmp['position'] * df_tmp['impressions']
+            grouped = df_tmp.groupby('query').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                _pos_imp=('_pos_imp', 'sum')
+            ).reset_index()
+            grouped['position'] = np.where(
+                grouped['impressions'] > 0,
+                (grouped['_pos_imp'] / grouped['impressions']).round(1),
+                0.0
+            )
+            grouped.drop(columns=['_pos_imp'], inplace=True)
+        else:
+            grouped = df_tmp.groupby('query').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum')
+            ).reset_index()
+            grouped['position'] = 0.0
         grouped['ctr'] = np.where(grouped['impressions'] > 0, (grouped['clicks'] / grouped['impressions'] * 100).round(2), 0.0)
-        grouped['position'] = grouped['position'].round(1)
 
         qw = grouped[
             (grouped['position'] >= pos_range[0]) &
@@ -4386,6 +4525,9 @@ elif page in ["⚡ Core Web Vitals & Quick Wins", "⚡ Quick Wins"]:
                 st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
                 qw_csv = qw.to_csv(index=False).encode('utf-8')
                 st.download_button("📥 Export Quick Wins (CSV)", qw_csv, "gsc_striking_distance_opportunities.csv", "text/csv", use_container_width=True)
+
+            qw_total_imp = qw['impressions'].sum()
+            qw_weighted_pos = (qw['position'] * qw['impressions']).sum() / qw_total_imp if qw_total_imp > 0 else (qw['position'].mean() if not qw.empty else 0.0)
 
             # Looker Studio / Stripe KPI metrics
             m_c1, m_c2, m_c3, m_c4 = st.columns(4)
@@ -4414,7 +4556,7 @@ elif page in ["⚡ Core Web Vitals & Quick Wins", "⚡ Quick Wins"]:
                 <div class="gsc-tile-wrapper">
                     <div class="gsc-card gsc-card-pos-on">
                         <div class="gsc-card-title">📍 Avg Position</div>
-                        <div class="gsc-card-val-big">{qw['position'].mean():.1f}</div>
+                        <div class="gsc-card-val-big">{qw_weighted_pos:.1f}</div>
                         <div class="gsc-card-sub"><span>Page 1-2 Threshold</span><span class="trend-badge-neutral">Striking</span></div>
                     </div>
                 </div>

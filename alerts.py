@@ -58,8 +58,18 @@ def check_position_drop(df_current, df_previous, site_url, threshold=5):
     if df_current.empty or df_previous.empty:
         return
     
-    current_pos = df_current['position'].mean()
-    previous_pos = df_previous['position'].mean()
+    curr_imp = df_current['impressions'].sum() if 'impressions' in df_current.columns else 0
+    prev_imp = df_previous['impressions'].sum() if 'impressions' in df_previous.columns else 0
+
+    if 'position' in df_current.columns and curr_imp > 0:
+        current_pos = (df_current['position'] * df_current['impressions']).sum() / curr_imp
+    else:
+        current_pos = df_current['position'].mean() if 'position' in df_current.columns else 0.0
+
+    if 'position' in df_previous.columns and prev_imp > 0:
+        previous_pos = (df_previous['position'] * df_previous['impressions']).sum() / prev_imp
+    else:
+        previous_pos = df_previous['position'].mean() if 'position' in df_previous.columns else 0.0
     
     drop = current_pos - previous_pos
     
@@ -80,8 +90,13 @@ def check_ctr_drop(df_current, df_previous, site_url, threshold=20):
     if df_current.empty or df_previous.empty:
         return
     
-    current_ctr = df_current['ctr'].mean()
-    previous_ctr = df_previous['ctr'].mean()
+    curr_c = df_current['clicks'].sum() if 'clicks' in df_current.columns else 0
+    curr_i = df_current['impressions'].sum() if 'impressions' in df_current.columns else 0
+    prev_c = df_previous['clicks'].sum() if 'clicks' in df_previous.columns else 0
+    prev_i = df_previous['impressions'].sum() if 'impressions' in df_previous.columns else 0
+
+    current_ctr = (curr_c / curr_i * 100) if curr_i > 0 else 0.0
+    previous_ctr = (prev_c / prev_i * 100) if prev_i > 0 else 0.0
     
     if previous_ctr == 0:
         return

@@ -79,12 +79,18 @@ def analyze_gsc_anomalies(df_current: pd.DataFrame, df_previous: pd.DataFrame, s
 
     curr_clicks = int(df_current['clicks'].sum()) if 'clicks' in df_current.columns else 0
     curr_impr = int(df_current['impressions'].sum()) if 'impressions' in df_current.columns else 0
-    curr_pos = round(df_current['position'].mean(), 2) if 'position' in df_current.columns else 0.0
+    if 'position' in df_current.columns and curr_impr > 0:
+        curr_pos = round((df_current['position'] * df_current['impressions']).sum() / curr_impr, 2)
+    else:
+        curr_pos = round(df_current['position'].mean(), 2) if 'position' in df_current.columns else 0.0
 
     if not df_previous.empty and 'clicks' in df_previous.columns and 'impressions' in df_previous.columns:
         prev_clicks = int(df_previous['clicks'].sum())
         prev_impr = int(df_previous['impressions'].sum())
-        prev_pos = round(df_previous['position'].mean(), 2)
+        if 'position' in df_previous.columns and prev_impr > 0:
+            prev_pos = round((df_previous['position'] * df_previous['impressions']).sum() / prev_impr, 2)
+        else:
+            prev_pos = round(df_previous['position'].mean(), 2) if 'position' in df_previous.columns else 0.0
 
         # 1. Traffic Drop Anomaly
         if prev_clicks > 10:

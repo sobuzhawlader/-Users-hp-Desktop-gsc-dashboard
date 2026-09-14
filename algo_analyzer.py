@@ -94,8 +94,15 @@ def analyze_algorithm_impact(service, site_url: str, update_date_str: str, windo
     imp_before = df_before['impressions'].sum() if not df_before.empty else 0
     imp_after = df_after['impressions'].sum() if not df_after.empty else 0
 
-    pos_before = round(df_before['position'].mean(), 2) if not df_before.empty else 0
-    pos_after = round(df_after['position'].mean(), 2) if not df_after.empty else 0
+    if not df_before.empty and 'position' in df_before.columns and imp_before > 0:
+        pos_before = round((df_before['position'] * df_before['impressions']).sum() / imp_before, 2)
+    else:
+        pos_before = round(df_before['position'].mean(), 2) if not df_before.empty and 'position' in df_before.columns else 0
+
+    if not df_after.empty and 'position' in df_after.columns and imp_after > 0:
+        pos_after = round((df_after['position'] * df_after['impressions']).sum() / imp_after, 2)
+    else:
+        pos_after = round(df_after['position'].mean(), 2) if not df_after.empty and 'position' in df_after.columns else 0
 
     clicks_diff = clicks_after - clicks_before
     clicks_pct = round((clicks_diff / clicks_before * 100), 2) if clicks_before > 0 else 0
@@ -103,9 +110,24 @@ def analyze_algorithm_impact(service, site_url: str, update_date_str: str, windo
     imp_pct = round((imp_diff / imp_before * 100), 2) if imp_before > 0 else 0
     pos_diff = round(pos_after - pos_before, 2)
 
-    # Page-Level Winners & Losers
-    p_before = df_before.groupby('page').agg(clicks_b=('clicks', 'sum'), imp_b=('impressions', 'sum'), pos_b=('position', 'mean')).reset_index() if not df_before.empty else pd.DataFrame(columns=['page', 'clicks_b', 'imp_b', 'pos_b'])
-    p_after = df_after.groupby('page').agg(clicks_a=('clicks', 'sum'), imp_a=('impressions', 'sum'), pos_a=('position', 'mean')).reset_index() if not df_after.empty else pd.DataFrame(columns=['page', 'clicks_a', 'imp_a', 'pos_a'])
+    # Page-Level Winners & Losers (Impression-weighted position)
+    if not df_before.empty and 'page' in df_before.columns:
+        df_b_p = df_before.copy()
+        df_b_p['_pos_imp'] = df_b_p['position'] * df_b_p['impressions'] if 'position' in df_b_p.columns else 0
+        p_before = df_b_p.groupby('page').agg(clicks_b=('clicks', 'sum'), imp_b=('impressions', 'sum'), _pos_imp=('_pos_imp', 'sum')).reset_index()
+        p_before['pos_b'] = np.where(p_before['imp_b'] > 0, (p_before['_pos_imp'] / p_before['imp_b']).round(2), 0.0)
+        p_before.drop(columns=['_pos_imp'], inplace=True)
+    else:
+        p_before = pd.DataFrame(columns=['page', 'clicks_b', 'imp_b', 'pos_b'])
+
+    if not df_after.empty and 'page' in df_after.columns:
+        df_a_p = df_after.copy()
+        df_a_p['_pos_imp'] = df_a_p['position'] * df_a_p['impressions'] if 'position' in df_a_p.columns else 0
+        p_after = df_a_p.groupby('page').agg(clicks_a=('clicks', 'sum'), imp_a=('impressions', 'sum'), _pos_imp=('_pos_imp', 'sum')).reset_index()
+        p_after['pos_a'] = np.where(p_after['imp_a'] > 0, (p_after['_pos_imp'] / p_after['imp_a']).round(2), 0.0)
+        p_after.drop(columns=['_pos_imp'], inplace=True)
+    else:
+        p_after = pd.DataFrame(columns=['page', 'clicks_a', 'imp_a', 'pos_a'])
 
     merged_pages = pd.merge(p_before, p_after, on='page', how='outer').fillna(0)
     merged_pages['clicks_change'] = merged_pages['clicks_a'] - merged_pages['clicks_b']
@@ -115,9 +137,24 @@ def analyze_algorithm_impact(service, site_url: str, update_date_str: str, windo
     top_winning_pages = merged_pages.sort_values('clicks_change', ascending=False).head(20)
     top_losing_pages = merged_pages.sort_values('clicks_change', ascending=True).head(20)
 
-    # Query-Level Winners & Losers
-    q_before = df_before.groupby('query').agg(clicks_b=('clicks', 'sum'), imp_b=('impressions', 'sum'), pos_b=('position', 'mean')).reset_index() if not df_before.empty else pd.DataFrame(columns=['query', 'clicks_b', 'imp_b', 'pos_b'])
-    q_after = df_after.groupby('query').agg(clicks_a=('clicks', 'sum'), imp_a=('impressions', 'sum'), pos_a=('position', 'mean')).reset_index() if not df_after.empty else pd.DataFrame(columns=['query', 'clicks_a', 'imp_a', 'pos_a'])
+    # Query-Level Winners & Losers (Impression-weighted position)
+    if not df_before.empty and 'query' in df_before.columns:
+        df_b_q = df_before.copy()
+        df_b_q['_pos_imp'] = df_b_q['position'] * df_b_q['impressions'] if 'position' in df_b_q.columns else 0
+        q_before = df_b_q.groupby('query').agg(clicks_b=('clicks', 'sum'), imp_b=('impressions', 'sum'), _pos_imp=('_pos_imp', 'sum')).reset_index()
+        q_before['pos_b'] = np.where(q_before['imp_b'] > 0, (q_before['_pos_imp'] / q_before['imp_b']).round(2), 0.0)
+        q_before.drop(columns=['_pos_imp'], inplace=True)
+    else:
+        q_before = pd.DataFrame(columns=['query', 'clicks_b', 'imp_b', 'pos_b'])
+
+    if not df_after.empty and 'query' in df_after.columns:
+        df_a_q = df_after.copy()
+        df_a_q['_pos_imp'] = df_a_q['position'] * df_a_q['impressions'] if 'position' in df_a_q.columns else 0
+        q_after = df_a_q.groupby('query').agg(clicks_a=('clicks', 'sum'), imp_a=('impressions', 'sum'), _pos_imp=('_pos_imp', 'sum')).reset_index()
+        q_after['pos_a'] = np.where(q_after['imp_a'] > 0, (q_after['_pos_imp'] / q_after['imp_a']).round(2), 0.0)
+        q_after.drop(columns=['_pos_imp'], inplace=True)
+    else:
+        q_after = pd.DataFrame(columns=['query', 'clicks_a', 'imp_a', 'pos_a'])
 
     merged_queries = pd.merge(q_before, q_after, on='query', how='outer').fillna(0)
     merged_queries['clicks_change'] = merged_queries['clicks_a'] - merged_queries['clicks_b']

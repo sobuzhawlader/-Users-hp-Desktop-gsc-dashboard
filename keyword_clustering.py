@@ -39,18 +39,28 @@ def cluster_keywords(df: pd.DataFrame, min_cluster_size: int = 2) -> tuple:
         return pd.DataFrame(), pd.DataFrame()
 
     # Aggregate by query first in case rows are split
+    df_c = df.copy()
+    has_pos = 'position' in df_c.columns and 'impressions' in df_c.columns
+    if has_pos:
+        df_c['_pos_imp'] = df_c['position'] * df_c['impressions']
+    
     agg_dict = {
         'clicks': 'sum',
         'impressions': 'sum',
-        'position': 'mean'
     }
-    if 'page' in df.columns:
+    if has_pos:
+        agg_dict['_pos_imp'] = 'sum'
+    if 'page' in df_c.columns:
         agg_dict['page'] = lambda x: x.iloc[0] if not x.empty else ""
 
-    q_df = df.groupby('query').agg(agg_dict).reset_index()
+    q_df = df_c.groupby('query').agg(agg_dict).reset_index()
     q_df['tokens'] = q_df['query'].apply(clean_tokens)
-    q_df['ctr'] = ((q_df['clicks'] / q_df['impressions']) * 100).round(2)
-    q_df['position'] = q_df['position'].round(1)
+    q_df['ctr'] = np.where(q_df['impressions'] > 0, ((q_df['clicks'] / q_df['impressions']) * 100).round(2), 0.0)
+    if has_pos:
+        q_df['position'] = np.where(q_df['impressions'] > 0, (q_df['_pos_imp'] / q_df['impressions']).round(1), 0.0)
+        q_df.drop(columns=['_pos_imp'], inplace=True)
+    else:
+        q_df['position'] = 0.0
 
     # 1. Mine most frequent bigrams and unigrams to form Cluster Themes
     token_freq = Counter()
@@ -101,7 +111,10 @@ def cluster_keywords(df: pd.DataFrame, min_cluster_size: int = 2) -> tuple:
         total_queries = len(group)
         tot_clicks = int(group['clicks'].sum())
         tot_impr = int(group['impressions'].sum())
-        avg_pos = round(group['position'].mean(), 1)
+        if 'position' in group.columns and tot_impr > 0:
+            avg_pos = round(float((group['position'] * group['impressions']).sum() / tot_impr), 1)
+        else:
+            avg_pos = round(group['position'].mean(), 1) if 'position' in group.columns else 0.0
         avg_ctr = round((tot_clicks / tot_impr * 100), 2) if tot_impr > 0 else 0.0
 
         # Dominant URL if page exists
