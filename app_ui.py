@@ -1956,88 +1956,11 @@ with st.sidebar:
         elif st.session_state.service:
             st.session_state.df = pd.DataFrame()
 
-    # 2B.1 Dedicated Quick Refresh & Sync Bar
-    c_sync_btn, c_live_btn = st.columns(2)
-    with c_sync_btn:
-        if st.button("🔄 Sync Sites", key="side_quick_sync_sites_btn", use_container_width=True, help="Re-sync all verified properties directly from Google Search Console"):
-            with st.spinner("Re-syncing sites from Google..."):
-                try:
-                    if st.session_state.service:
-                        fresh_sites = get_sites_detailed(st.session_state.service, force_refresh=True)
-                        st.session_state.sites_detailed = fresh_sites
-                        st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
-                    st.session_state.portfolio_needs_refresh = True
-                    if 'clear_portfolio_cache' in globals():
-                        clear_portfolio_cache()
-                    if 'clear_sites_cache' in globals():
-                        clear_sites_cache()
-                    st.session_state.df = pd.DataFrame()
-                    st.success("Properties synced!")
-                    st.rerun()
-                except Exception as ex:
-                    st.error(f"Sync error: {ex}")
-    with c_live_btn:
-        if st.button("⚡ Reload Data", key="side_quick_live_reload_btn", use_container_width=True, help="Reload page & fetch fresh data"):
-            st.session_state.portfolio_needs_refresh = True
-            st.rerun()
-
-    # 2C. Bulk Paste / Import Sites Tool
-    with st.expander(f"📋 Bulk Paste / Import Sites ({total_p})", expanded=False):
-        st.caption("Paste your Search Console domain/URL properties (one per line):")
-        pasted_text = st.text_area(
-            "Website URLs / sc-domains", 
-            value="\n".join(clean_active_sites) if clean_active_sites else "", 
-            height=140, 
-            key="txt_bulk_sites_import"
-        )
-        col_imp1, col_imp2 = st.columns(2)
-        with col_imp1:
-            if st.button("📥 Load Pasted Sites", use_container_width=True, type="primary", key="btn_load_pasted_sites"):
-                new_list = [line.strip() for line in pasted_text.splitlines() if line.strip()]
-                if new_list:
-                    st.session_state.sites = new_list
-                    st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in new_list]
-                    st.session_state.current_site = new_list[0]
-                    st.session_state.portfolio_needs_refresh = True
-                    st.success(f"Loaded {len(new_list)} sites into dropdown!")
-                    st.rerun()
-        with col_imp2:
-            if st.button("🗑️ Clear Sites", use_container_width=True, key="btn_clear_sites"):
-                st.session_state.sites = []
-                st.session_state.sites_detailed = []
-                st.session_state.current_site = None
-                st.session_state.portfolio_needs_refresh = True
-                st.rerun()
-
-    # 2D. Expandable interactive list of all account properties in sidebar (only if sites exist!)
-    if total_p > 0:
-        with st.expander(f"📋 Quick Switch — All {total_p} Sites", expanded=False):
-            st.caption("Click any site to instantly switch the dashboard:")
-            is_port_active = bool(st.session_state.current_site and str(st.session_state.current_site).startswith("🌐 [ALL SITES]"))
-            if is_port_active:
-                st.markdown(f"<div style='background:rgba(56, 189, 248, 0.15); border:1px solid rgba(56, 189, 248, 0.35); padding:6px 10px; border-radius:6px; font-size:12px; font-weight:700; color:#38bdf8; font-family:\"JetBrains Mono\", monospace; margin-bottom:6px;'>● 🌐 Consolidated Portfolio (Active)</div>", unsafe_allow_html=True)
-            else:
-                if st.button(f"🌐 [ALL SITES] Consolidated Portfolio ({total_p})", key="side_btn_portfolio_toggle", use_container_width=True):
-                    st.session_state.current_site = portfolio_label
-                    if st.session_state.get('portfolio_data') is None:
-                        st.session_state.portfolio_needs_refresh = True
-                    st.rerun()
-            for idx, s in enumerate(clean_active_sites):
-                is_active = (s == st.session_state.current_site)
-                tag = "🌐 [Domain]" if s.startswith("sc-domain:") else "🔗 [URL]"
-                clean_name = s.replace("sc-domain:", "").replace("https://", "").replace("http://", "").strip("/")
-                if is_active:
-                    st.markdown(f"<div style='background:rgba(56, 189, 248, 0.15); border:1px solid rgba(56, 189, 248, 0.35); padding:6px 10px; border-radius:6px; font-size:12px; font-weight:700; color:#38bdf8; font-family:\"JetBrains Mono\", monospace; margin-bottom:4px;'>● {tag} {clean_name} (Active)</div>", unsafe_allow_html=True)
-                else:
-                    if st.button(f"{tag} {clean_name}", key=f"side_site_btn_{idx}_{abs(hash(s))%100000}", use_container_width=True):
-                        st.session_state.current_site = s
-                        if st.session_state.service:
-                            st.session_state.df = pd.DataFrame()
-                        st.rerun()
-
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
+    # ============================================================
     # 3. Authentic Google Search Console 5-Category Enterprise Navigation
+    # ============================================================
     NAV_CATEGORIES = {
         "📊 Core Performance & Traffic": [
             "📈 Performance",
@@ -2118,40 +2041,167 @@ with st.sidebar:
         else:
             st.session_state.selected_page = "📈 Performance"
 
+    # Identify active category
     active_category = "📊 Core Performance & Traffic"
     for cat_name, p_list in NAV_CATEGORIES.items():
         if st.session_state.selected_page in p_list:
             active_category = cat_name
             break
 
-    nav_hdr_col = "#38bdf8" if is_dark else "#5f6368"
-    st.markdown(f"<div style='font-size:11px; font-weight:700; color:{nav_hdr_col}; text-transform:uppercase; letter-spacing:0.8px; margin:14px 0 6px 2px;'>NAVIGATION MODULES</div>", unsafe_allow_html=True)
+    # High-Visibility Navigation Banner
+    nav_badge_bg = "rgba(56, 189, 248, 0.15)" if is_dark else "#e8f0fe"
+    nav_badge_border = "1px solid rgba(56, 189, 248, 0.35)" if is_dark else "1px solid #d2e3fc"
+    nav_badge_title = "#38bdf8" if is_dark else "#1a73e8"
+    st.markdown(f"""
+    <div style='background:{nav_badge_bg}; border:{nav_badge_border}; border-left:4px solid {nav_badge_title}; border-radius:6px; padding:7px 10px; margin:10px 0 8px 0;'>
+        <div style='font-size:11.5px; font-weight:800; color:{nav_badge_title}; text-transform:uppercase; letter-spacing:0.8px;'>
+            🧭 NAVIGATION (5 CATEGORIES)
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # 1-Click Quick Feature Search / Jump
-    quick_idx = ALL_NAV_PAGES.index(st.session_state.selected_page) if st.session_state.selected_page in ALL_NAV_PAGES else 0
-    quick_choice = st.selectbox("Quick Jump", ALL_NAV_PAGES, index=quick_idx, key="sb_quick_jump_feature", label_visibility="collapsed")
-    if quick_choice != st.session_state.selected_page:
-        st.session_state.selected_page = quick_choice
-        st.query_params['page'] = quick_choice
+    # 1. Category Switcher (Dropdown for the 5 categories)
+    cat_keys = list(NAV_CATEGORIES.keys())
+    cur_cat_idx = cat_keys.index(active_category) if active_category in cat_keys else 0
+
+    st.markdown(f"<div style='font-size:11px; font-weight:700; color:{'#94a3b8' if is_dark else '#5f6368'}; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.5px;'>📁 CATEGORY / SUITE:</div>", unsafe_allow_html=True)
+    chosen_cat = st.selectbox(
+        "Category",
+        cat_keys,
+        index=cur_cat_idx,
+        key="sb_category_picker",
+        label_visibility="collapsed"
+    )
+
+    # If user selected a new category from the dropdown, switch to its first page
+    if chosen_cat != active_category:
+        st.session_state.selected_page = NAV_CATEGORIES[chosen_cat][0]
+        st.query_params['page'] = st.session_state.selected_page
         st.rerun()
 
-    # 5 Collapsible Category Accordions
-    for cat_name, cat_pages in NAV_CATEGORIES.items():
-        is_open = (cat_name == active_category)
-        with st.expander(cat_name, expanded=is_open):
+    # 2. Features inside the chosen category (Immediately visible!)
+    cat_sub_pages = NAV_CATEGORIES[chosen_cat]
+    sub_page_idx = cat_sub_pages.index(st.session_state.selected_page) if st.session_state.selected_page in cat_sub_pages else 0
+    picked_sub = st.radio(
+        f"Features in {chosen_cat}",
+        cat_sub_pages,
+        index=sub_page_idx,
+        key=f"cat_feature_radio_{chosen_cat}",
+        label_visibility="collapsed"
+    )
+    if picked_sub != st.session_state.selected_page:
+        st.session_state.selected_page = picked_sub
+        st.query_params['page'] = picked_sub
+        st.rerun()
+
+    page = st.session_state.selected_page
+
+    # 3. Quick Jump to Any Feature
+    quick_idx = ALL_NAV_PAGES.index(st.session_state.selected_page) if st.session_state.selected_page in ALL_NAV_PAGES else 0
+    with st.expander("🔍 Quick Jump to Any of the 23 Tools", expanded=False):
+        quick_choice = st.selectbox("Search all 23 tools", ALL_NAV_PAGES, index=quick_idx, key="sb_quick_jump_feature")
+        if quick_choice != st.session_state.selected_page:
+            st.session_state.selected_page = quick_choice
+            st.query_params['page'] = quick_choice
+            st.rerun()
+
+    # 4. Collapsible Accordions for all 5 categories
+    with st.expander("📑 View All 5 Categories & Tools at Once", expanded=False):
+        for cat_name, cat_pages in NAV_CATEGORIES.items():
+            st.markdown(f"<div style='font-size:12px; font-weight:700; color:{nav_badge_title}; margin:8px 0 3px 0;'>{cat_name} ({len(cat_pages)})</div>", unsafe_allow_html=True)
             for p in cat_pages:
                 is_selected = (st.session_state.selected_page == p)
                 btn_type = "primary" if is_selected else "secondary"
                 btn_prefix = "● " if is_selected else "  "
-                if st.button(f"{btn_prefix}{p}", key=f"nav_btn_{abs(hash(p))}", use_container_width=True, type=btn_type):
+                if st.button(f"{btn_prefix}{p}", key=f"nav_all_acc_btn_{abs(hash(p))}", use_container_width=True, type=btn_type):
                     if st.session_state.selected_page != p:
                         st.session_state.selected_page = p
                         st.query_params['page'] = p
                         st.rerun()
 
-    page = st.session_state.selected_page
-
     st.divider()
+
+    # ============================================================
+    # 4. Site Operations, Refresh & Bulk Tools
+    # ============================================================
+    # Quick Refresh & Sync Bar
+    c_sync_btn, c_live_btn = st.columns(2)
+    with c_sync_btn:
+        if st.button("🔄 Sync Sites", key="side_quick_sync_sites_btn", use_container_width=True, help="Re-sync all verified properties directly from Google Search Console"):
+            with st.spinner("Re-syncing sites from Google..."):
+                try:
+                    if st.session_state.service:
+                        fresh_sites = get_sites_detailed(st.session_state.service, force_refresh=True)
+                        st.session_state.sites_detailed = fresh_sites
+                        st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
+                    st.session_state.portfolio_needs_refresh = True
+                    if 'clear_portfolio_cache' in globals():
+                        clear_portfolio_cache()
+                    if 'clear_sites_cache' in globals():
+                        clear_sites_cache()
+                    st.session_state.df = pd.DataFrame()
+                    st.success("Properties synced!")
+                    st.rerun()
+                except Exception as ex:
+                    st.error(f"Sync error: {ex}")
+    with c_live_btn:
+        if st.button("⚡ Reload Data", key="side_quick_live_reload_btn", use_container_width=True, help="Reload page & fetch fresh data"):
+            st.session_state.portfolio_needs_refresh = True
+            st.rerun()
+
+    # Bulk Paste / Import Sites Tool
+    with st.expander(f"📋 Bulk Paste / Import Sites ({total_p})", expanded=False):
+        st.caption("Paste your Search Console domain/URL properties (one per line):")
+        pasted_text = st.text_area(
+            "Website URLs / sc-domains", 
+            value="\n".join(clean_active_sites) if clean_active_sites else "", 
+            height=140, 
+            key="txt_bulk_sites_import"
+        )
+        col_imp1, col_imp2 = st.columns(2)
+        with col_imp1:
+            if st.button("📥 Load Pasted Sites", use_container_width=True, type="primary", key="btn_load_pasted_sites"):
+                new_list = [line.strip() for line in pasted_text.splitlines() if line.strip()]
+                if new_list:
+                    st.session_state.sites = new_list
+                    st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in new_list]
+                    st.session_state.current_site = new_list[0]
+                    st.session_state.portfolio_needs_refresh = True
+                    st.success(f"Loaded {len(new_list)} sites into dropdown!")
+                    st.rerun()
+        with col_imp2:
+            if st.button("🗑️ Clear Sites", use_container_width=True, key="btn_clear_sites"):
+                st.session_state.sites = []
+                st.session_state.sites_detailed = []
+                st.session_state.current_site = None
+                st.session_state.portfolio_needs_refresh = True
+                st.rerun()
+
+    # Expandable interactive list of all account properties in sidebar (only if sites exist!)
+    if total_p > 0:
+        with st.expander(f"📋 Quick Switch — All {total_p} Sites", expanded=False):
+            st.caption("Click any site to instantly switch the dashboard:")
+            is_port_active = bool(st.session_state.current_site and str(st.session_state.current_site).startswith("🌐 [ALL SITES]"))
+            if is_port_active:
+                st.markdown(f"<div style='background:rgba(56, 189, 248, 0.15); border:1px solid rgba(56, 189, 248, 0.35); padding:6px 10px; border-radius:6px; font-size:12px; font-weight:700; color:#38bdf8; font-family:\"JetBrains Mono\", monospace; margin-bottom:6px;'>● 🌐 Consolidated Portfolio (Active)</div>", unsafe_allow_html=True)
+            else:
+                if st.button(f"🌐 [ALL SITES] Consolidated Portfolio ({total_p})", key="side_btn_portfolio_toggle", use_container_width=True):
+                    st.session_state.current_site = portfolio_label
+                    if st.session_state.get('portfolio_data') is None:
+                        st.session_state.portfolio_needs_refresh = True
+                    st.rerun()
+            for idx, s in enumerate(clean_active_sites):
+                is_active = (s == st.session_state.current_site)
+                tag = "🌐 [Domain]" if s.startswith("sc-domain:") else "🔗 [URL]"
+                clean_name = s.replace("sc-domain:", "").replace("https://", "").replace("http://", "").strip("/")
+                if is_active:
+                    st.markdown(f"<div style='background:rgba(56, 189, 248, 0.15); border:1px solid rgba(56, 189, 248, 0.35); padding:6px 10px; border-radius:6px; font-size:12px; font-weight:700; color:#38bdf8; font-family:\"JetBrains Mono\", monospace; margin-bottom:4px;'>● {tag} {clean_name} (Active)</div>", unsafe_allow_html=True)
+                else:
+                    if st.button(f"{tag} {clean_name}", key=f"side_site_btn_{idx}_{abs(hash(s))%100000}", use_container_width=True):
+                        st.session_state.current_site = s
+                        if st.session_state.service:
+                            st.session_state.df = pd.DataFrame()
+                        st.rerun()
 
     # 4. Property Controls & Google API (Collapsible Expander)
     with st.expander("⚙️ Fetch Data & Google Account", expanded=False):
