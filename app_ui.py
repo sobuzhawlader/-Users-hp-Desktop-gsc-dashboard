@@ -1418,7 +1418,7 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
 
-    # 1.1 Single Sleek Theme Toggle Switch
+    # 1.1 Sleek Theme Switcher (Both Toggle Switch & Quick Action Buttons)
     theme_toggle_val = st.toggle(
         "🌙 Dark Theme" if is_dark else "🌙 Dark Mode",
         value=is_dark,
@@ -1429,6 +1429,21 @@ with st.sidebar:
         st.session_state.theme_mode = 'Dark' if theme_toggle_val else 'Light'
         st.query_params['theme'] = 'dark' if theme_toggle_val else 'light'
         st.rerun()
+
+    # Dedicated Light & Dark Action Buttons (Quick switch buttons alongside toggle)
+    th_col1, th_col2 = st.columns(2)
+    with th_col1:
+        if st.button("☀️ Light", key="btn_quick_light_theme", use_container_width=True, type="primary" if not is_dark else "secondary"):
+            if is_dark:
+                st.session_state.theme_mode = 'Light'
+                st.query_params['theme'] = 'light'
+                st.rerun()
+    with th_col2:
+        if st.button("🌙 Dark", key="btn_quick_dark_theme", use_container_width=True, type="primary" if is_dark else "secondary"):
+            if not is_dark:
+                st.session_state.theme_mode = 'Dark'
+                st.query_params['theme'] = 'dark'
+                st.rerun()
 
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
