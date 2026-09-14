@@ -149,6 +149,66 @@ is_dark = (st.session_state.get('theme_mode', 'Light') == 'Dark')
 import plotly.io as pio
 pio.templates.default = "plotly_dark" if is_dark else "plotly_white"
 
+# ============================================================
+# Universal Streamlit Cloud Shell Cleanup:
+# Completely eliminates the Streamlit toolbar, Fork button,
+# GitHub links, Streamlit watermark badges, and default header.
+# ============================================================
+st.markdown("""
+<style>
+    /* Complete Elimination of Streamlit Cloud Toolbar, Fork Button, GitHub Link & Streamlit Badges */
+    header,
+    header[data-testid="stHeader"],
+    [data-testid="stHeader"],
+    [data-testid="stToolbar"],
+    [data-testid="stToolbarActions"],
+    .stAppToolbar,
+    #MainMenu,
+    footer,
+    [data-testid="stDecoration"],
+    [data-testid="stStatusWidget"],
+    div[class*="viewerBadge"],
+    a[class*="viewerBadge"],
+    [class*="viewerBadge"],
+    [data-testid="manage-app-button"],
+    a[href*="github.com"],
+    a[href*="github"],
+    button[title*="Fork"],
+    a[title*="Fork"],
+    [aria-label*="Fork"] {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0px !important;
+        max-height: 0px !important;
+        width: 0px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: absolute !important;
+        top: -9999px !important;
+        left: -9999px !important;
+    }
+
+    /* Keep the sidebar expand toggle accessible */
+    [data-testid="stSidebarCollapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: fixed !important;
+        top: 14px !important;
+        left: 14px !important;
+        z-index: 999999 !important;
+    }
+
+    /* Remove empty header whitespace at top */
+    .main .block-container,
+    [data-testid="stAppViewContainer"] > section:first-child {
+        padding-top: 1.2rem !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 if is_dark:
     st.markdown("""
 <style>
@@ -156,7 +216,7 @@ if is_dark:
     * { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
     
     /* Deep Tech Dark Canvas */
-    html, body, [class*="css"], .stApp, .main, [data-testid="stAppViewContainer"], [data-testid="stHeader"] { 
+    html, body, [class*="css"], .stApp, .main, [data-testid="stAppViewContainer"] { 
         background-color: #080c14 !important; 
         background-image: 
             radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.22) 0px, transparent 50%), 
@@ -660,7 +720,7 @@ else:
     * { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
     
     /* Google Search Console Clean Light Canvas */
-    html, body, [class*="css"], .stApp, .main, [data-testid="stAppViewContainer"], [data-testid="stHeader"] { 
+    html, body, [class*="css"], .stApp, .main, [data-testid="stAppViewContainer"] { 
         background-color: #f8f9fa !important; 
         background-image: none !important;
         color: #202124 !important;
@@ -2013,46 +2073,47 @@ def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, act
     avatar_shadow = "box-shadow:0 0 10px rgba(59,130,246,0.5);" if is_dark_mode else ""
     icon_color = "#94a3b8" if is_dark_mode else "#5f6368"
 
-    st.markdown(f"""
-    <div class="gsc-top-bar">
-        <div style="display:flex; align-items:center; gap:14px;">
-            <span style="font-size:20px; color:{icon_color}; cursor:pointer;">☰</span>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <svg width="24" height="24" viewBox="0 0 48 48">
-                    <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                    <path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                    <path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                    <path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
-                </svg>
-                {brand_logo_title}
-            </div>
-        </div>
-        <div class="gsc-search-pill">
-            <span style="color:{search_icon_color}; font-size:14px;">🔍</span>
-            <span style="color:{search_text_color}; font-size:12.5px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">Inspect any URL in "{site_label}"</span>
-            <span style="font-size:10px; font-family:'JetBrains Mono', monospace; background:{kbd_bg}; color:{kbd_color}; padding:2px 6px; border-radius:4px; border:1px solid {kbd_border};">⌘K</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-            <div class="gsc-live-badge" title="Live active visitors browsing your website right now">
-                <span class="gsc-pulse-dot"></span>
-                <span><b>{live_users}</b> ACTIVE</span>
-            </div>
-            <div class="gsc-dash-badge" title="Users currently viewing this dashboard">
-                <span>👥</span>
-                <span><b>{active_users}</b> ONLINE</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:10px; margin-left:6px;">
-                <span style="color:{icon_color}; font-size:16px; cursor:pointer;" title="Help">❔</span>
-                <span style="color:{icon_color}; font-size:16px; cursor:pointer;" title="Feedback">💬</span>
-                <div style="position:relative; cursor:pointer;">
-                    <span style="color:{icon_color}; font-size:16px;">🔔</span>
-                    <span style="position:absolute; top:-4px; right:-6px; background:#ef4444; color:white; font-size:9px; font-weight:bold; border-radius:50%; width:14px; height:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 8px #ef4444;">0</span>
-                </div>
-                <div style="width:28px; height:28px; border-radius:50%; background:{avatar_bg}; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; {avatar_shadow}">S</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    top_bar_html = (
+        f'<div class="gsc-top-bar">'
+        f'<div style="display:flex; align-items:center; gap:14px;">'
+        f'<span style="font-size:20px; color:{icon_color}; cursor:pointer;">☰</span>'
+        f'<div style="display:flex; align-items:center; gap:10px;">'
+        f'<svg width="24" height="24" viewBox="0 0 48 48">'
+        f'<path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>'
+        f'<path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>'
+        f'<path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>'
+        f'<path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>'
+        f'</svg>'
+        f'{brand_logo_title}'
+        f'</div>'
+        f'</div>'
+        f'<div class="gsc-search-pill">'
+        f'<span style="color:{search_icon_color}; font-size:14px;">🔍</span>'
+        f'<span style="color:{search_text_color}; font-size:12.5px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">Inspect any URL in "{site_label}"</span>'
+        f'<span style="font-size:10px; font-family:\'JetBrains Mono\', monospace; background:{kbd_bg}; color:{kbd_color}; padding:2px 6px; border-radius:4px; border:1px solid {kbd_border};">⌘K</span>'
+        f'</div>'
+        f'<div style="display:flex; align-items:center; gap:8px;">'
+        f'<div class="gsc-live-badge" title="Live active visitors browsing your website right now">'
+        f'<span class="gsc-pulse-dot"></span>'
+        f'<span><b>{live_users}</b> ACTIVE</span>'
+        f'</div>'
+        f'<div class="gsc-dash-badge" title="Users currently viewing this dashboard">'
+        f'<span>👥</span>'
+        f'<span><b>{active_users}</b> ONLINE</span>'
+        f'</div>'
+        f'<div style="display:flex; align-items:center; gap:10px; margin-left:6px;">'
+        f'<span style="color:{icon_color}; font-size:16px; cursor:pointer;" title="Help">❔</span>'
+        f'<span style="color:{icon_color}; font-size:16px; cursor:pointer;" title="Feedback">💬</span>'
+        f'<div style="position:relative; cursor:pointer;">'
+        f'<span style="color:{icon_color}; font-size:16px;">🔔</span>'
+        f'<span style="position:absolute; top:-4px; right:-6px; background:#ef4444; color:white; font-size:9px; font-weight:bold; border-radius:50%; width:14px; height:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 8px #ef4444;">0</span>'
+        f'</div>'
+        f'<div style="width:28px; height:28px; border-radius:50%; background:{avatar_bg}; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; {avatar_shadow}">S</div>'
+        f'</div>'
+        f'</div>'
+        f'</div>'
+    )
+    st.markdown(top_bar_html, unsafe_allow_html=True)
 
 # ----------------------------------------------------
 # 1. Performance Overview
@@ -2100,20 +2161,21 @@ if page in ["📈 Performance", "📊 Overview"]:
             card_title_col = "#202124" if not is_dark else "#f8fafc"
             card_sub_col = "#5f6368" if not is_dark else "#94a3b8"
 
-            st.markdown(f"""
-            <div style="background:{card_bg}; border:1px solid {card_border}; border-radius:16px; padding:36px 28px; margin:40px auto 20px auto; text-align:center; box-shadow:0 2px 12px rgba(60,64,67,0.08);">
-                <div style="display:flex; justify-content:center; margin-bottom:16px;">
-                    <svg width="44" height="44" viewBox="0 0 48 48">
-                        <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                        <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                        <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                        <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
-                    </svg>
-                </div>
-                <div style="font-size:22px; font-weight:600; color:{card_title_col}; letter-spacing:-0.2px; margin-bottom:8px;">Sign in with Google</div>
-                <div style="font-size:13.5px; color:{card_sub_col}; line-height:1.5; margin-bottom:20px;">Connect your Search Console account to load your verified sites & search telemetry.</div>
-            </div>
-            """, unsafe_allow_html=True)
+            login_card_html = (
+                f'<div style="background:{card_bg}; border:1px solid {card_border}; border-radius:16px; padding:36px 28px; margin:40px auto 20px auto; text-align:center; box-shadow:0 2px 12px rgba(60,64,67,0.08);">'
+                f'<div style="display:flex; justify-content:center; margin-bottom:16px;">'
+                f'<svg width="44" height="44" viewBox="0 0 48 48">'
+                f'<path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>'
+                f'<path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>'
+                f'<path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>'
+                f'<path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>'
+                f'</svg>'
+                f'</div>'
+                f'<div style="font-size:22px; font-weight:600; color:{card_title_col}; letter-spacing:-0.2px; margin-bottom:8px;">Sign in with Google</div>'
+                f'<div style="font-size:13.5px; color:{card_sub_col}; line-height:1.5; margin-bottom:20px;">Connect your Search Console account to load your verified sites & search telemetry.</div>'
+                f'</div>'
+            )
+            st.markdown(login_card_html, unsafe_allow_html=True)
 
             if auth_url:
                 st.link_button("🌐 Continue with Google", auth_url, type="primary", use_container_width=True)

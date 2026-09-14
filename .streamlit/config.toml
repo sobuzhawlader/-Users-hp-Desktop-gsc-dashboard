@@ -16,4 +16,5 @@ font = "sans serif"
 
 [client]
 showErrorDetails = "full"
+toolbarMode = "minimal"
 
