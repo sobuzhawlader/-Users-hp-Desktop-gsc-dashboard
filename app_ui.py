@@ -2287,6 +2287,11 @@ service = st.session_state.service
 service_v1 = st.session_state.service_v1
 current_site = st.session_state.current_site
 
+if 'start_str' not in locals():
+    start_str = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+if 'end_str' not in locals():
+    end_str = datetime.now().strftime('%Y-%m-%d')
+
 is_portfolio_mode = bool(current_site and current_site.startswith("🌐 [ALL SITES]"))
 real_active_sites = [s for s in st.session_state.sites if s and not s.startswith("🧪") and "Consolidated" not in s and "Custom Property" not in s]
 effective_site = real_active_sites[0] if (is_portfolio_mode and real_active_sites) else (current_site or (real_active_sites[0] if real_active_sites else ""))
@@ -2326,6 +2331,52 @@ if is_portfolio_mode or page in ["🌐 All Sites & Properties", "🌐 Properties
                 force_refresh=st.session_state.get('portfolio_needs_refresh', False)
             )
             st.session_state.portfolio_needs_refresh = False
+
+def render_empty_state_action(feature_title: str = "this report"):
+    eff_site = effective_site if effective_site else (st.session_state.current_site or "Selected Property")
+    is_http_only = eff_site.startswith("http://")
+    
+    notice_http = (
+        f'<div style="margin-top:6px; color:#fbbf24; font-size:12px;">'
+        f'⚠️ <b>Notice:</b> You selected an unencrypted <code>http://</code> property. If your website has migrated to <b>HTTPS</b>, Google Search Console stores all clicks and impressions under the <code>https://</code> or <code>sc-domain:</code> property.'
+        f'</div>'
+    ) if is_http_only else ''
+
+    st.markdown(f"""
+    <div style="background:rgba(30, 41, 59, 0.45); border:1px solid rgba(56, 189, 248, 0.25); border-radius:12px; padding:22px 18px; margin:16px 0 20px 0; text-align:center;">
+        <div style="font-size:28px; margin-bottom:6px;">📊</div>
+        <div style="font-size:16px; font-weight:700; color:#f8fafc;">No Search Performance Data Loaded for <span style="color:#38bdf8; font-family:'JetBrains Mono',monospace;">{eff_site}</span></div>
+        <div style="font-size:12.5px; color:#94a3b8; max-width:580px; margin:6px auto 14px auto; line-height:1.5;">
+            {notice_http}
+            Click below to query Google Search Console API live, or select your HTTPS / Domain property in the sidebar.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    c_act1, c_act2, c_act3 = st.columns([1, 1.8, 1])
+    with c_act2:
+        if service and eff_site and not eff_site.startswith("🧪") and "Consolidated" not in eff_site:
+            btn_key = f"btn_fetch_empty_act_{feature_title.lower().replace(' ', '_').replace('&', 'and')}"
+            if st.button("🚀 Fetch Live Search Console Data", key=btn_key, type="primary", use_container_width=True):
+                with st.spinner(f"Querying Google Search Console for {eff_site}..."):
+                    try:
+                        fetched = fetch_gsc_data(service, eff_site, start_str, end_str)
+                        if not fetched.empty:
+                            save_data(fetched, eff_site)
+                            st.session_state.df = fetched
+                            st.success(f"Successfully loaded {len(fetched):,} rows!")
+                            st.rerun()
+                        else:
+                            st.warning(f"⚠️ Google Search Console returned 0 rows for '{eff_site}'.\n\n👉 **Tip:** In the sidebar property selector, switch to the `https://` or `sc-domain:` version of this site.")
+                    except Exception as ex:
+                        st.error(f"Error connecting to GSC API: {ex}")
+        elif not service:
+            if st.button("🧪 Explore with Sample Demo Data", key=f"btn_demo_{feature_title.lower().replace(' ', '_')}", use_container_width=True):
+                demo_site = "sc-domain:example-enterprise.com"
+                st.session_state.current_site = demo_site
+                st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+                st.rerun()
+
 
 # ----------------------------------------------------
 # GSC Top Navigation Bar Renderer (Theme Aware)
@@ -4334,7 +4385,7 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
 elif page in ["🎯 Top Keywords & Queries", "🔍 Keywords"]:
     st.markdown("<div class='section-header'>🔍 Keyword Intelligence</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
+        render_empty_state_action("Keywords")
     else:
         t1, t2, t3, t4, t5 = st.tabs(["🏆 Top Ranking", "📏 Long Tail", "⚠️ Cannibalization", "🚫 Zero Clicks", "🏷️ Brand vs Non-Brand"])
         with t1:
@@ -4382,7 +4433,7 @@ elif page in ["🎯 Top Keywords & Queries", "🔍 Keywords"]:
 elif page in ["📄 Pages & Indexing", "📄 Pages"]:
     st.markdown("<div class='section-header'>📄 Page Level Performance</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
+        render_empty_state_action("Pages")
     else:
         p1, p2, p3, p4 = st.tabs(["🏆 Top Pages", "📉 Content Decay", "🧟 Zombie Pages", "🎯 High Imp / Low CTR"])
         with p1:
@@ -4406,7 +4457,7 @@ elif page in ["📄 Pages & Indexing", "📄 Pages"]:
 elif page in ["⚡ Core Web Vitals & Quick Wins", "⚡ Quick Wins"]:
     st.markdown("<div class='section-header'>⚡ Quick Wins & Striking Distance Keywords</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
+        render_empty_state_action("Quick Wins")
     else:
         st.markdown("""
         **Striking Distance Optimization Engine**: Identifies search queries ranking between **positions 4.0 and 20.0** with substantial search impressions.
@@ -4710,7 +4761,7 @@ elif page == "📉 Algo Update Impact":
 elif page == "📈 Custom CTR Curve":
     st.markdown("<div class='section-header'>📈 Custom Empirical CTR Curve & Traffic Opportunity Forecaster</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
+        render_empty_state_action("Custom CTR Curve")
     else:
         st.markdown("Builds your domain's **actual CTR curve by rank** and calculates predicted traffic gains if rankings improve.")
 
@@ -4843,7 +4894,7 @@ elif page == "🪵 Log Reconciliation":
 elif page in ["🎯 Search Intent & Regex", "🎯 Intent & Regex"]:
     st.markdown("<div class='section-header'>🎯 Search Intent & RE2 Regex Explorer</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
+        render_empty_state_action("Search Intent")
     else:
         t1, t2 = st.tabs(["🏷️ Intent Classification", "🧪 Custom RE2 Regex Filter"])
         with t1:
@@ -5041,7 +5092,7 @@ elif page == "⚔️ Keyword Cannibalization":
     """, unsafe_allow_html=True)
 
     if df.empty:
-        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
+        render_empty_state_action("Keyword Cannibalization")
     else:
         matrix_df = get_cannibalization_matrix(df)
         if matrix_df.empty:
@@ -5132,7 +5183,7 @@ elif page == "🧩 Semantic Keyword Clusters":
     """, unsafe_allow_html=True)
 
     if df.empty:
-        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
+        render_empty_state_action("Semantic Clusters")
     else:
         with st.spinner("Processing NLP semantic token clusters..."):
             summary_clusters, detailed_clusters = cluster_keywords(df)
