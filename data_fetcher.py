@@ -1,3 +1,4 @@
+import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
@@ -7,8 +8,9 @@ from database import save_data, init_db
 # Supported official GSC search types
 SEARCH_TYPES = ['web', 'image', 'video', 'news', 'discover', 'googleNews']
 
-def fetch_gsc_data(
-    service,
+@st.cache_data(ttl=3600, show_spinner=False)
+def _fetch_gsc_data_cached(
+    _service,
     site_url: str,
     start_date: str,
     end_date: str,
@@ -18,25 +20,20 @@ def fetch_gsc_data(
     aggregation_type: str = 'auto',
     dimension_filters: Optional[List[Dict[str, Any]]] = None
 ) -> pd.DataFrame:
-    """
-    Fetches search analytics data from GSC API with full feature support:
-    - Dimensions: date, query, page, country, device, searchAppearance
-    - Search Types: web, image, video, news, discover, googleNews
-    - Data State: 'all' (includes fresh unfinalized/hourly data) or 'final'
-    - RE2 Regex and dimension filters
-    - Complete pagination up to 100,000 rows
-    """
-    if not service:
+    """Internal cached GSC API query executor."""
+    if not _service:
         return pd.DataFrame()
 
     # Discover and GoogleNews do NOT support the 'query' dimension
     if search_type in ['discover', 'googleNews']:
         if dimensions is None:
-            dimensions = ['date', 'page', 'country', 'device']
+            dims = ['date', 'page', 'country', 'device']
         else:
-            dimensions = [d for d in dimensions if d != 'query']
+            dims = [d for d in dimensions if d != 'query']
     elif dimensions is None:
-        dimensions = ['date', 'query', 'page', 'country', 'device']
+        dims = ['date', 'query', 'page', 'country', 'device']
+    else:
+        dims = list(dimensions)
 
     all_rows = []
     start_row = 0
@@ -46,7 +43,7 @@ def fetch_gsc_data(
         request_body = {
             'startDate': start_date,
             'endDate': end_date,
-            'dimensions': dimensions,
+            'dimensions': dims,
             'rowLimit': row_limit,
             'startRow': start_row,
             'type': search_type if search_type in SEARCH_TYPES else 'web',
@@ -61,7 +58,7 @@ def fetch_gsc_data(
             }]
 
         try:
-            response = service.searchanalytics().query(
+            response = _service.searchanalytics().query(
                 siteUrl=site_url,
                 body=request_body
             ).execute()
@@ -73,7 +70,7 @@ def fetch_gsc_data(
             for row in rows:
                 data = {}
                 keys = row.get('keys', [])
-                for i, dim in enumerate(dimensions):
+                for i, dim in enumerate(dims):
                     if i < len(keys):
                         data[dim] = keys[i]
                     else:
@@ -97,6 +94,43 @@ def fetch_gsc_data(
 
     df = pd.DataFrame(all_rows)
     return df
+
+
+def fetch_gsc_data(
+    service=None,
+    site_url: str = "",
+    start_date: str = "",
+    end_date: str = "",
+    dimensions: Optional[List[str]] = None,
+    search_type: str = 'web',
+    data_state: str = 'final',
+    aggregation_type: str = 'auto',
+    dimension_filters: Optional[List[Dict[str, Any]]] = None,
+    **kwargs
+) -> pd.DataFrame:
+    """
+    Fetches search analytics data from GSC API with high-performance caching:
+    - Dimensions: date, query, page, country, device, searchAppearance
+    - Search Types: web, image, video, news, discover, googleNews
+    - Data State: 'all' (includes fresh unfinalized/hourly data) or 'final'
+    - RE2 Regex and dimension filters
+    - Complete pagination up to 100,000 rows
+    """
+    actual_service = service if service is not None else kwargs.get('_service')
+    if not actual_service:
+        return pd.DataFrame()
+
+    return _fetch_gsc_data_cached(
+        _service=actual_service,
+        site_url=site_url,
+        start_date=start_date,
+        end_date=end_date,
+        dimensions=dimensions,
+        search_type=search_type,
+        data_state=data_state,
+        aggregation_type=aggregation_type,
+        dimension_filters=dimension_filters
+    )
 
 
 def fetch_discover_data(service, site_url: str, start_date: str, end_date: str) -> pd.DataFrame:

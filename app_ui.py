@@ -212,8 +212,8 @@ st.markdown("""
 if is_dark:
     st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-    * { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    * { font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     
     /* Deep Tech Dark Canvas */
     html, body, [class*="css"], .stApp, .main, [data-testid="stAppViewContainer"] { 
@@ -519,6 +519,50 @@ if is_dark:
         align-items: center;
         justify-content: center;
     }
+
+    /* Looker Studio / Stripe Trend Pill Badges (Dark Mode) */
+    .trend-badge-up {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 2px !important;
+        background: rgba(16, 185, 129, 0.18) !important;
+        color: #34d399 !important;
+        border: 1px solid rgba(16, 185, 129, 0.35) !important;
+        border-radius: 12px !important;
+        padding: 2px 7px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        line-height: 1.1 !important;
+        font-family: 'JetBrains Mono', monospace !important;
+    }
+    .trend-badge-down {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 2px !important;
+        background: rgba(239, 68, 68, 0.18) !important;
+        color: #f87171 !important;
+        border: 1px solid rgba(239, 68, 68, 0.35) !important;
+        border-radius: 12px !important;
+        padding: 2px 7px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        line-height: 1.1 !important;
+        font-family: 'JetBrains Mono', monospace !important;
+    }
+    .trend-badge-neutral {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 2px !important;
+        background: rgba(148, 163, 184, 0.15) !important;
+        color: #94a3b8 !important;
+        border: 1px solid rgba(148, 163, 184, 0.25) !important;
+        border-radius: 12px !important;
+        padding: 2px 7px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        line-height: 1.1 !important;
+        font-family: 'JetBrains Mono', monospace !important;
+    }
     
     /* AI Cyber Banner */
     .gsc-ai-banner {
@@ -686,13 +730,64 @@ if is_dark:
         background: rgba(15, 23, 42, 0.7) !important;
     }
     
-    /* Streamlit Expander */
+    /* Streamlit Expander & Sidebar Accordion */
     .streamlit-expanderHeader {
         background: rgba(15, 23, 42, 0.6) !important;
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
         border-radius: 8px !important;
         color: #e2e8f0 !important;
         font-weight: 600 !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details {
+        border: 1px solid rgba(56, 189, 248, 0.18) !important;
+        border-radius: 8px !important;
+        background: rgba(15, 23, 42, 0.6) !important;
+        margin-bottom: 5px !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details summary {
+        background: rgba(15, 23, 42, 0.85) !important;
+        border-radius: 8px !important;
+        padding: 8px 12px !important;
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        color: #f1f5f9 !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details summary:hover {
+        background: rgba(56, 189, 248, 0.12) !important;
+        color: #38bdf8 !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details summary svg {
+        fill: #94a3b8 !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] {
+        padding: 4px 6px !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] .stButton > button {
+        text-align: left !important;
+        justify-content: flex-start !important;
+        font-size: 12.5px !important;
+        padding: 6px 10px !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        margin: 2px 0 !important;
+        width: 100% !important;
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        color: #cbd5e1 !important;
+        box-shadow: none !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] .stButton > button:hover {
+        background: rgba(56, 189, 248, 0.12) !important;
+        color: #38bdf8 !important;
+        border-color: rgba(56, 189, 248, 0.25) !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] .stButton > button[kind="primary"],
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] .stButton > button[data-testid="baseButton-primary"] {
+        background: linear-gradient(90deg, rgba(56, 189, 248, 0.25) 0%, rgba(37, 99, 235, 0.18) 100%) !important;
+        color: #38bdf8 !important;
+        border: 1px solid rgba(56, 189, 248, 0.4) !important;
+        border-left: 3px solid #38bdf8 !important;
+        font-weight: 700 !important;
     }
     
     /* Custom Tech Scrollbar */
@@ -716,14 +811,14 @@ else:
     # Authentic Google Search Console Light Theme
     st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-    * { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    * { font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
     
     /* Google Search Console Clean Light Canvas */
     html, body, [class*="css"], .stApp, .main, [data-testid="stAppViewContainer"] { 
-        background-color: #f8f9fa !important; 
+        background-color: #f8fafc !important; 
         background-image: none !important;
-        color: #202124 !important;
+        color: #1e293b !important;
     }
 
     /* Global Light Typography */
@@ -936,74 +1031,75 @@ else:
     }
     
     /* Authentic Google Search Console Scorecards */
+    /* Authentic Looker Studio & Stripe Enterprise Scorecards */
     .gsc-tile-wrapper {
-        border: 1px solid #dadce0 !important;
-        border-radius: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
         overflow: hidden;
         margin-bottom: 12px;
         background: #ffffff !important;
-        box-shadow: 0 1px 3px rgba(60,64,67,0.1) !important;
-        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .gsc-tile-wrapper:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 6px rgba(60,64,67,0.15) !important;
-        border-color: #bdc1c6 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+        border-color: #cbd5e1 !important;
     }
     .gsc-card {
-        padding: 14px 16px;
+        padding: 16px 18px;
         min-height: 155px;
         position: relative;
         background: #ffffff !important;
     }
     .gsc-card-users-on {
-        background: #e6f4ea !important;
-        border-top: 3px solid #137333 !important;
-        color: #137333 !important;
+        background: #f0fdf4 !important;
+        border-top: 3px solid #10b981 !important;
+        color: #065f46 !important;
     }
     .gsc-card-clicks-on {
-        background: #e8f0fe !important;
-        border-top: 3px solid #1a73e8 !important;
-        color: #1a73e8 !important;
+        background: #eff6ff !important;
+        border-top: 3px solid #2563eb !important;
+        color: #1e40af !important;
     }
     .gsc-card-imps-on {
-        background: #f3e8fd !important;
-        border-top: 3px solid #9334e6 !important;
-        color: #7627bb !important;
+        background: #faf5ff !important;
+        border-top: 3px solid #9333ea !important;
+        color: #6b21a8 !important;
     }
     .gsc-card-ctr-on {
-        background: #e6f4ea !important;
-        border-top: 3px solid #137333 !important;
-        color: #137333 !important;
+        background: #f0fdfa !important;
+        border-top: 3px solid #0d9488 !important;
+        color: #115e59 !important;
     }
     .gsc-card-pos-on {
-        background: #fef7e0 !important;
-        border-top: 3px solid #e37400 !important;
-        color: #b06000 !important;
+        background: #fffbeb !important;
+        border-top: 3px solid #d97706 !important;
+        color: #92400e !important;
     }
     .gsc-card-off {
         background: #ffffff !important;
-        color: #80868b !important;
+        color: #94a3b8 !important;
         border-top: 3px solid transparent !important;
     }
     
     .gsc-card-title {
-        font-size: 12px;
+        font-size: 11.5px;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.5px;
         display: flex;
         align-items: center;
         gap: 6px;
-        color: #5f6368 !important;
+        color: #64748b !important;
     }
     .gsc-card-val-big {
-        font-family: 'Plus Jakarta Sans', sans-serif !important;
-        font-size: 32px !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-size: 30px !important;
         font-weight: 700 !important;
         line-height: 1.15 !important;
         margin-top: 8px !important;
-        color: #202124 !important;
+        color: #0f172a !important;
         letter-spacing: -0.5px !important;
     }
     .gsc-card-sub {
@@ -1011,30 +1107,74 @@ else:
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: 3px;
-        color: #5f6368 !important;
+        margin-top: 4px;
+        color: #64748b !important;
     }
     .gsc-card-val-comp {
-        font-family: 'Plus Jakarta Sans', sans-serif !important;
-        font-size: 17px !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-size: 16px !important;
         font-weight: 600 !important;
         line-height: 1.15 !important;
-        margin-top: 10px !important;
-        color: #5f6368 !important;
+        margin-top: 8px !important;
+        color: #64748b !important;
     }
     .gsc-card-info-icon {
         position: absolute;
         bottom: 12px;
         right: 14px;
         font-size: 11px;
-        color: #80868b !important;
-        border: 1px solid #dadce0 !important;
+        color: #94a3b8 !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 50%;
         width: 16px;
         height: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+
+    /* Looker Studio / Stripe Trend Pill Badges (Light Mode) */
+    .trend-badge-up {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 2px !important;
+        background: #def7ec !important;
+        color: #03543f !important;
+        border: 1px solid #bcf0da !important;
+        border-radius: 12px !important;
+        padding: 2px 7px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        line-height: 1.1 !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    .trend-badge-down {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 2px !important;
+        background: #fde8e8 !important;
+        color: #9b1c1c !important;
+        border: 1px solid #fbd5d5 !important;
+        border-radius: 12px !important;
+        padding: 2px 7px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        line-height: 1.1 !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    .trend-badge-neutral {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 2px !important;
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 2px 7px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        line-height: 1.1 !important;
+        font-family: 'Inter', sans-serif !important;
     }
     
     /* AI Banner */
@@ -1189,11 +1329,12 @@ else:
         background: #ffffff !important;
     }
     
-    /* Expander */
+    /* Expander & Sidebar Accordions (Light Mode) */
     div[data-testid="stExpander"] details {
-        border: 1px solid #dadce0 !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 8px !important;
         background: #ffffff !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
     }
     div[data-testid="stExpander"] details summary {
         background: #ffffff !important;
@@ -1202,11 +1343,62 @@ else:
     }
     div[data-testid="stExpander"] details summary p,
     div[data-testid="stExpander"] details summary span {
-        color: #202124 !important;
+        color: #1e293b !important;
         font-weight: 600 !important;
     }
     div[data-testid="stExpander"] details summary svg {
-        fill: #5f6368 !important;
+        fill: #64748b !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details {
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        margin-bottom: 5px !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details summary {
+        background: #f8fafc !important;
+        border-radius: 8px !important;
+        padding: 8px 12px !important;
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        color: #1e293b !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details summary:hover {
+        background: #f1f5f9 !important;
+        color: #1a73e8 !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details summary svg {
+        fill: #64748b !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] {
+        padding: 4px 6px !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] .stButton > button {
+        text-align: left !important;
+        justify-content: flex-start !important;
+        font-size: 12.5px !important;
+        padding: 6px 10px !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        margin: 2px 0 !important;
+        width: 100% !important;
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        color: #334155 !important;
+        box-shadow: none !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] .stButton > button:hover {
+        background: #f1f5f9 !important;
+        color: #1a73e8 !important;
+        border-color: #e2e8f0 !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] .stButton > button[kind="primary"],
+    section[data-testid="stSidebar"] div[data-testid="stExpander"] details div[data-testid="stExpanderDetails"] .stButton > button[data-testid="baseButton-primary"] {
+        background: #e8f0fe !important;
+        color: #1a73e8 !important;
+        border: 1px solid #d2e3fc !important;
+        border-left: 3px solid #1a73e8 !important;
+        font-weight: 700 !important;
     }
     
     /* Light Mode Overrides for Dark Containers & Telemetry */
@@ -1700,6 +1892,12 @@ with st.sidebar:
 
         if auth_url:
             st.link_button("🌐 Sign in with Google", auth_url, type="primary", use_container_width=True)
+            sec_col = "#94a3b8" if is_dark else "#5f6368"
+            st.markdown(f"""
+            <div style="font-size:10.5px; color:{sec_col}; line-height:1.35; margin:4px 0 8px 0; text-align:center;">
+                🔒 <b>Read-Only & In-Memory</b>: OAuth2 token held in volatile memory; never stored permanently or sold.
+            </div>
+            """, unsafe_allow_html=True)
 
         if st.button("🧪 Explore Demo Mode", key="side_btn_demo_explore", use_container_width=True, help="Load 90-day search data to test all 23 dashboard features without signing in"):
             demo_site = "sc-domain:example-enterprise.com"
@@ -1839,32 +2037,119 @@ with st.sidebar:
 
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
-    # 3. Authentic Google Search Console Navigation Menu (100% GSC API Scope + Enterprise Suite)
-    page = st.radio("Navigation", [
-        "📈 Performance",
-        "🟢 Real-Time Active Users",
-        "🌐 All Sites & Properties",
-        "🔍 URL inspection & Schema",
-        "🚀 Instant Google Indexing API",
-        "📄 Pages & Indexing",
-        "🗺️ Sitemaps Manager",
-        "⚡ Core Web Vitals & Quick Wins",
-        "🎯 Top Keywords & Queries",
-        "⚔️ Keyword Cannibalization",
-        "🧩 Semantic Keyword Clusters",
-        "🕷️ Technical On-Page Crawler",
-        "✨ AI Meta & Schema Studio",
-        "🔌 WordPress 1-Click Sync",
-        "🚨 24/7 Anomaly & Telegram Bot",
-        "💼 White-Label Client Portal",
-        "📉 Algo Update Impact",
-        "📈 Custom CTR Curve",
-        "🪵 Log Reconciliation",
-        "🎯 Search Intent & Regex",
-        "🤖 AI Features & AEO",
-        "📤 Reports & PDF Export",
-        "⚙️ Settings & Google Connection"
-    ], index=0, label_visibility="collapsed")
+    # 3. Authentic Google Search Console 5-Category Enterprise Navigation
+    NAV_CATEGORIES = {
+        "📊 Core Performance & Traffic": [
+            "📈 Performance",
+            "🟢 Real-Time Active Users",
+            "🌐 All Sites & Properties",
+            "📈 Custom CTR Curve",
+        ],
+        "⚙️ Technical SEO & Indexing": [
+            "🔍 URL inspection & Schema",
+            "🚀 Instant Google Indexing API",
+            "📄 Pages & Indexing",
+            "🗺️ Sitemaps Manager",
+            "🕷️ Technical On-Page Crawler",
+            "🪵 Log Reconciliation",
+        ],
+        "🎯 Keywords, Intent & SERP": [
+            "🎯 Top Keywords & Queries",
+            "⚔️ Keyword Cannibalization",
+            "🧩 Semantic Keyword Clusters",
+            "⚡ Core Web Vitals & Quick Wins",
+            "📉 Algo Update Impact",
+            "🎯 Search Intent & Regex",
+        ],
+        "🤖 AI & Automation": [
+            "✨ AI Meta & Schema Studio",
+            "🔌 WordPress 1-Click Sync",
+            "🚨 24/7 Anomaly & Telegram Bot",
+            "🤖 AI Features & AEO",
+        ],
+        "📄 Reporting & Agency": [
+            "💼 White-Label Client Portal",
+            "📤 Reports & PDF Export",
+            "⚙️ Settings & Google Connection",
+        ],
+    }
+
+    ALL_NAV_PAGES = []
+    for cat_pages in NAV_CATEGORIES.values():
+        ALL_NAV_PAGES.extend(cat_pages)
+
+    if 'selected_page' not in st.session_state:
+        qp_p = st.query_params.get('page')
+        if qp_p and qp_p in ALL_NAV_PAGES:
+            st.session_state.selected_page = qp_p
+        else:
+            st.session_state.selected_page = "📈 Performance"
+
+    # Normalize aliases if any
+    if st.session_state.selected_page not in ALL_NAV_PAGES:
+        if st.session_state.selected_page in ["📊 Overview", "📈 Performance on Search Results"]:
+            st.session_state.selected_page = "📈 Performance"
+        elif st.session_state.selected_page in ["🟢 Real-Time Visitors"]:
+            st.session_state.selected_page = "🟢 Real-Time Active Users"
+        elif st.session_state.selected_page in ["🌐 Properties Manager"]:
+            st.session_state.selected_page = "🌐 All Sites & Properties"
+        elif st.session_state.selected_page in ["🔍 Keywords"]:
+            st.session_state.selected_page = "🎯 Top Keywords & Queries"
+        elif st.session_state.selected_page in ["📄 Pages"]:
+            st.session_state.selected_page = "📄 Pages & Indexing"
+        elif st.session_state.selected_page in ["⚡ Quick Wins"]:
+            st.session_state.selected_page = "⚡ Core Web Vitals & Quick Wins"
+        elif st.session_state.selected_page in ["🔍 URL inspection", "🔬 URL & Canonical Inspector"]:
+            st.session_state.selected_page = "🔍 URL inspection & Schema"
+        elif st.session_state.selected_page in ["🚀 Instant Indexing"]:
+            st.session_state.selected_page = "🚀 Instant Google Indexing API"
+        elif st.session_state.selected_page in ["🗺️ Sitemaps"]:
+            st.session_state.selected_page = "🗺️ Sitemaps Manager"
+        elif st.session_state.selected_page in ["🎯 Intent & Regex"]:
+            st.session_state.selected_page = "🎯 Search Intent & Regex"
+        elif st.session_state.selected_page in ["🤖 AEO & Preferred Sources"]:
+            st.session_state.selected_page = "🤖 AI Features & AEO"
+        elif st.session_state.selected_page in ["⚙️ Settings & Connection", "⚙️ 24/7 Automation"]:
+            st.session_state.selected_page = "⚙️ Settings & Google Connection"
+        elif st.session_state.selected_page in ["🚨 Alerts"]:
+            st.session_state.selected_page = "🚨 24/7 Anomaly & Telegram Bot"
+        elif st.session_state.selected_page in ["📤 Reports & Export"]:
+            st.session_state.selected_page = "📤 Reports & PDF Export"
+        else:
+            st.session_state.selected_page = "📈 Performance"
+
+    active_category = "📊 Core Performance & Traffic"
+    for cat_name, p_list in NAV_CATEGORIES.items():
+        if st.session_state.selected_page in p_list:
+            active_category = cat_name
+            break
+
+    nav_hdr_col = "#38bdf8" if is_dark else "#5f6368"
+    st.markdown(f"<div style='font-size:11px; font-weight:700; color:{nav_hdr_col}; text-transform:uppercase; letter-spacing:0.8px; margin:14px 0 6px 2px;'>NAVIGATION MODULES</div>", unsafe_allow_html=True)
+
+    # 1-Click Quick Feature Search / Jump
+    quick_idx = ALL_NAV_PAGES.index(st.session_state.selected_page) if st.session_state.selected_page in ALL_NAV_PAGES else 0
+    quick_choice = st.selectbox("Quick Jump", ALL_NAV_PAGES, index=quick_idx, key="sb_quick_jump_feature", label_visibility="collapsed")
+    if quick_choice != st.session_state.selected_page:
+        st.session_state.selected_page = quick_choice
+        st.query_params['page'] = quick_choice
+        st.rerun()
+
+    # 5 Collapsible Category Accordions
+    for cat_name, cat_pages in NAV_CATEGORIES.items():
+        is_open = (cat_name == active_category)
+        with st.expander(cat_name, expanded=is_open):
+            for p in cat_pages:
+                is_selected = (st.session_state.selected_page == p)
+                btn_type = "primary" if is_selected else "secondary"
+                btn_prefix = "● " if is_selected else "  "
+                if st.button(f"{btn_prefix}{p}", key=f"nav_btn_{abs(hash(p))}", use_container_width=True, type=btn_type):
+                    if st.session_state.selected_page != p:
+                        st.session_state.selected_page = p
+                        st.query_params['page'] = p
+                        st.rerun()
+
+    page = st.session_state.selected_page
 
     st.divider()
 
@@ -2152,14 +2437,20 @@ if page in ["📈 Performance", "📊 Overview"]:
             c1, c2, c3 = st.columns([1, 2, 1])
             with c2:
                 st.link_button("🔄 Switch Google Account (Sign In with Another Gmail)", auth_url, type="primary", use_container_width=True)
+                with st.expander("💡 How to Connect Your GSC Property (Step-by-Step)", expanded=False):
+                    st.markdown("""
+                    **1. Check Google Account**: Ensure you sign in with the exact Gmail/Workspace address that has Owner or Full permissions in Search Console.  
+                    **2. Check Property Verification**: Visit [Google Search Console](https://search.google.com/search-console) to confirm your property is verified.  
+                    **3. Domain vs URL-Prefix**: Domain properties (`sc-domain:example.com`) cover all subdomains (`www`, `blog`); URL-prefix (`https://example.com/`) covers only that prefix.
+                    """)
         st.stop()
     elif not is_connected and not real_active_sites:
         col_pad1, col_center, col_pad2 = st.columns([1, 2.2, 1])
         with col_center:
             card_bg = "#ffffff" if not is_dark else "linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%)"
-            card_border = "#dadce0" if not is_dark else "rgba(56, 189, 248, 0.3)"
-            card_title_col = "#202124" if not is_dark else "#f8fafc"
-            card_sub_col = "#5f6368" if not is_dark else "#94a3b8"
+            card_border = "#e2e8f0" if not is_dark else "rgba(56, 189, 248, 0.3)"
+            card_title_col = "#0f172a" if not is_dark else "#f8fafc"
+            card_sub_col = "#64748b" if not is_dark else "#94a3b8"
 
             login_card_html = (
                 f'<div style="background:{card_bg}; border:1px solid {card_border}; border-radius:16px; padding:36px 28px; margin:40px auto 20px auto; text-align:center; box-shadow:0 2px 12px rgba(60,64,67,0.08);">'
@@ -2171,7 +2462,7 @@ if page in ["📈 Performance", "📊 Overview"]:
                 f'<path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>'
                 f'</svg>'
                 f'</div>'
-                f'<div style="font-size:22px; font-weight:600; color:{card_title_col}; letter-spacing:-0.2px; margin-bottom:8px;">Sign in with Google</div>'
+                f'<div style="font-size:22px; font-weight:700; color:{card_title_col}; letter-spacing:-0.2px; margin-bottom:8px;">Sign in with Google</div>'
                 f'<div style="font-size:13.5px; color:{card_sub_col}; line-height:1.5; margin-bottom:20px;">Connect your Search Console account to load your verified sites & search telemetry.</div>'
                 f'</div>'
             )
@@ -2179,6 +2470,13 @@ if page in ["📈 Performance", "📊 Overview"]:
 
             if auth_url:
                 st.link_button("🌐 Continue with Google", auth_url, type="primary", use_container_width=True)
+
+            sec_note_col = "#94a3b8" if is_dark else "#64748b"
+            st.markdown(f"""
+            <div style="font-size:11.5px; color:{sec_note_col}; line-height:1.45; text-align:center; margin:10px auto 16px auto; max-width:440px;">
+                🔒 <b>Read-Only & In-Memory</b>: Your credentials and Search Console data are accessed securely via Google OAuth2, processed in volatile session memory, and never permanently stored on external servers or sold.
+            </div>
+            """, unsafe_allow_html=True)
 
             if st.button("🧪 Explore Demo Dashboard", key="btn_login_demo_explore", use_container_width=True, help="Load sample data to preview all 23 dashboard features"):
                 demo_site = "sc-domain:example-enterprise.com"
@@ -2191,6 +2489,23 @@ if page in ["📈 Performance", "📊 Overview"]:
                 st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
                 st.session_state.portfolio_needs_refresh = True
                 st.rerun()
+
+            with st.expander("💡 How to Connect Your GSC Property (Step-by-Step Guide)", expanded=False):
+                st.markdown("""
+                #### 1. Verify Property Ownership in Search Console
+                Ensure your website is already added and verified in the official [Google Search Console](https://search.google.com/search-console).
+
+                #### 2. Confirm Google Account Permissions
+                The signed-in Gmail or Google Workspace account must have at least **Full** or **Restricted** user access (or **Owner**) on the property.
+
+                #### 3. Domain Properties vs URL-Prefix Properties
+                - **Domain Property (`sc-domain:example.com`)**: Verified via DNS TXT record. Automatically tracks data across all protocols (`http://` and `https://`) and all subdomains (`www`, `blog`, `m`).
+                - **URL-Prefix Property (`https://example.com/`)**: Verified via HTML file, meta tag, or GA4. Tracks only URLs starting with that exact address.
+
+                #### 4. Troubleshooting 0 Properties or 403 Forbidden
+                - **0 Properties Found**: If you see 0 properties after connecting, your Search Console properties belong to another Gmail account. Click **🔄 Switch Google Account** to log in with your primary webmaster account.
+                - **403 Forbidden**: Confirm that the **Google Search Console API** is enabled in your Google Cloud Console project and permissions have been granted.
+                """)
         st.stop()
 
     # 2. GSC Performance Header
@@ -2445,16 +2760,17 @@ if page in ["📈 Performance", "📊 Overview"]:
             return ""
         if comp == 0:
             if curr > 0:
-                return '<span style="color:#10b981; font-size:11px; font-weight:700; margin-left:6px;">▲ +100%</span>'
-            return '<span style="color:#94a3b8; font-size:11px; font-weight:600; margin-left:6px;">— 0%</span>'
+                badge_cls = "trend-badge-up" if higher_is_better else "trend-badge-down"
+                return f'<span class="{badge_cls}">▲ +100%</span>'
+            return '<span class="trend-badge-neutral">— 0%</span>'
         diff_pct = round(((curr - comp) / comp) * 100, 1)
         if diff_pct > 0:
-            col = "#10b981" if higher_is_better else "#ef4444"
-            return f'<span style="color:{col}; font-size:11px; font-weight:700; margin-left:6px;">▲ +{diff_pct}%</span>'
+            badge_cls = "trend-badge-up" if higher_is_better else "trend-badge-down"
+            return f'<span class="{badge_cls}">▲ +{diff_pct}%</span>'
         elif diff_pct < 0:
-            col = "#ef4444" if higher_is_better else "#10b981"
-            return f'<span style="color:{col}; font-size:11px; font-weight:700; margin-left:6px;">▼ {diff_pct}%</span>'
-        return '<span style="color:#94a3b8; font-size:11px; font-weight:600; margin-left:6px;">— 0%</span>'
+            badge_cls = "trend-badge-down" if higher_is_better else "trend-badge-up"
+            return f'<span class="{badge_cls}">▼ {abs(diff_pct)}%</span>'
+        return '<span class="trend-badge-neutral">— 0%</span>'
 
     # 2.5 Prominent Live Active Users Banner
     if is_dark:
@@ -2905,9 +3221,12 @@ if page in ["📈 Performance", "📊 Overview"]:
 
     with gsc_t1:
         if not df_active_tab.empty and 'query' in df_active_tab.columns:
-            q_col1, q_col2 = st.columns([3, 1])
+            q_col1, q_col_qw, q_col2 = st.columns([3.0, 2.2, 1.4])
             with q_col1:
                 q_search = st.text_input("Filter queries...", key="gsc_q_filter", placeholder="Filter by query...", label_visibility="collapsed")
+            with q_col_qw:
+                filter_striking = st.checkbox("⚡ Striking Distance (Pos 4-20)", value=False, key="chk_striking_distance", help="Filter queries ranking between position 4.0 and 20.0 with high impressions — prime targets for Page 1 optimization")
+            
             q_df = df_active_tab.groupby('query').agg(
                 clicks=('clicks', 'sum'),
                 impressions=('impressions', 'sum'),
@@ -2915,16 +3234,56 @@ if page in ["📈 Performance", "📊 Overview"]:
             ).reset_index()
             q_df['ctr'] = np.where(q_df['impressions'] > 0, (q_df['clicks'] / q_df['impressions'] * 100).round(2), 0.0)
             q_df['position'] = q_df['position'].round(1)
-            q_df = q_df.sort_values('clicks', ascending=False)
+
+            if filter_striking:
+                # Positions 4.0 to 20.0 with high impressions
+                min_imp_threshold = max(20, int(q_df['impressions'].quantile(0.25))) if len(q_df) > 10 else 10
+                q_df = q_df[
+                    (q_df['position'] >= 4.0) & 
+                    (q_df['position'] <= 20.0) & 
+                    (q_df['impressions'] >= min_imp_threshold)
+                ].sort_values('impressions', ascending=False)
+                
+                # Estimated CTR upside if promoted to Top 3
+                q_df['Est. Upside (Top 3 Jump)'] = np.where(
+                    q_df['position'] <= 10.0,
+                    "+180% to +320% CTR",
+                    "+400% to +850% CTR"
+                )
+                
+                qw_bg = "rgba(16, 185, 129, 0.12)" if is_dark else "#e6f4ea"
+                qw_border = "rgba(16, 185, 129, 0.35)" if is_dark else "#ceead6"
+                qw_title = "#34d399" if is_dark else "#137333"
+                qw_sub = "#94a3b8" if is_dark else "#5f6368"
+                st.markdown(f"""
+                <div style="background:{qw_bg}; border:1px solid {qw_border}; border-radius:8px; padding:10px 14px; margin:4px 0 10px 0; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span style="font-weight:700; color:{qw_title}; font-size:13px;">⚡ {len(q_df)} Striking Distance Opportunities Found</span>
+                        <span style="font-size:12px; color:{qw_sub}; margin-left:8px;">Ranking pos 4.0–20.0 with ≥{min_imp_threshold} impressions. High ROI targets for Page 1 optimization.</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                q_df = q_df.sort_values('clicks', ascending=False)
+
             if q_search:
                 q_df = q_df[q_df['query'].str.contains(q_search, case=False, na=False)]
+
             with q_col2:
                 q_csv = q_df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Export Queries (CSV)", q_csv, "gsc_queries.csv", "text/csv", use_container_width=True)
+                export_label = "📥 Export Striking (CSV)" if filter_striking else "📥 Export Queries (CSV)"
+                st.download_button(export_label, q_csv, "gsc_striking_distance.csv" if filter_striking else "gsc_queries.csv", "text/csv", use_container_width=True)
+
+            disp_cols = ['query', 'clicks', 'impressions', 'ctr', 'position']
+            rename_map = {
+                'query': 'Top queries', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
+            }
+            if filter_striking and 'Est. Upside (Top 3 Jump)' in q_df.columns:
+                disp_cols.append('Est. Upside (Top 3 Jump)')
+                rename_map['Est. Upside (Top 3 Jump)'] = 'Est. Upside (Top 3 Jump)'
+
             st.dataframe(
-                q_df[['query', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                    'query': 'Top queries', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
-                }),
+                q_df[disp_cols].rename(columns=rename_map),
                 use_container_width=True, height=420
             )
         elif not df_active_tab.empty and 'query' not in df_active_tab.columns:
@@ -3934,33 +4293,135 @@ elif page in ["📄 Pages & Indexing", "📄 Pages"]:
 # 4. Quick Wins
 # ----------------------------------------------------
 elif page in ["⚡ Core Web Vitals & Quick Wins", "⚡ Quick Wins"]:
-    st.markdown("<div class='section-header'>⚡ Quick Wins (Page 2 Striking Distance)</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-header'>⚡ Quick Wins & Striking Distance Keywords</div>", unsafe_allow_html=True)
     if df.empty:
-        st.info("👈 Please fetch data first.")
+        st.info("👈 Please fetch Search Console data first.")
     else:
-        qw = get_quick_wins(df)
+        st.markdown("""
+        **Striking Distance Optimization Engine**: Identifies search queries ranking between **positions 4.0 and 20.0** with substantial search impressions.
+        These are your highest-leverage quick wins: a modest rank improvement into the top 3 can yield a **+180% to +850% organic CTR jump**.
+        """)
+
+        ctrl_c1, ctrl_c2, ctrl_c3 = st.columns([2, 2, 1.5])
+        with ctrl_c1:
+            pos_range = st.slider("Target Position Range:", min_value=1.0, max_value=30.0, value=(4.0, 20.0), step=0.5, key="qw_pos_slider")
+        with ctrl_c2:
+            min_imp = st.number_input("Minimum Impressions:", min_value=10, max_value=50000, value=50, step=10, key="qw_min_imp_num")
+
+        grouped = df.groupby('query').agg(
+            clicks=('clicks', 'sum'),
+            impressions=('impressions', 'sum'),
+            position=('position', 'mean')
+        ).reset_index()
+        grouped['ctr'] = np.where(grouped['impressions'] > 0, (grouped['clicks'] / grouped['impressions'] * 100).round(2), 0.0)
+        grouped['position'] = grouped['position'].round(1)
+
+        qw = grouped[
+            (grouped['position'] >= pos_range[0]) &
+            (grouped['position'] <= pos_range[1]) &
+            (grouped['impressions'] >= min_imp)
+        ].sort_values('impressions', ascending=False)
+
         if not qw.empty:
-            st.success(f"🎯 Found {len(qw)} keywords ranking on Page 2 (pos 11-20) with >100 impressions!")
+            qw['Est. Upside'] = np.where(
+                qw['position'] <= 10.0,
+                "+180% to +320% CTR",
+                "+400% to +850% CTR"
+            )
+            # Potential incremental clicks if moving to top 3 (benchmark ~15% CTR)
+            qw['Est. Top 3 Clicks'] = (qw['impressions'] * 0.15).astype(int)
+            qw['Opportunity Gap'] = (qw['Est. Top 3 Clicks'] - qw['clicks']).clip(lower=0)
+
+            with ctrl_c3:
+                st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
+                qw_csv = qw.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Export Quick Wins (CSV)", qw_csv, "gsc_striking_distance_opportunities.csv", "text/csv", use_container_width=True)
+
+            # Looker Studio / Stripe KPI metrics
+            m_c1, m_c2, m_c3, m_c4 = st.columns(4)
+            with m_c1:
+                st.markdown(f"""
+                <div class="gsc-tile-wrapper">
+                    <div class="gsc-card gsc-card-clicks-on">
+                        <div class="gsc-card-title">🎯 Striking Keywords</div>
+                        <div class="gsc-card-val-big">{len(qw):,}</div>
+                        <div class="gsc-card-sub"><span>Positions {pos_range[0]} - {pos_range[1]}</span><span class="trend-badge-up">High ROI</span></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            with m_c2:
+                st.markdown(f"""
+                <div class="gsc-tile-wrapper">
+                    <div class="gsc-card gsc-card-imps-on">
+                        <div class="gsc-card-title">👁️ Total Impressions</div>
+                        <div class="gsc-card-val-big">{qw['impressions'].sum():,}</div>
+                        <div class="gsc-card-sub"><span>Available Search Volume</span><span class="trend-badge-neutral">Ready to Capture</span></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            with m_c3:
+                st.markdown(f"""
+                <div class="gsc-tile-wrapper">
+                    <div class="gsc-card gsc-card-pos-on">
+                        <div class="gsc-card-title">📍 Avg Position</div>
+                        <div class="gsc-card-val-big">{qw['position'].mean():.1f}</div>
+                        <div class="gsc-card-sub"><span>Page 1-2 Threshold</span><span class="trend-badge-neutral">Striking</span></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            with m_c4:
+                st.markdown(f"""
+                <div class="gsc-tile-wrapper">
+                    <div class="gsc-card gsc-card-users-on">
+                        <div class="gsc-card-title">🚀 Est. Incremental Clicks</div>
+                        <div class="gsc-card-val-big">+{qw['Opportunity Gap'].sum():,}</div>
+                        <div class="gsc-card-sub"><span>Potential Gain in Top 3</span><span class="trend-badge-up">+Upside</span></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
             fig_qw = px.scatter(
-                qw.head(40),
+                qw.head(50),
                 x='position',
                 y='impressions',
-                size='clicks',
+                size='impressions',
                 color='ctr',
-                hover_data=['query'],
-                color_continuous_scale=['#38bdf8', '#a855f7', '#f59e0b']
+                hover_data=['query', 'clicks', 'Est. Upside'],
+                color_continuous_scale=['#2563eb', '#8b5cf6', '#10b981']
             )
             fig_qw.update_layout(
                 paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(15, 23, 42, 0.45)',
-                font=dict(color='#94a3b8', family="'Plus Jakarta Sans', sans-serif"),
-                xaxis=dict(gridcolor='rgba(255, 255, 255, 0.05)', title="Ranking Position"),
-                yaxis=dict(gridcolor='rgba(255, 255, 255, 0.05)', title="Search Impressions")
+                plot_bgcolor='rgba(15, 23, 42, 0.45)' if is_dark else '#f8fafc',
+                font=dict(color='#94a3b8' if is_dark else '#5f6368', family="'Inter', sans-serif"),
+                xaxis=dict(gridcolor='rgba(255, 255, 255, 0.05)' if is_dark else '#e2e8f0', title="Ranking Position (Striking Distance)"),
+                yaxis=dict(gridcolor='rgba(255, 255, 255, 0.05)' if is_dark else '#e2e8f0', title="Search Impressions"),
+                height=380,
+                margin=dict(l=30, r=20, t=20, b=30)
             )
             st.plotly_chart(fig_qw, use_container_width=True)
-            st.dataframe(qw[['query', 'clicks', 'impressions', 'ctr', 'position']], use_container_width=True, height=400)
+
+            st.dataframe(
+                qw[['query', 'position', 'impressions', 'clicks', 'ctr', 'Est. Upside', 'Opportunity Gap']].rename(columns={
+                    'query': 'Striking Query',
+                    'position': 'Position',
+                    'impressions': 'Impressions',
+                    'clicks': 'Clicks',
+                    'ctr': 'CTR (%)',
+                    'Est. Upside': 'Estimated CTR Upside',
+                    'Opportunity Gap': 'Potential Incremental Clicks'
+                }),
+                use_container_width=True, height=450
+            )
         else:
-            st.info("No quick win candidates found.")
+            st.markdown(f"""
+            <div style="background:{'rgba(15, 23, 42, 0.65)' if is_dark else '#ffffff'}; border:1px dashed {'rgba(56, 189, 248, 0.3)' if is_dark else '#dadce0'}; border-radius:10px; padding:28px 20px; text-align:center; margin:14px 0;">
+                <div style="font-size:28px; margin-bottom:8px;">🎯</div>
+                <div style="font-size:15px; font-weight:700; color:{'#f8fafc' if is_dark else '#0f172a'};">No Striking Distance Candidates Found</div>
+                <div style="font-size:12.5px; color:{'#94a3b8' if is_dark else '#64748b'}; max-width:480px; margin:6px auto 0 auto; line-height:1.5;">
+                    Try lowering the minimum impressions filter or expanding the position range to uncover additional ranking opportunities.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
 # ----------------------------------------------------
 # ----------------------------------------------------
