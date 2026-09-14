@@ -11,6 +11,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
+from typing import Optional, List, Dict, Any, Union, Tuple
 
 # Ensure repo root directory is always on sys.path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -2612,7 +2613,7 @@ service_v1 = st.session_state.service_v1
 current_site = st.session_state.current_site
 
 if 'start_str' not in locals():
-    start_str = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+    start_str = (datetime.now() - timedelta(days=28)).strftime('%Y-%m-%d')
 if 'end_str' not in locals():
     end_str = datetime.now().strftime('%Y-%m-%d')
 

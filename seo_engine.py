@@ -368,6 +368,14 @@ def get_high_impression_low_ctr(df):
     ].sort_values('impressions', ascending=False).head(50)
 
 
+try:
+    import streamlit as st
+    _cache_dec = st.cache_data(ttl=3600, show_spinner=False)
+except Exception:
+    def _cache_dec(f):
+        return f
+
+@_cache_dec
 def generate_mock_gsc_data(site_name="https://example.com", days=90):
     """Generates comprehensive, realistic 90-day mock GSC data for immediate testing and demo."""
     np.random.seed(42)
