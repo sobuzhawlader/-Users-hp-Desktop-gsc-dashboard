@@ -210,8 +210,14 @@ if is_dark:
         color: #38bdf8 !important;
         font-weight: 700 !important;
     }
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] div[data-baseweb="radio"] {
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] div[data-baseweb="radio"],
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label > div:not([data-testid="stMarkdownContainer"]) {
         display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     /* Main Page Filter Radio Buttons in Dark Mode */
@@ -669,19 +675,21 @@ else:
         border-right: 1px solid #dadce0 !important;
     }
     
-    /* Light Sidebar Menu */
+    /* Authentic Google Search Console Flat Sidebar Menu */
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
-        gap: 3px !important;
+        gap: 1px !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label {
         background-color: transparent !important;
-        border-radius: 8px !important;
-        padding: 7px 12px !important;
-        margin: 0 !important;
+        border: none !important;
+        border-radius: 0 20px 20px 0 !important;
+        padding: 8px 12px 8px 14px !important;
+        margin: 1px 0 !important;
         cursor: pointer !important;
-        transition: all 0.15s ease-in-out !important;
+        transition: background-color 0.12s ease !important;
         display: flex !important;
         align-items: center !important;
+        box-shadow: none !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
         background-color: #f1f3f4 !important;
@@ -689,27 +697,35 @@ else:
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] {
         background: #e8f0fe !important;
         border-left: 4px solid #1a73e8 !important;
+        border-radius: 0 20px 20px 0 !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label span,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-testid="stMarkdownContainer"] p {
         color: #3c4043 !important;
-        font-size: 13.5px !important;
+        font-size: 13px !important;
         font-weight: 500 !important;
         margin: 0 !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover span {
-        color: #1a73e8 !important;
+        color: #202124 !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] p,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] span,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] [data-testid="stMarkdownContainer"] p {
         color: #1a73e8 !important;
-        font-weight: 700 !important;
+        font-weight: 600 !important;
     }
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] div[data-baseweb="radio"] {
+    /* 100% Bulletproof removal of radio circle indicator */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] div[data-baseweb="radio"],
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label > div:not([data-testid="stMarkdownContainer"]) {
         display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     /* Main Page Filter Radio Buttons (Search Type & Date Range) */
@@ -1120,27 +1136,33 @@ else:
         fill: #5f6368 !important;
     }
     
-    /* Light Mode Overrides for Dark Containers */
+    /* Light Mode Overrides for Dark Containers & Telemetry */
     div[style*="background:rgba(15, 23, 42"],
     div[style*="background: rgba(15, 23, 42"],
     div[style*="background:linear-gradient(135deg, rgba(30, 58, 138"],
     div[style*="background:linear-gradient(135deg, rgba(245, 158, 11"],
     div[style*="background:linear-gradient(135deg, rgba(56, 189, 248"],
     div[style*="background:linear-gradient(90deg, rgba(30, 58, 138"],
-    div[style*="background:linear-gradient(90deg, rgba(15, 23, 42"] {
+    div[style*="background:linear-gradient(90deg, rgba(15, 23, 42"],
+    div[style*="background: linear-gradient(90deg, rgba(30, 58, 138"] {
         background: #ffffff !important;
         border-color: #dadce0 !important;
-        box-shadow: 0 1px 3px rgba(60,64,67,0.1) !important;
+        box-shadow: 0 1px 3px rgba(60,64,67,0.08) !important;
     }
-    div[style*="background: linear-gradient(90deg, rgba(16, 185, 129"] {
+    div[style*="background: linear-gradient(90deg, rgba(16, 185, 129"],
+    div[style*="background:linear-gradient(90deg, rgba(16, 185, 129"] {
         background: #e6f4ea !important;
         border-color: #ceead6 !important;
-        box-shadow: 0 1px 3px rgba(60,64,67,0.1) !important;
+        box-shadow: 0 1px 3px rgba(60,64,67,0.08) !important;
     }
     div[style*="color:#f8fafc"],
     div[style*="color: #f8fafc"],
+    div[style*="color:#f1f5f9"],
+    div[style*="color: #f1f5f9"],
     span[style*="color:#f8fafc"],
     span[style*="color: #f8fafc"],
+    span[style*="color:#f1f5f9"],
+    span[style*="color: #f1f5f9"],
     b[style*="color:#f8fafc"],
     b[style*="color: #f8fafc"] {
         color: #202124 !important;
@@ -1154,6 +1176,35 @@ else:
     div[style*="color:#cbd5e1"],
     span[style*="color:#cbd5e1"] {
         color: #3c4043 !important;
+    }
+    /* Harmonize Neon Cyan to Google Blue in Light Mode */
+    div[style*="color:#38bdf8"],
+    span[style*="color:#38bdf8"],
+    b[style*="color:#38bdf8"] {
+        color: #1a73e8 !important;
+    }
+    /* Harmonize Neon Green to Google Green in Light Mode */
+    div[style*="color:#34d399"],
+    span[style*="color:#34d399"] {
+        color: #137333 !important;
+    }
+    /* Harmonize Neon Purple to Google Purple in Light Mode */
+    div[style*="color:#c084fc"],
+    span[style*="color:#c084fc"],
+    span[style*="color:#e9d5ff"] {
+        color: #7627bb !important;
+    }
+    /* Harmonize Neon Yellow to Google Amber in Light Mode */
+    div[style*="color:#fbbf24"],
+    span[style*="color:#fbbf24"],
+    span[style*="color:#fde68a"] {
+        color: #b06000 !important;
+    }
+    /* Fix dividers and white borders on white background */
+    div[style*="border:1px solid rgba(255, 255, 255"],
+    div[style*="border: 1px solid rgba(255, 255, 255"],
+    div[style*="border-bottom:1px solid rgba(255, 255, 255"] {
+        border-color: #dadce0 !important;
     }
     
     /* Scrollbar */
@@ -1336,57 +1387,50 @@ if st.session_state.service:
 # ==============================
 with st.sidebar:
     # 1. GSC Logo & Brand Header
-    st.markdown("""
-    <div style='display:flex; align-items:center; gap:10px; padding: 6px 6px 14px 6px; border-bottom: 1px solid rgba(56, 189, 248, 0.15); margin-bottom: 12px;'>
-        <svg width="26" height="26" viewBox="0 0 48 48">
-            <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-            <path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-            <path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-            <path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
-        </svg>
-        <div>
-            <div style='font-size:16px; font-weight:800; background:linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;'>GSC TERMINAL</div>
-            <div style='font-size:9.5px; font-family:"JetBrains Mono",monospace; color:#34d399; letter-spacing:0.5px;'>● ENTERPRISE AI SEO</div>
+    if is_dark:
+        st.markdown("""
+        <div style='display:flex; align-items:center; gap:10px; padding:6px 6px 12px 6px; border-bottom:1px solid rgba(56, 189, 248, 0.15); margin-bottom:12px;'>
+            <svg width="26" height="26" viewBox="0 0 48 48">
+                <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                <path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                <path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                <path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+            </svg>
+            <div>
+                <div style='font-size:16px; font-weight:800; background:linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;'>GSC TERMINAL</div>
+                <div style='font-size:9.5px; font-family:"JetBrains Mono",monospace; color:#34d399; letter-spacing:0.5px;'>● ENTERPRISE AI SEO</div>
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style='display:flex; align-items:center; gap:10px; padding:6px 6px 12px 6px; border-bottom:1px solid #dadce0; margin-bottom:12px;'>
+            <svg width="28" height="28" viewBox="0 0 48 48">
+                <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+            </svg>
+            <div>
+                <div style='font-size:16px; font-weight:600; color:#202124; letter-spacing:-0.3px;'><b style='color:#1a73e8;'>Google</b> Search Console</div>
+                <div style='font-size:11px; color:#5f6368; font-weight:400;'>Enterprise Search Analytics</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # 1.1 Authentic Theme Toggle Switch (Light vs Dark Mode)
-    theme_box_bg = "rgba(15, 23, 42, 0.6)" if is_dark else "#f1f3f4"
-    theme_box_border = "1px solid rgba(56, 189, 248, 0.25)" if is_dark else "1px solid #dadce0"
-    st.markdown(f"""
-    <div style="background:{theme_box_bg}; border:{theme_box_border}; border-radius:8px; padding:6px 12px; margin-bottom:6px;">
-        <div style="font-size:10px; font-weight:700; color:{'#38bdf8' if is_dark else '#1a73e8'}; font-family:'JetBrains Mono',monospace; letter-spacing:0.8px; text-transform:uppercase;">
-            THEME: {'🌙 DARK' if is_dark else '☀️ LIGHT (DEFAULT)'}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
+    # 1.1 Single Sleek Theme Toggle Switch
     theme_toggle_val = st.toggle(
-        "🌙 Dark Theme",
+        "🌙 Dark Theme" if is_dark else "🌙 Dark Mode",
         value=is_dark,
         key="side_theme_toggle_switch",
-        help="Turn toggle ON for Dark Mode or OFF for Light Mode (Clean Google Search Console)"
+        help="Switch between Clean Google Light Mode and Cyber Dark Mode"
     )
     if theme_toggle_val != is_dark:
         st.session_state.theme_mode = 'Dark' if theme_toggle_val else 'Light'
         st.query_params['theme'] = 'dark' if theme_toggle_val else 'light'
         st.rerun()
 
-    th_c1, th_c2 = st.columns(2)
-    with th_c1:
-        if st.button("☀️ Light", key="side_theme_btn_light", use_container_width=True, type="primary" if not is_dark else "secondary"):
-            if is_dark:
-                st.session_state.theme_mode = 'Light'
-                st.query_params['theme'] = 'light'
-                st.rerun()
-    with th_c2:
-        if st.button("🌙 Dark", key="side_theme_btn_dark", use_container_width=True, type="primary" if is_dark else "secondary"):
-            if not is_dark:
-                st.session_state.theme_mode = 'Dark'
-                st.query_params['theme'] = 'dark'
-                st.rerun()
-    st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
     # 2. Property Selector Pill & Account Header (Matching GSC)
     is_connected = bool(st.session_state.service)
@@ -1538,10 +1582,27 @@ with st.sidebar:
 
     else:
         # Not connected yet
-        st.markdown("""
-        <div style="background:linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%); border:1px solid rgba(56, 189, 248, 0.3); border-radius:10px; padding:12px 14px; margin-bottom:10px; box-shadow:0 0 15px rgba(56, 189, 248, 0.08);">
-            <div style="font-size:10px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">🔐 GOOGLE SEARCH CONSOLE AUTH</div>
-            <div style="font-size:11.5px; color:#94a3b8; margin-top:4px; line-height:1.4;">Sign in to stream live telemetry across all <b style="color:#f8fafc;">Search Console properties</b>.</div>
+        if is_dark:
+            auth_side_bg = "linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%)"
+            auth_side_border = "1px solid rgba(56, 189, 248, 0.3)"
+            auth_side_title_col = "#38bdf8"
+            auth_side_text_col = "#94a3b8"
+            auth_side_bold_col = "#f8fafc"
+            auth_side_shadow = "box-shadow:0 0 15px rgba(56, 189, 248, 0.08);"
+            auth_font = "font-family:'JetBrains Mono',monospace;"
+        else:
+            auth_side_bg = "#ffffff"
+            auth_side_border = "1px solid #dadce0"
+            auth_side_title_col = "#1a73e8"
+            auth_side_text_col = "#5f6368"
+            auth_side_bold_col = "#202124"
+            auth_side_shadow = "box-shadow:0 1px 3px rgba(60,64,67,0.08);"
+            auth_font = ""
+
+        st.markdown(f"""
+        <div style="background:{auth_side_bg}; border:{auth_side_border}; border-radius:8px; padding:12px 14px; margin-bottom:10px; {auth_side_shadow}">
+            <div style="font-size:11px; font-weight:700; color:{auth_side_title_col}; text-transform:uppercase; letter-spacing:0.5px; {auth_font}">Google Search Console</div>
+            <div style="font-size:12px; color:{auth_side_text_col}; margin-top:4px; line-height:1.4;">Sign in to view live telemetry across your <b style="color:{auth_side_bold_col};">Search Console properties</b>.</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -1607,8 +1668,9 @@ with st.sidebar:
         def_idx = 0
 
     dropdown_label = f"Select Property ({total_p} Sites Loaded ▾):" if total_p > 0 else "Select Property (Sign In ▾):"
-    dropdown_label_col = "#38bdf8" if is_dark else "#1a73e8"
-    st.markdown(f"<div style='font-size:11px; font-weight:700; color:{dropdown_label_col}; font-family:\"JetBrains Mono\",monospace; text-transform:uppercase; margin-top:8px; margin-bottom:4px; letter-spacing:0.5px;'>{dropdown_label}</div>", unsafe_allow_html=True)
+    dropdown_label_col = "#38bdf8" if is_dark else "#5f6368"
+    dropdown_font = "font-family:'JetBrains Mono',monospace;" if is_dark else "font-family:'Plus Jakarta Sans',sans-serif;"
+    st.markdown(f"<div style='font-size:11px; font-weight:600; color:{dropdown_label_col}; {dropdown_font} text-transform:uppercase; margin-top:10px; margin-bottom:4px; letter-spacing:0.5px;'>{dropdown_label}</div>", unsafe_allow_html=True)
     selected_choice = st.selectbox("Property", site_options, index=def_idx, label_visibility="collapsed", key="sidebar_property_selector")
 
     if selected_choice == "➕ Enter Custom Property URL":
@@ -1969,13 +2031,26 @@ if page in ["📈 Performance", "📊 Overview"]:
 
     if is_connected and not real_active_sites:
         user_e = st.session_state.get('user_email') or 'your Google Account'
+        if is_dark:
+            zero_bg = "linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(15, 23, 42, 0.85) 100%)"
+            zero_border = "1px solid rgba(245, 158, 11, 0.35)"
+            zero_title = "#fbbf24"
+            zero_text = "#cbd5e1"
+            zero_shadow = "box-shadow:0 8px 32px rgba(0,0,0,0.4);"
+        else:
+            zero_bg = "#ffffff"
+            zero_border = "1px solid #f9ab00"
+            zero_title = "#b06000"
+            zero_text = "#3c4043"
+            zero_shadow = "box-shadow:0 1px 3px rgba(60,64,67,0.1);"
+
         st.markdown(f"""
-        <div style="background:linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(15, 23, 42, 0.85) 100%); border:1px solid rgba(245, 158, 11, 0.35); border-radius:12px; padding:32px 24px; margin:20px 0; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.4);">
-            <div style="font-size:40px; margin-bottom:10px;">⚠️</div>
-            <div style="font-size:20px; font-weight:700; color:#fbbf24;">No Search Console Properties Found in 📧 {user_e}</div>
-            <div style="font-size:14px; color:#cbd5e1; max-width:620px; margin:10px auto 20px auto; line-height:1.5;">
-                Google Search Console reported <b style="color:#fbbf24;">0 verified properties</b> under this Gmail address.<br>
-                If your <b>websites</b> are registered under a different Gmail account, click the button below to switch accounts:
+        <div style="background:{zero_bg}; border:{zero_border}; border-radius:12px; padding:32px 24px; margin:24px auto; max-width:620px; text-align:center; {zero_shadow}">
+            <div style="font-size:36px; margin-bottom:10px;">⚠️</div>
+            <div style="font-size:18px; font-weight:700; color:{zero_title};">No Search Console Properties Found in 📧 {user_e}</div>
+            <div style="font-size:14px; color:{zero_text}; max-width:540px; margin:10px auto 20px auto; line-height:1.5;">
+                Google Search Console reported <b style="color:{zero_title};">0 verified properties</b> under this Gmail address.<br>
+                If your <b>websites</b> are registered under a different Google account, click below to switch accounts:
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1985,12 +2060,36 @@ if page in ["📈 Performance", "📊 Overview"]:
                 st.link_button("🔄 Switch Google Account (Sign In with Another Gmail)", auth_url, type="primary", use_container_width=True)
         st.stop()
     elif not is_connected and not real_active_sites:
-        st.markdown("""
-        <div style="background:linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.9) 100%); border:1px solid rgba(56, 189, 248, 0.35); border-radius:12px; padding:36px 24px; margin:20px 0; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-            <div style="font-size:44px; margin-bottom:10px; filter:drop-shadow(0 0 12px rgba(56,189,248,0.5));">🔐</div>
-            <div style="font-size:22px; font-weight:800; background:linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Connect Your Google Search Console Account</div>
-            <div style="font-size:14px; color:#94a3b8; max-width:620px; margin:10px auto 24px auto; line-height:1.6;">
-                Authenticate with your verified Google account to load live search telemetry, impressions, clicks, keyword rankings, and index status.
+        if is_dark:
+            auth_main_bg = "linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.9) 100%)"
+            auth_main_border = "1px solid rgba(56, 189, 248, 0.35)"
+            auth_main_title = '<div style="font-size:22px; font-weight:800; background:linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Connect Your Google Search Console Account</div>'
+            auth_main_text = "#94a3b8"
+            auth_main_icon = '<div style="font-size:44px; margin-bottom:10px; filter:drop-shadow(0 0 12px rgba(56,189,248,0.5));">🔐</div>'
+            auth_main_shadow = "box-shadow:0 8px 32px rgba(0,0,0,0.5);"
+        else:
+            auth_main_bg = "#ffffff"
+            auth_main_border = "1px solid #dadce0"
+            auth_main_title = '<div style="font-size:22px; font-weight:600; color:#202124;">Sign in to Google Search Console</div>'
+            auth_main_text = "#5f6368"
+            auth_main_icon = '''
+            <div style="display:flex; justify-content:center; margin-bottom:14px;">
+                <svg width="48" height="48" viewBox="0 0 48 48">
+                    <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                    <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                    <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                    <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                </svg>
+            </div>
+            '''
+            auth_main_shadow = "box-shadow:0 2px 8px rgba(60,64,67,0.08);"
+
+        st.markdown(f"""
+        <div style="background:{auth_main_bg}; border:{auth_main_border}; border-radius:12px; padding:36px 24px; margin:24px auto; max-width:620px; text-align:center; {auth_main_shadow}">
+            {auth_main_icon}
+            {auth_main_title}
+            <div style="font-size:14px; color:{auth_main_text}; max-width:520px; margin:10px auto 24px auto; line-height:1.6;">
+                Authenticate with your verified Google account to load live search telemetry, impressions, clicks, keyword rankings, and index status across all your properties.
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -2101,26 +2200,31 @@ if page in ["📈 Performance", "📊 Overview"]:
         live_chip_border2 = "1px solid #dadce0"
         live_chip_label = "#5f6368"
 
+    live_m30_col = "#38bdf8" if is_dark else "#1a73e8"
+    live_dash_col = "#c084fc" if is_dark else "#7627bb"
+    live_pulse_col = "#10b981" if is_dark else "#137333"
+    live_pulse_bar = "#10b981" if is_dark else "#137333"
+
     st.markdown(f"""
-    <div style="background: {live_banner_bg}; border: {live_banner_border}; border-left: 4px solid #10b981; border-radius: 10px; padding: 14px 20px; margin: 10px 0 18px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow: {live_banner_box_shadow};">
+    <div style="background: {live_banner_bg}; border: {live_banner_border}; border-left: 4px solid {live_pulse_bar}; border-radius: 10px; padding: 14px 20px; margin: 10px 0 18px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow: {live_banner_box_shadow};">
         <div style="display:flex; align-items:center; gap:14px;">
             <span class="gsc-pulse-dot" style="width:13px; height:13px;"></span>
             <div>
-                <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:{live_title_color}; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">LIVE REAL-TIME TELEMETRY</div>
-                <div style="font-size:24px; font-weight:700; color:{live_main_color}; line-height:1.2; font-family:'Plus Jakarta Sans',sans-serif;">
-                    <span style="color:#10b981; font-family:'JetBrains Mono',monospace;">{live_site_users}</span> Active Visitors
-                    <span style="font-size:12px; font-weight:400; color:{live_sub_color}; margin-left:8px; font-family:'JetBrains Mono',monospace;">— Currently on {pill_site_text}</span>
+                <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:{live_title_color}; letter-spacing:0.8px;">LIVE REAL-TIME TELEMETRY</div>
+                <div style="font-size:24px; font-weight:700; color:{live_main_color}; line-height:1.2;">
+                    <span style="color:{live_pulse_col}; font-weight:700;">{live_site_users}</span> Active Visitors
+                    <span style="font-size:12px; font-weight:400; color:{live_sub_color}; margin-left:8px;">— Currently on {pill_site_text}</span>
                 </div>
             </div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
             <div style="background:{live_chip_bg}; border:{live_chip_border1}; border-radius:8px; padding:6px 14px; text-align:center;">
-                <div style="font-size:10px; font-weight:600; color:{live_chip_label}; text-transform:uppercase; letter-spacing:0.5px; font-family:'JetBrains Mono',monospace;">PAST 30 MINS</div>
-                <div style="font-size:15px; font-weight:700; color:#38bdf8; font-family:'JetBrains Mono',monospace;">⏱️ {rt_metrics['users_last_30m']}</div>
+                <div style="font-size:10px; font-weight:600; color:{live_chip_label}; text-transform:uppercase; letter-spacing:0.5px;">PAST 30 MINS</div>
+                <div style="font-size:15px; font-weight:700; color:{live_m30_col};">⏱️ {rt_metrics['users_last_30m']}</div>
             </div>
             <div style="background:{live_chip_bg}; border:{live_chip_border2}; border-radius:8px; padding:6px 14px; text-align:center;">
-                <div style="font-size:10px; font-weight:600; color:{live_chip_label}; text-transform:uppercase; letter-spacing:0.5px; font-family:'JetBrains Mono',monospace;">DASH SESSIONS</div>
-                <div style="font-size:15px; font-weight:700; color:#c084fc; font-family:'JetBrains Mono',monospace;">👥 {active_dash_users} online</div>
+                <div style="font-size:10px; font-weight:600; color:{live_chip_label}; text-transform:uppercase; letter-spacing:0.5px;">DASH SESSIONS</div>
+                <div style="font-size:15px; font-weight:700; color:{live_dash_col};">👥 {active_dash_users} online</div>
             </div>
         </div>
     </div>
@@ -2722,15 +2826,20 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
     # 2. Header & Live Controls
     hdr_c1, hdr_c2 = st.columns([3, 1])
     with hdr_c1:
+        rt_hdr_title = "#f8fafc" if is_dark else "#202124"
+        rt_hdr_sub = "#94a3b8" if is_dark else "#5f6368"
+        rt_hdr_hi = "#38bdf8" if is_dark else "#1a73e8"
+        rt_tag_col = "#64748b" if is_dark else "#5f6368"
+
         st.markdown(f"""
         <div style="margin-bottom:18px;">
-            <div style="font-size:11px; font-weight:700; color:#64748b; font-family:'JetBrains Mono',monospace; letter-spacing:0.8px; text-transform:uppercase; margin-bottom:4px;">TELEMETRY // REAL-TIME ACTIVE VISITORS</div>
-            <div style="font-size:24px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; display:flex; align-items:center; gap:10px;">
+            <div style="font-size:11px; font-weight:700; color:{rt_tag_col}; letter-spacing:0.8px; text-transform:uppercase; margin-bottom:4px;">TELEMETRY // REAL-TIME ACTIVE VISITORS</div>
+            <div style="font-size:24px; font-weight:700; color:{rt_hdr_title}; display:flex; align-items:center; gap:10px;">
                 <span class="gsc-pulse-dot" style="width:13px; height:13px;"></span>
                 <span>Real-Time Active Visitors &amp; Site Usage</span>
             </div>
-            <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
-                Live telemetry on <b style="color:#38bdf8; font-family:'JetBrains Mono',monospace;">{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}</b> and connected dashboard sessions.
+            <div style="font-size:13px; color:{rt_hdr_sub}; margin-top:6px;">
+                Live telemetry on <b style="color:{rt_hdr_hi};">{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}</b> and connected dashboard sessions.
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -2740,66 +2849,103 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
             st.rerun()
         st.markdown(f"<div style='text-align:right; font-size:11px; color:#70757a;'>Synced: {rt_metrics['last_updated']}</div>", unsafe_allow_html=True)
 
-    # 3. Four Cyber Telemetry Scorecards
+    # 3. Four Telemetry Scorecards
+    if is_dark:
+        rt_c_bg = "rgba(15, 23, 42, 0.7)"
+        rt_c_border = "1px solid rgba(255, 255, 255, 0.08)"
+        rt_c_shadow = "box-shadow:0 4px 20px rgba(0,0,0,0.3);"
+        rt_c1_bar = "#10b981"; rt_c1_title = "#34d399"; rt_c1_num = "#10b981"; rt_c1_sub = "#34d399"
+        rt_c2_bar = "#38bdf8"; rt_c2_title = "#38bdf8"; rt_c2_num = "#38bdf8"; rt_c2_sub = "#7dd3fc"
+        rt_c3_bar = "#a855f7"; rt_c3_title = "#c084fc"; rt_c3_num = "#c084fc"; rt_c3_sub = "#e9d5ff"
+        rt_c4_bar = "#f59e0b"; rt_c4_title = "#fbbf24"; rt_c4_num = "#f59e0b"; rt_c4_sub = "#fde68a"
+        rt_c_desc = "#94a3b8"
+        rt_box_bg = "rgba(15, 23, 42, 0.7)"
+        rt_box_border = "1px solid rgba(255, 255, 255, 0.08)"
+        rt_box_title = "#f8fafc"
+        rt_box_sub = "#94a3b8"
+        rt_chart_bg = "rgba(15, 23, 42, 0.45)"
+        rt_chart_font = "#94a3b8"
+        rt_chart_grid = "rgba(255, 255, 255, 0.05)"
+        rt_evt_type = "#f1f5f9"
+        rt_evt_border = "rgba(255, 255, 255, 0.05)"
+    else:
+        rt_c_bg = "#ffffff"
+        rt_c_border = "1px solid #dadce0"
+        rt_c_shadow = "box-shadow:0 1px 3px rgba(60,64,67,0.08);"
+        rt_c1_bar = "#137333"; rt_c1_title = "#137333"; rt_c1_num = "#137333"; rt_c1_sub = "#137333"
+        rt_c2_bar = "#1a73e8"; rt_c2_title = "#1a73e8"; rt_c2_num = "#1a73e8"; rt_c2_sub = "#1a73e8"
+        rt_c3_bar = "#7627bb"; rt_c3_title = "#7627bb"; rt_c3_num = "#7627bb"; rt_c3_sub = "#7627bb"
+        rt_c4_bar = "#b06000"; rt_c4_title = "#b06000"; rt_c4_num = "#b06000"; rt_c4_sub = "#b06000"
+        rt_c_desc = "#5f6368"
+        rt_box_bg = "#ffffff"
+        rt_box_border = "1px solid #dadce0"
+        rt_box_title = "#202124"
+        rt_box_sub = "#5f6368"
+        rt_chart_bg = "#ffffff"
+        rt_chart_font = "#5f6368"
+        rt_chart_grid = "#f1f3f4"
+        rt_evt_type = "#202124"
+        rt_evt_border = "#dadce0"
+
     rt_col1, rt_col2, rt_col3, rt_col4 = st.columns(4)
     with rt_col1:
         st.markdown(f"""
-        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(16, 185, 129, 0.4); border-top:3px solid #10b981; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-            <div style="font-size:11px; font-weight:700; color:#34d399; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+        <div style="background:{rt_c_bg}; border:{rt_c_border}; border-top:3px solid {rt_c1_bar}; border-radius:10px; padding:16px; {rt_c_shadow}">
+            <div style="font-size:11px; font-weight:700; color:{rt_c1_title}; text-transform:uppercase; letter-spacing:0.8px; display:flex; align-items:center; gap:6px; margin-bottom:8px;">
                 <span class="gsc-pulse-dot"></span> ACTIVE USERS NOW
             </div>
-            <div style="font-size:36px; font-weight:700; color:#10b981; font-family:'JetBrains Mono',monospace; line-height:1.1; margin-bottom:6px;">{live_site_users}</div>
-            <div style="font-size:12px; color:#94a3b8;">Browsing website right now</div>
-            <div style="font-size:11px; color:#34d399; font-weight:600; font-family:'JetBrains Mono',monospace; margin-top:4px;">▲ +2 in last 5m</div>
+            <div style="font-size:36px; font-weight:700; color:{rt_c1_num}; line-height:1.1; margin-bottom:6px;">{live_site_users}</div>
+            <div style="font-size:12px; color:{rt_c_desc};">Browsing website right now</div>
+            <div style="font-size:11px; color:{rt_c1_sub}; font-weight:600; margin-top:4px;">▲ +2 in last 5m</div>
         </div>
         """, unsafe_allow_html=True)
 
     with rt_col2:
         st.markdown(f"""
-        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(56, 189, 248, 0.3); border-top:3px solid #38bdf8; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-            <div style="font-size:11px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace; margin-bottom:8px;">
+        <div style="background:{rt_c_bg}; border:{rt_c_border}; border-top:3px solid {rt_c2_bar}; border-radius:10px; padding:16px; {rt_c_shadow}">
+            <div style="font-size:11px; font-weight:700; color:{rt_c2_title}; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px;">
                 ⏱️ VISITORS LAST 30M
             </div>
-            <div style="font-size:36px; font-weight:700; color:#38bdf8; font-family:'JetBrains Mono',monospace; line-height:1.1; margin-bottom:6px;">{rt_metrics['users_last_30m']}</div>
-            <div style="font-size:12px; color:#94a3b8;">Unique sessions across site</div>
-            <div style="font-size:11px; color:#7dd3fc; font-weight:600; font-family:'JetBrains Mono',monospace; margin-top:4px;">~1.6 pageviews / user</div>
+            <div style="font-size:36px; font-weight:700; color:{rt_c2_num}; line-height:1.1; margin-bottom:6px;">{rt_metrics['users_last_30m']}</div>
+            <div style="font-size:12px; color:{rt_c_desc};">Unique sessions across site</div>
+            <div style="font-size:11px; color:{rt_c2_sub}; font-weight:600; margin-top:4px;">~1.6 pageviews / user</div>
         </div>
         """, unsafe_allow_html=True)
 
     with rt_col3:
         st.markdown(f"""
-        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(168, 85, 247, 0.3); border-top:3px solid #a855f7; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-            <div style="font-size:11px; font-weight:700; color:#c084fc; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace; margin-bottom:8px;">
+        <div style="background:{rt_c_bg}; border:{rt_c_border}; border-top:3px solid {rt_c3_bar}; border-radius:10px; padding:16px; {rt_c_shadow}">
+            <div style="font-size:11px; font-weight:700; color:{rt_c3_title}; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px;">
                 👥 DASHBOARD VIEWERS
             </div>
-            <div style="font-size:36px; font-weight:700; color:#c084fc; font-family:'JetBrains Mono',monospace; line-height:1.1; margin-bottom:6px;">{active_dash_users}</div>
-            <div style="font-size:12px; color:#94a3b8;">Currently viewing this app</div>
-            <div style="font-size:11px; color:#e9d5ff; font-weight:600; font-family:'JetBrains Mono',monospace; margin-top:4px;">Live active session</div>
+            <div style="font-size:36px; font-weight:700; color:{rt_c3_num}; line-height:1.1; margin-bottom:6px;">{active_dash_users}</div>
+            <div style="font-size:12px; color:{rt_c_desc};">Currently viewing this app</div>
+            <div style="font-size:11px; color:{rt_c3_sub}; font-weight:600; margin-top:4px;">Live active session</div>
         </div>
         """, unsafe_allow_html=True)
 
     with rt_col4:
         st.markdown(f"""
-        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(245, 158, 11, 0.3); border-top:3px solid #f59e0b; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-            <div style="font-size:11px; font-weight:700; color:#fbbf24; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace; margin-bottom:8px;">
+        <div style="background:{rt_c_bg}; border:{rt_c_border}; border-top:3px solid {rt_c4_bar}; border-radius:10px; padding:16px; {rt_c_shadow}">
+            <div style="font-size:11px; font-weight:700; color:{rt_c4_title}; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px;">
                 ⚡ VIEWS / MINUTE
             </div>
-            <div style="font-size:36px; font-weight:700; color:#f59e0b; font-family:'JetBrains Mono',monospace; line-height:1.1; margin-bottom:6px;">{rt_metrics['pageviews_per_min']}</div>
-            <div style="font-size:12px; color:#94a3b8;">Real-time event velocity</div>
-            <div style="font-size:11px; color:#fde68a; font-weight:600; font-family:'JetBrains Mono',monospace; margin-top:4px;">Normal peak activity</div>
+            <div style="font-size:36px; font-weight:700; color:{rt_c4_num}; line-height:1.1; margin-bottom:6px;">{rt_metrics['pageviews_per_min']}</div>
+            <div style="font-size:12px; color:{rt_c_desc};">Real-time event velocity</div>
+            <div style="font-size:11px; color:{rt_c4_sub}; font-weight:600; margin-top:4px;">Normal peak activity</div>
         </div>
         """, unsafe_allow_html=True)
 
     st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
 
     # 4. Real-time Activity Timeline (Users per Minute - Last 30 Minutes)
-    st.markdown("""
-    <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:16px; margin-bottom:20px; backdrop-filter:blur(12px);">
-        <div style="font-size:14px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+    st.markdown(f"""
+    <div style="background:{rt_box_bg}; border:{rt_box_border}; border-radius:10px; padding:16px; margin-bottom:20px; {rt_c_shadow}">
+        <div style="font-size:14px; font-weight:700; color:{rt_box_title}; margin-bottom:4px; display:flex; align-items:center; gap:8px;">
             <span>📊 Real-Time Activity: Users per Minute</span>
-            <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; background:rgba(56, 189, 248, 0.15); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.3); padding:2px 8px; border-radius:6px;">PAST 30 MINS</span>
+            <span style="font-size:10.5px; background:{'rgba(56, 189, 248, 0.15)' if is_dark else '#e8f0fe'}; color:{'#38bdf8' if is_dark else '#1a73e8'}; border:1px solid {'rgba(56, 189, 248, 0.3)' if is_dark else '#d2e3fc'}; padding:2px 8px; border-radius:6px; font-weight:600;">PAST 30 MINS</span>
         </div>
-        <div style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+        <div style="font-size:12px; color:{rt_box_sub}; margin-bottom:12px;">
             Continuous stream of active website visitors per minute (GA4 Real-Time Telemetry Stream)
         </div>
     """, unsafe_allow_html=True)
@@ -2809,27 +2955,27 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         x=rt_metrics['df_minutes']['minute'],
         y=rt_metrics['df_minutes']['users'],
         marker=dict(
-            color='#10b981',
-            line=dict(color='#34d399', width=1)
+            color='#10b981' if is_dark else '#137333',
+            line=dict(color='#34d399' if is_dark else '#137333', width=1)
         ),
         hovertemplate='Minute: %{x}<br>Active Users: <b>%{y}</b><extra></extra>',
         name='Active Users'
     ))
     fig_rt.update_layout(
         paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(15, 23, 42, 0.45)',
-        font=dict(color='#94a3b8', family="'JetBrains Mono', monospace", size=11),
+        plot_bgcolor=rt_chart_bg,
+        font=dict(color=rt_chart_font, size=11),
         height=220,
         margin=dict(l=30, r=20, t=10, b=30),
         xaxis=dict(
             showgrid=False,
-            color='#64748b',
+            color='#64748b' if is_dark else '#5f6368',
             tickangle=-45
         ),
         yaxis=dict(
             showgrid=True,
-            gridcolor='rgba(255, 255, 255, 0.05)',
-            color='#64748b',
+            gridcolor=rt_chart_grid,
+            color='#64748b' if is_dark else '#5f6368',
             dtick=1
         ),
         showlegend=False
@@ -2841,12 +2987,12 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
     rt_grid1, rt_grid2 = st.columns([3, 2])
 
     with rt_grid1:
-        st.markdown("""
-        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:16px; margin-bottom:16px; backdrop-filter:blur(12px);">
-            <div style="font-size:13.5px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+        st.markdown(f"""
+        <div style="background:{rt_box_bg}; border:{rt_box_border}; border-radius:10px; padding:16px; margin-bottom:16px; {rt_c_shadow}">
+            <div style="font-size:13.5px; font-weight:700; color:{rt_box_title}; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
                 <span>📄 Top Active Pages Right Now</span>
             </div>
-            <div style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+            <div style="font-size:12px; color:{rt_box_sub}; margin-bottom:12px;">
                 Live URLs currently receiving browsing activity
             </div>
         """, unsafe_allow_html=True)
@@ -2858,12 +3004,12 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("""
-        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:16px; margin-bottom:16px; backdrop-filter:blur(12px);">
-            <div style="font-size:13.5px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+        st.markdown(f"""
+        <div style="background:{rt_box_bg}; border:{rt_box_border}; border-radius:10px; padding:16px; margin-bottom:16px; {rt_c_shadow}">
+            <div style="font-size:13.5px; font-weight:700; color:{rt_box_title}; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
                 <span>🔗 Real-Time Traffic Sources</span>
             </div>
-            <div style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+            <div style="font-size:12px; color:{rt_box_sub}; margin-bottom:12px;">
                 Acquisition channels of current concurrent visitors
             </div>
         """, unsafe_allow_html=True)
@@ -2876,12 +3022,12 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         st.markdown("</div>", unsafe_allow_html=True)
 
     with rt_grid2:
-        st.markdown("""
-        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:16px; margin-bottom:16px; backdrop-filter:blur(12px);">
-            <div style="font-size:13.5px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+        st.markdown(f"""
+        <div style="background:{rt_box_bg}; border:{rt_box_border}; border-radius:10px; padding:16px; margin-bottom:16px; {rt_c_shadow}">
+            <div style="font-size:13.5px; font-weight:700; color:{rt_box_title}; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
                 <span>📍 Active Visitor Locations</span>
             </div>
-            <div style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+            <div style="font-size:12px; color:{rt_box_sub}; margin-bottom:12px;">
                 Geographical telemetry distribution of live traffic
             </div>
         """, unsafe_allow_html=True)
@@ -2893,12 +3039,12 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("""
-        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:16px; margin-bottom:16px; backdrop-filter:blur(12px);">
-            <div style="font-size:13.5px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+        st.markdown(f"""
+        <div style="background:{rt_box_bg}; border:{rt_box_border}; border-radius:10px; padding:16px; margin-bottom:16px; {rt_c_shadow}">
+            <div style="font-size:13.5px; font-weight:700; color:{rt_box_title}; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
                 <span>📱 Device Distribution</span>
             </div>
-            <div style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+            <div style="font-size:12px; color:{rt_box_sub}; margin-bottom:12px;">
                 Hardware & client breakdown of active sessions
             </div>
         """, unsafe_allow_html=True)
@@ -2911,25 +3057,25 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
         st.markdown("</div>", unsafe_allow_html=True)
 
     # 6. Live Stream of Recent User Actions
-    st.markdown("""
-    <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:16px; margin-bottom:20px; backdrop-filter:blur(12px);">
-        <div style="font-size:14px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+    st.markdown(f"""
+    <div style="background:{rt_box_bg}; border:{rt_box_border}; border-radius:10px; padding:16px; margin-bottom:20px; {rt_c_shadow}">
+        <div style="font-size:14px; font-weight:700; color:{rt_box_title}; margin-bottom:4px; display:flex; align-items:center; gap:8px;">
             <span>⚡ Live Telemetry Stream &amp; Events</span>
-            <span style="font-size:10px; font-family:'JetBrains Mono',monospace; background:rgba(16, 185, 129, 0.15); color:#34d399; border:1px solid rgba(16, 185, 129, 0.3); padding:2px 7px; border-radius:10px;">LIVE FEED</span>
+            <span style="font-size:10px; background:{'rgba(16, 185, 129, 0.15)' if is_dark else '#e6f4ea'}; color:{'#34d399' if is_dark else '#137333'}; border:1px solid {'rgba(16, 185, 129, 0.3)' if is_dark else '#ceead6'}; padding:2px 7px; border-radius:10px; font-weight:600;">LIVE FEED</span>
         </div>
-        <div style="font-size:12px; color:#94a3b8; margin-bottom:14px;">
+        <div style="font-size:12px; color:{rt_box_sub}; margin-bottom:14px;">
             Real-time telemetry event stream recorded across connected properties
         </div>
     """, unsafe_allow_html=True)
     for evt in rt_metrics['recent_events']:
         st.markdown(f"""
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid rgba(255, 255, 255, 0.05); font-size:13px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid {rt_evt_border}; font-size:13px;">
             <div style="display:flex; align-items:center; gap:10px;">
                 <span style="font-size:16px;">{evt['icon']}</span>
-                <span style="font-weight:600; color:#f1f5f9; font-family:'JetBrains Mono',monospace;">{evt['type']}:</span>
-                <span style="color:#94a3b8;">{evt['detail']}</span>
+                <span style="font-weight:600; color:{rt_evt_type};">{evt['type']}:</span>
+                <span style="color:{rt_box_sub};">{evt['detail']}</span>
             </div>
-            <span style="font-size:11px; color:#34d399; font-weight:600; font-family:'JetBrains Mono',monospace; background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.25); padding:2px 8px; border-radius:10px;">{evt['time']}</span>
+            <span style="font-size:11px; color:{'#34d399' if is_dark else '#137333'}; font-weight:600; background:{'rgba(16, 185, 129, 0.12)' if is_dark else '#e6f4ea'}; border:1px solid {'rgba(16, 185, 129, 0.25)' if is_dark else '#ceead6'}; padding:2px 8px; border-radius:10px;">{evt['time']}</span>
         </div>
         """, unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -3002,21 +3148,54 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
     badge_color = "#34d399" if is_conn else "#fbbf24"
     badge_border = "rgba(16, 185, 129, 0.3)" if is_conn else "rgba(245, 158, 11, 0.3)"
 
+    if is_dark:
+        p_card_bg = "rgba(15, 23, 42, 0.7)"
+        p_card_border = "1px solid rgba(56, 189, 248, 0.25)"
+        p_card_shadow = "box-shadow:0 4px 20px rgba(0,0,0,0.3);"
+        p_c1_col = "#38bdf8"
+        p_c2_col = "#c084fc"
+        p_c3_col = "#34d399"
+        p_c4_col = "#fbbf24"
+        p_c_desc = "#94a3b8"
+        p_title_col = "#f8fafc"
+        p_acc_bg = "linear-gradient(90deg, rgba(30, 58, 138, 0.2) 0%, rgba(15, 23, 42, 0.75) 100%)"
+        p_acc_border = "1px solid rgba(56, 189, 248, 0.25)"
+        p_acc_left = "4px solid #38bdf8"
+        p_acc_title = "#38bdf8"
+        p_acc_text = "#f8fafc"
+        p_acc_sub = "#94a3b8"
+    else:
+        p_card_bg = "#ffffff"
+        p_card_border = "1px solid #dadce0"
+        p_card_shadow = "box-shadow:0 1px 3px rgba(60,64,67,0.08);"
+        p_c1_col = "#1a73e8"
+        p_c2_col = "#7627bb"
+        p_c3_col = "#137333"
+        p_c4_col = "#b06000"
+        p_c_desc = "#5f6368"
+        p_title_col = "#202124"
+        p_acc_bg = "#ffffff"
+        p_acc_border = "1px solid #dadce0"
+        p_acc_left = "4px solid #1a73e8"
+        p_acc_title = "#1a73e8"
+        p_acc_text = "#202124"
+        p_acc_sub = "#5f6368"
+
     st.markdown(f"""
-    <div style="background: linear-gradient(90deg, rgba(30, 58, 138, 0.2) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1px solid rgba(56, 189, 248, 0.25); border-left: 4px solid #38bdf8; border-radius: 10px; padding: 18px 22px; margin-bottom: 20px; backdrop-filter:blur(12px); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+    <div style="background:{p_acc_bg}; border:{p_acc_border}; border-left:{p_acc_left}; border-radius:10px; padding:18px 22px; margin-bottom:20px; {p_card_shadow}">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div>
-                <div style="font-size:10.5px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">AUTHENTICATED ACCOUNT TELEMETRY</div>
-                <div style="font-size:20px; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans',sans-serif; margin-top:2px;">
+                <div style="font-size:10.5px; font-weight:700; color:{p_acc_title}; text-transform:uppercase; letter-spacing:0.8px;">AUTHENTICATED ACCOUNT TELEMETRY</div>
+                <div style="font-size:20px; font-weight:700; color:{p_acc_text}; margin-top:2px;">
                     📧 {user_email_disp}
                 </div>
-                <div style="font-size:12.5px; color:#94a3b8; margin-top:4px; font-family:'JetBrains Mono',monospace;">
-                    Active Selection: <b style="color:#38bdf8;">{st.session_state.current_site or 'None'}</b>
+                <div style="font-size:12.5px; color:{p_acc_sub}; margin-top:4px;">
+                    Active Selection: <b style="color:{p_c1_col};">{st.session_state.current_site or 'None'}</b>
                 </div>
             </div>
             <div style="text-align:right;">
-                <span style="background:{badge_bg}; color:{badge_color}; border:1px solid {badge_border}; border-radius:16px; padding:4px 14px; font-size:11px; font-weight:700; font-family:'JetBrains Mono',monospace; display:inline-block; margin-bottom:6px;">{conn_badge}</span>
-                <div style="font-size:12px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">Total Verified Properties: <b style="color:#f8fafc;">{len(detailed_sites)}</b></div>
+                <span style="background:{badge_bg}; color:{badge_color}; border:1px solid {badge_border}; border-radius:16px; padding:4px 14px; font-size:11px; font-weight:700; display:inline-block; margin-bottom:6px;">{conn_badge}</span>
+                <div style="font-size:12px; color:{p_acc_sub};">Total Verified Properties: <b style="color:{p_acc_text};">{len(detailed_sites)}</b></div>
             </div>
         </div>
     </div>
@@ -3081,34 +3260,34 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
     m_c1, m_c2, m_c3, m_c4 = st.columns(4)
     with m_c1:
         st.markdown(f"""
-        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(56, 189, 248, 0.35); border-top:3px solid #38bdf8; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-            <div style="font-size:10.5px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">COMBINED TOTAL CLICKS</div>
-            <div style="font-size:32px; font-weight:700; color:#38bdf8; font-family:'JetBrains Mono',monospace; margin-top:4px; line-height:1.1;">{p_clicks:,}</div>
-            <div style="font-size:12px; color:#94a3b8; margin-top:6px;">Across all {len(detailed_sites)} verified properties (Past 28d)</div>
+        <div style="background:{p_card_bg}; border:{p_card_border}; border-top:3px solid {p_c1_col}; border-radius:10px; padding:16px; {p_card_shadow}">
+            <div style="font-size:10.5px; font-weight:700; color:{p_c1_col}; text-transform:uppercase; letter-spacing:0.8px;">COMBINED TOTAL CLICKS</div>
+            <div style="font-size:32px; font-weight:700; color:{p_c1_col}; margin-top:4px; line-height:1.1;">{p_clicks:,}</div>
+            <div style="font-size:12px; color:{p_c_desc}; margin-top:6px;">Across all {len(detailed_sites)} verified properties (Past 28d)</div>
         </div>
         """, unsafe_allow_html=True)
     with m_c2:
         st.markdown(f"""
-        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(168, 85, 247, 0.35); border-top:3px solid #a855f7; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-            <div style="font-size:10.5px; font-weight:700; color:#c084fc; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">COMBINED IMPRESSIONS</div>
-            <div style="font-size:32px; font-weight:700; color:#c084fc; font-family:'JetBrains Mono',monospace; margin-top:4px; line-height:1.1;">{_fmt_big(p_imps)}</div>
-            <div style="font-size:12px; color:#94a3b8; margin-top:6px;">Total search visibility ({p_imps:,} total)</div>
+        <div style="background:{p_card_bg}; border:{p_card_border}; border-top:3px solid {p_c2_col}; border-radius:10px; padding:16px; {p_card_shadow}">
+            <div style="font-size:10.5px; font-weight:700; color:{p_c2_col}; text-transform:uppercase; letter-spacing:0.8px;">COMBINED IMPRESSIONS</div>
+            <div style="font-size:32px; font-weight:700; color:{p_c2_col}; margin-top:4px; line-height:1.1;">{_fmt_big(p_imps)}</div>
+            <div style="font-size:12px; color:{p_c_desc}; margin-top:6px;">Total search visibility ({p_imps:,} total)</div>
         </div>
         """, unsafe_allow_html=True)
     with m_c3:
         st.markdown(f"""
-        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(16, 185, 129, 0.35); border-top:3px solid #10b981; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-            <div style="font-size:10.5px; font-weight:700; color:#34d399; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">WEIGHTED AVG CTR</div>
-            <div style="font-size:32px; font-weight:700; color:#10b981; font-family:'JetBrains Mono',monospace; margin-top:4px; line-height:1.1;">{p_ctr}%</div>
-            <div style="font-size:12px; color:#94a3b8; margin-top:6px;">Organic click-through conversion rate</div>
+        <div style="background:{p_card_bg}; border:{p_card_border}; border-top:3px solid {p_c3_col}; border-radius:10px; padding:16px; {p_card_shadow}">
+            <div style="font-size:10.5px; font-weight:700; color:{p_c3_col}; text-transform:uppercase; letter-spacing:0.8px;">WEIGHTED AVG CTR</div>
+            <div style="font-size:32px; font-weight:700; color:{p_c3_col}; margin-top:4px; line-height:1.1;">{p_ctr}%</div>
+            <div style="font-size:12px; color:{p_c_desc}; margin-top:6px;">Organic click-through conversion rate</div>
         </div>
         """, unsafe_allow_html=True)
     with m_c4:
         st.markdown(f"""
-        <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(245, 158, 11, 0.35); border-top:3px solid #f59e0b; border-radius:10px; padding:16px; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-            <div style="font-size:10.5px; font-weight:700; color:#fbbf24; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">WEIGHTED AVG POSITION</div>
-            <div style="font-size:32px; font-weight:700; color:#f59e0b; font-family:'JetBrains Mono',monospace; margin-top:4px; line-height:1.1;">{p_pos}</div>
-            <div style="font-size:12px; color:#94a3b8; margin-top:6px;">Impression-weighted average ranking</div>
+        <div style="background:{p_card_bg}; border:{p_card_border}; border-top:3px solid {p_c4_col}; border-radius:10px; padding:16px; {p_card_shadow}">
+            <div style="font-size:10.5px; font-weight:700; color:{p_c4_col}; text-transform:uppercase; letter-spacing:0.8px;">WEIGHTED AVG POSITION</div>
+            <div style="font-size:32px; font-weight:700; color:{p_c4_col}; margin-top:4px; line-height:1.1;">{p_pos}</div>
+            <div style="font-size:12px; color:{p_c_desc}; margin-top:6px;">Impression-weighted average ranking</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -3116,10 +3295,10 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
 
     # Visual Comparative Analytics
     if not df_all_sites.empty:
-        st.markdown("### 📈 Comparative Multi-Property Search Analytics")
+        st.markdown(f"<h3 style='color:{p_title_col};'>📈 Comparative Multi-Property Search Analytics</h3>", unsafe_allow_html=True)
         ch_c1, ch_c2 = st.columns([5, 3])
         with ch_c1:
-            st.markdown("<div style='font-size:13.5px; font-weight:600; color:#f8fafc; margin-bottom:6px;'>Clicks &amp; Impressions by Property</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:13.5px; font-weight:600; color:{p_title_col}; margin-bottom:6px;'>Clicks &amp; Impressions by Property</div>", unsafe_allow_html=True)
             fig_bar = go.Figure()
             fig_bar.add_trace(go.Bar(
                 x=df_all_sites['domain'],
