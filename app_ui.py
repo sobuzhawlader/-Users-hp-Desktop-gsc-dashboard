@@ -172,33 +172,96 @@ if is_dark:
     }
     
     /* Futuristic Sidebar Menu */
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] {
-        gap: 4px !important;
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
+        gap: 3px !important;
     }
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label {
-        color: #94a3b8 !important;
-        font-size: 13.5px !important;
-        font-weight: 500 !important;
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label {
+        background-color: transparent !important;
         border-radius: 8px !important;
-        padding: 8px 14px !important;
-        margin-right: 10px !important;
+        padding: 7px 12px !important;
+        margin: 0 !important;
         cursor: pointer !important;
         transition: all 0.15s ease-in-out !important;
         display: flex !important;
         align-items: center !important;
     }
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label:hover {
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
         background-color: rgba(56, 189, 248, 0.08) !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] {
+        background: linear-gradient(90deg, rgba(56, 189, 248, 0.2) 0%, rgba(37, 99, 235, 0.05) 100%) !important;
+        border-left: 3px solid #38bdf8 !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label span,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-testid="stMarkdownContainer"] p {
+        color: #94a3b8 !important;
+        font-size: 13.5px !important;
+        font-weight: 500 !important;
+        margin: 0 !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover span {
         color: #f8fafc !important;
     }
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label[data-checked="true"] {
-        background: linear-gradient(90deg, rgba(56, 189, 248, 0.2) 0%, rgba(37, 99, 235, 0.05) 100%) !important;
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] p,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] span,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] [data-testid="stMarkdownContainer"] p {
         color: #38bdf8 !important;
-        border-left: 3px solid #38bdf8 !important;
-        font-weight: 600 !important;
-        text-shadow: 0 0 10px rgba(56, 189, 248, 0.5) !important;
+        font-weight: 700 !important;
     }
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label > div:first-child {
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] div[data-baseweb="radio"] {
+        display: none !important;
+    }
+
+    /* Main Page Filter Radio Buttons in Dark Mode */
+    div[data-testid="stRadio"] label[data-testid="stWidgetLabel"] p {
+        color: #94a3b8 !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        margin-bottom: 6px !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label {
+        background: rgba(15, 23, 42, 0.7) !important;
+        border: 1px solid rgba(56, 189, 248, 0.25) !important;
+        border-radius: 20px !important;
+        padding: 4px 14px !important;
+        margin: 0 !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
+        background: rgba(56, 189, 248, 0.1) !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] {
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(37, 99, 235, 0.4)) !important;
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.3) !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label p,
+    div[data-testid="stRadio"] div[role="radiogroup"] label span,
+    div[data-testid="stRadio"] div[role="radiogroup"] [data-testid="stMarkdownContainer"] p {
+        color: #cbd5e1 !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        margin: 0 !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] p,
+    div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] span,
+    div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] [data-testid="stMarkdownContainer"] p {
+        color: #38bdf8 !important;
+        font-weight: 700 !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] div[data-baseweb="radio"] {
         display: none !important;
     }
     
@@ -589,6 +652,16 @@ else:
         background-image: none !important;
         color: #202124 !important;
     }
+
+    /* Global Light Typography */
+    body, p, span, label, li, a, div, h1, h2, h3, h4, h5, h6 {
+        color: #202124;
+    }
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] span,
+    [data-testid="stMarkdownContainer"] li {
+        color: #202124 !important;
+    }
     
     /* Clean Light Sidebar */
     section[data-testid="stSidebar"] {
@@ -597,33 +670,101 @@ else:
     }
     
     /* Light Sidebar Menu */
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] {
-        gap: 4px !important;
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
+        gap: 3px !important;
     }
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label {
-        color: #3c4043 !important;
-        font-size: 13.5px !important;
-        font-weight: 500 !important;
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label {
+        background-color: transparent !important;
         border-radius: 8px !important;
-        padding: 8px 14px !important;
-        margin-right: 10px !important;
+        padding: 7px 12px !important;
+        margin: 0 !important;
         cursor: pointer !important;
         transition: all 0.15s ease-in-out !important;
         display: flex !important;
         align-items: center !important;
     }
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label:hover {
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
         background-color: #f1f3f4 !important;
-        color: #202124 !important;
     }
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label[data-checked="true"] {
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] {
         background: #e8f0fe !important;
-        color: #1a73e8 !important;
-        border-left: 3px solid #1a73e8 !important;
-        font-weight: 600 !important;
-        text-shadow: none !important;
+        border-left: 4px solid #1a73e8 !important;
     }
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label > div:first-child {
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label span,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-testid="stMarkdownContainer"] p {
+        color: #3c4043 !important;
+        font-size: 13.5px !important;
+        font-weight: 500 !important;
+        margin: 0 !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover span {
+        color: #1a73e8 !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] p,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] span,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] [data-testid="stMarkdownContainer"] p {
+        color: #1a73e8 !important;
+        font-weight: 700 !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] div[data-baseweb="radio"] {
+        display: none !important;
+    }
+
+    /* Main Page Filter Radio Buttons (Search Type & Date Range) */
+    div[data-testid="stRadio"] label[data-testid="stWidgetLabel"] p {
+        color: #5f6368 !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        margin-bottom: 6px !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label {
+        background: #ffffff !important;
+        border: 1px solid #dadce0 !important;
+        border-radius: 20px !important;
+        padding: 5px 14px !important;
+        margin: 0 !important;
+        cursor: pointer !important;
+        box-shadow: 0 1px 2px rgba(60,64,67,0.06) !important;
+        transition: all 0.15s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
+        background: #f1f3f4 !important;
+        border-color: #bdc1c6 !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] {
+        background: #e8f0fe !important;
+        border: 1px solid #1a73e8 !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label p,
+    div[data-testid="stRadio"] div[role="radiogroup"] label span,
+    div[data-testid="stRadio"] div[role="radiogroup"] [data-testid="stMarkdownContainer"] p {
+        color: #3c4043 !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        margin: 0 !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label:hover p,
+    div[data-testid="stRadio"] div[role="radiogroup"] label:hover span {
+        color: #1a73e8 !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] p,
+    div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] span,
+    div[data-testid="stRadio"] div[role="radiogroup"] label[data-checked="true"] [data-testid="stMarkdownContainer"] p {
+        color: #1a73e8 !important;
+        font-weight: 700 !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] div[data-baseweb="radio"] {
         display: none !important;
     }
     
@@ -840,21 +981,37 @@ else:
     }
     
     /* Buttons */
-    .stButton > button {
-        background: #1a73e8 !important;
-        color: white !important;
-        border: 1px solid #1a73e8 !important;
+    .stButton > button,
+    [data-testid="stDownloadButton"] > button,
+    [data-testid="stLinkButton"] > a {
+        background: #ffffff !important;
+        color: #1a73e8 !important;
+        border: 1px solid #dadce0 !important;
         border-radius: 6px !important;
         font-weight: 500 !important;
         font-size: 13px !important;
-        padding: 7px 18px !important;
-        box-shadow: 0 1px 2px rgba(60,64,67,0.2) !important;
+        padding: 6px 16px !important;
+        box-shadow: 0 1px 2px rgba(60,64,67,0.1) !important;
         transition: all 0.2s ease !important;
     }
-    .stButton > button:hover {
-        background: #1765cc !important;
-        box-shadow: 0 1px 4px rgba(60,64,67,0.3) !important;
+    .stButton > button:hover,
+    [data-testid="stDownloadButton"] > button:hover,
+    [data-testid="stLinkButton"] > a:hover {
+        background: #f1f3f4 !important;
+        border-color: #bdc1c6 !important;
+        color: #1765cc !important;
         transform: translateY(-1px) !important;
+    }
+    .stButton > button[kind="primary"],
+    .stButton > button[data-testid="baseButton-primary"] {
+        background: #1a73e8 !important;
+        color: #ffffff !important;
+        border: 1px solid #1a73e8 !important;
+    }
+    .stButton > button[kind="primary"]:hover,
+    .stButton > button[data-testid="baseButton-primary"]:hover {
+        background: #1765cc !important;
+        color: #ffffff !important;
     }
     
     /* Section Headers */
@@ -920,15 +1077,20 @@ else:
     }
     
     /* Checkboxes */
-    [data-testid="stCheckbox"] label span {
-        color: #3c4043 !important;
+    div[data-testid="stCheckbox"] label p,
+    div[data-testid="stCheckbox"] label span,
+    div[data-testid="stCheckbox"] [data-testid="stMarkdownContainer"] p {
+        color: #202124 !important;
         font-size: 13px !important;
         font-weight: 500 !important;
     }
-    [data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] {
+    div[data-testid="stCheckbox"] div[role="checkbox"] {
+        border-color: #dadce0 !important;
+        background-color: #ffffff !important;
+    }
+    div[data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] {
         background-color: #1a73e8 !important;
         border-color: #1a73e8 !important;
-        box-shadow: none !important;
     }
     
     /* Dataframes */
@@ -939,12 +1101,23 @@ else:
     }
     
     /* Expander */
-    .streamlit-expanderHeader {
-        background: #ffffff !important;
+    div[data-testid="stExpander"] details {
         border: 1px solid #dadce0 !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+    }
+    div[data-testid="stExpander"] details summary {
+        background: #ffffff !important;
+        border-radius: 8px !important;
+        padding: 8px 14px !important;
+    }
+    div[data-testid="stExpander"] details summary p,
+    div[data-testid="stExpander"] details summary span {
         color: #202124 !important;
         font-weight: 600 !important;
+    }
+    div[data-testid="stExpander"] details summary svg {
+        fill: #5f6368 !important;
     }
     
     /* Light Mode Overrides for Dark Containers */
@@ -1233,14 +1406,35 @@ with st.sidebar:
     if is_connected:
         user_mail_disp = st.session_state.get('user_email') or 'Connected Google Account'
         if total_p > 0:
+            if is_dark:
+                sess_card_bg = "linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.8) 100%)"
+                sess_card_border = "1px solid rgba(56, 189, 248, 0.3)"
+                sess_card_title = "#38bdf8"
+                sess_badge_bg = "rgba(56, 189, 248, 0.2)"
+                sess_badge_border = "1px solid rgba(56,189,248,0.4)"
+                sess_badge_col = "#38bdf8"
+                sess_card_mail = "#f8fafc"
+                sess_card_sub = "#94a3b8"
+                sess_card_hi = "#38bdf8"
+            else:
+                sess_card_bg = "#ffffff"
+                sess_card_border = "1px solid #dadce0"
+                sess_card_title = "#1a73e8"
+                sess_badge_bg = "#e8f0fe"
+                sess_badge_border = "1px solid #d2e3fc"
+                sess_badge_col = "#1a73e8"
+                sess_card_mail = "#202124"
+                sess_card_sub = "#5f6368"
+                sess_card_hi = "#1a73e8"
+
             st.markdown(f"""
-            <div style="background:linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.8) 100%); border:1px solid rgba(56, 189, 248, 0.3); border-radius:10px; padding:12px 14px; margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.3);">
+            <div style="background:{sess_card_bg}; border:{sess_card_border}; border-radius:10px; padding:12px 14px; margin-bottom:10px; box-shadow:0 1px 3px rgba(60,64,67,0.1);">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-size:10px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">● CONNECTED SESSION</div>
-                    <span style="font-size:10px; background:rgba(56, 189, 248, 0.2); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); padding:1px 7px; border-radius:12px; font-weight:700; font-family:'JetBrains Mono',monospace;">{total_p} PROPERTIES</span>
+                    <div style="font-size:10px; font-weight:700; color:{sess_card_title}; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">● CONNECTED SESSION</div>
+                    <span style="font-size:10px; background:{sess_badge_bg}; color:{sess_badge_col}; border:{sess_badge_border}; padding:1px 7px; border-radius:12px; font-weight:700; font-family:'JetBrains Mono',monospace;">{total_p} PROPERTIES</span>
                 </div>
-                <div style="font-size:13px; font-weight:600; color:#f8fafc; margin-top:5px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
-                <div style="font-size:11px; color:#94a3b8; margin-top:3px;">Consolidating <b style="color:#38bdf8;">{total_p}</b> verified search properties ▾</div>
+                <div style="font-size:13px; font-weight:600; color:{sess_card_mail}; margin-top:5px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
+                <div style="font-size:11px; color:{sess_card_sub}; margin-top:3px;">Consolidating <b style="color:{sess_card_hi};">{total_p}</b> verified search properties ▾</div>
             </div>
             """, unsafe_allow_html=True)
             col_acc1, col_acc2 = st.columns(2)
@@ -1278,14 +1472,33 @@ with st.sidebar:
                     st.rerun()
         else:
             # Connected, but 0 sites found in this Gmail!
+            if is_dark:
+                sess0_bg = "linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%)"
+                sess0_border = "1px solid rgba(245, 158, 11, 0.35)"
+                sess0_title = "#fbbf24"
+                sess0_badge_bg = "rgba(245,158,11,0.2)"
+                sess0_badge_border = "1px solid rgba(245,158,11,0.4)"
+                sess0_badge_col = "#fbbf24"
+                sess0_mail = "#f8fafc"
+                sess0_sub = "#fcd34d"
+            else:
+                sess0_bg = "#fef7e0"
+                sess0_border = "1px solid #f9ab00"
+                sess0_title = "#b06000"
+                sess0_badge_bg = "#fff0c2"
+                sess0_badge_border = "1px solid #f9ab00"
+                sess0_badge_col = "#b06000"
+                sess0_mail = "#202124"
+                sess0_sub = "#5f6368"
+
             st.markdown(f"""
-            <div style="background:linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%); border:1px solid rgba(245, 158, 11, 0.35); border-radius:10px; padding:12px 14px; margin-bottom:10px;">
+            <div style="background:{sess0_bg}; border:{sess0_border}; border-radius:10px; padding:12px 14px; margin-bottom:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-size:10px; font-weight:700; color:#fbbf24; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">● SESSION ACTIVE</div>
-                    <span style="font-size:10px; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.4); padding:1px 7px; border-radius:12px; font-weight:700; font-family:'JetBrains Mono',monospace;">0 SITES</span>
+                    <div style="font-size:10px; font-weight:700; color:{sess0_title}; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">● SESSION ACTIVE</div>
+                    <span style="font-size:10px; background:{sess0_badge_bg}; color:{sess0_badge_col}; border:{sess0_badge_border}; padding:1px 7px; border-radius:12px; font-weight:700; font-family:'JetBrains Mono',monospace;">0 SITES</span>
                 </div>
-                <div style="font-size:13px; font-weight:600; color:#f8fafc; margin-top:5px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
-                <div style="font-size:11px; color:#fcd34d; margin-top:4px; line-height:1.4;">
+                <div style="font-size:13px; font-weight:600; color:{sess0_mail}; margin-top:5px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="{user_mail_disp}">📧 {user_mail_disp}</div>
+                <div style="font-size:11px; color:{sess0_sub}; margin-top:4px; line-height:1.4;">
                     ⚠️ <b>0 properties found in Search Console.</b><br>
                     If your 20+ sites are in another Gmail, switch accounts below:
                 </div>
@@ -1394,7 +1607,8 @@ with st.sidebar:
         def_idx = 0
 
     dropdown_label = f"Select Property ({total_p} Sites Loaded ▾):" if total_p > 0 else "Select Property (Sign In ▾):"
-    st.markdown(f"<div style='font-size:11px; font-weight:700; color:#38bdf8; font-family:\"JetBrains Mono\",monospace; text-transform:uppercase; margin-top:8px; margin-bottom:4px; letter-spacing:0.5px;'>{dropdown_label}</div>", unsafe_allow_html=True)
+    dropdown_label_col = "#38bdf8" if is_dark else "#1a73e8"
+    st.markdown(f"<div style='font-size:11px; font-weight:700; color:{dropdown_label_col}; font-family:\"JetBrains Mono\",monospace; text-transform:uppercase; margin-top:8px; margin-bottom:4px; letter-spacing:0.5px;'>{dropdown_label}</div>", unsafe_allow_html=True)
     selected_choice = st.selectbox("Property", site_options, index=def_idx, label_visibility="collapsed", key="sidebar_property_selector")
 
     if selected_choice == "➕ Enter Custom Property URL":
@@ -1596,21 +1810,44 @@ with st.sidebar:
                 st.caption("Credentials not configured in secrets.")
 
     # 5. Live Telemetry Status Card (Sidebar Footer)
+    if is_dark:
+        side_card_bg = "rgba(15, 23, 42, 0.75)"
+        side_card_border = "1px solid rgba(56, 189, 248, 0.2)"
+        side_card_title = "#38bdf8"
+        side_badge_bg = "rgba(16, 185, 129, 0.15)"
+        side_badge_border = "1px solid rgba(16, 185, 129, 0.3)"
+        side_badge_text = "#34d399"
+        side_card_text = "#94a3b8"
+        side_val1 = "#f8fafc"
+        side_val2 = "#38bdf8"
+        side_val3 = "#a855f7"
+    else:
+        side_card_bg = "#ffffff"
+        side_card_border = "1px solid #dadce0"
+        side_card_title = "#1a73e8"
+        side_badge_bg = "#e6f4ea"
+        side_badge_border = "1px solid #ceead6"
+        side_badge_text = "#137333"
+        side_card_text = "#5f6368"
+        side_val1 = "#202124"
+        side_val2 = "#1a73e8"
+        side_val3 = "#9334e6"
+
     st.markdown(f"""
-    <div style="background:rgba(15, 23, 42, 0.75); border:1px solid rgba(56, 189, 248, 0.2); border-radius:10px; padding:12px 14px; margin-top:16px; backdrop-filter:blur(8px);">
+    <div style="background:{side_card_bg}; border:{side_card_border}; border-radius:10px; padding:12px 14px; margin-top:16px; box-shadow: 0 1px 3px rgba(60,64,67,0.08);">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
             <div style="display:flex; align-items:center; gap:8px;">
                 <span class="gsc-pulse-dot"></span>
-                <span style="font-size:11px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">LIVE TELEMETRY</span>
+                <span style="font-size:11px; font-weight:700; color:{side_card_title}; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">LIVE TELEMETRY</span>
             </div>
-            <span style="font-size:11px; background:rgba(16, 185, 129, 0.15); color:#34d399; border:1px solid rgba(16, 185, 129, 0.3); font-weight:700; padding:2px 8px; border-radius:12px; font-family:'JetBrains Mono',monospace;">
+            <span style="font-size:11px; background:{side_badge_bg}; color:{side_badge_text}; border:{side_badge_border}; font-weight:700; padding:2px 8px; border-radius:12px; font-family:'JetBrains Mono',monospace;">
                 {live_site_users} ACTIVE
             </span>
         </div>
-        <div style="font-size:11px; color:#94a3b8; line-height:1.6; font-family:'JetBrains Mono',monospace;">
-            <div>🌐 Site: <b style="color:#f8fafc;">{live_site_users}</b> online right now</div>
-            <div>⏱️ Last 30m: <b style="color:#38bdf8;">{rt_metrics['users_last_30m']}</b> visitors</div>
-            <div>👥 Dashboard: <b style="color:#a855f7;">{active_dash_users}</b> session{'s' if active_dash_users > 1 else ''}</div>
+        <div style="font-size:11px; color:{side_card_text}; line-height:1.6; font-family:'JetBrains Mono',monospace;">
+            <div>🌐 Site: <b style="color:{side_val1};">{live_site_users}</b> online right now</div>
+            <div>⏱️ Last 30m: <b style="color:{side_val2};">{rt_metrics['users_last_30m']}</b> visitors</div>
+            <div>👥 Dashboard: <b style="color:{side_val3};">{active_dash_users}</b> session{'s' if active_dash_users > 1 else ''}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -2010,17 +2247,34 @@ if page in ["📈 Performance", "📊 Overview"]:
         """, unsafe_allow_html=True)
 
     # Live Real-Time Activity Bar
+    if is_dark:
+        rt_bar_bg = "linear-gradient(90deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%)"
+        rt_bar_border = "1px solid rgba(56, 189, 248, 0.25)"
+        rt_bar_shadow = "box-shadow:0 4px 15px rgba(0,0,0,0.3);"
+        rt_bar_title = "#f8fafc"
+        rt_bar_badge_text = "#34d399"
+        rt_bar_sub = "#94a3b8"
+        rt_bar_hi = "#38bdf8"
+    else:
+        rt_bar_bg = "#ffffff"
+        rt_bar_border = "1px solid #dadce0"
+        rt_bar_shadow = "box-shadow:0 1px 3px rgba(60,64,67,0.1);"
+        rt_bar_title = "#202124"
+        rt_bar_badge_text = "#137333"
+        rt_bar_sub = "#5f6368"
+        rt_bar_hi = "#1a73e8"
+
     st.markdown(f"""
-    <div style="background:linear-gradient(90deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%); border:1px solid rgba(56, 189, 248, 0.25); border-radius:10px; padding:10px 16px; margin: 12px 0 6px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+    <div style="background:{rt_bar_bg}; border:{rt_bar_border}; border-radius:10px; padding:10px 16px; margin: 12px 0 6px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; {rt_bar_shadow}">
         <div style="display:flex; align-items:center; gap:10px;">
             <span class="gsc-pulse-dot"></span>
-            <span style="font-weight:700; color:#f8fafc; font-size:13px; font-family:'JetBrains Mono',monospace;">LIVE SITE TELEMETRY:</span>
-            <span style="color:#34d399; font-weight:700; font-size:13px; font-family:'JetBrains Mono',monospace;">{live_site_users} Active Users browsing</span>
-            <span style="color:#94a3b8; font-size:12px;">on <b style="color:#38bdf8;">{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}</b> • {rt_metrics['users_last_30m']} in last 30m</span>
+            <span style="font-weight:700; color:{rt_bar_title}; font-size:13px; font-family:'JetBrains Mono',monospace;">LIVE SITE TELEMETRY:</span>
+            <span style="color:{rt_bar_badge_text}; font-weight:700; font-size:13px; font-family:'JetBrains Mono',monospace;">{live_site_users} Active Users browsing</span>
+            <span style="color:{rt_bar_sub}; font-size:12px;">on <b style="color:{rt_bar_hi};">{current_site or (real_active_sites[0] if real_active_sites else 'selected property')}</b> • {rt_metrics['users_last_30m']} in last 30m</span>
         </div>
-        <div style="display:flex; align-items:center; gap:14px; font-size:12px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">
-            <span>👥 <b style="color:#38bdf8;">{active_dash_users}</b> viewing dashboard</span>
-            <span>⚡ <b style="color:#34d399;">{rt_metrics['pageviews_per_min']}</b> views/min</span>
+        <div style="display:flex; align-items:center; gap:14px; font-size:12px; color:{rt_bar_sub}; font-family:'JetBrains Mono',monospace;">
+            <span>👥 <b style="color:{rt_bar_hi};">{active_dash_users}</b> viewing dashboard</span>
+            <span>⚡ <b style="color:{rt_bar_badge_text};">{rt_metrics['pageviews_per_min']}</b> views/min</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
