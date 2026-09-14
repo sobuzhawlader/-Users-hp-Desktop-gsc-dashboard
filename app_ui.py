@@ -1825,6 +1825,11 @@ def resolve_redirect_uri(cfg):
 # Multi-User Web OAuth Callback Handler (MUST RUN FIRST!)
 # ==============================
 query_params = st.query_params
+if 'error' in query_params:
+    oauth_err = query_params.get('error')
+    st.query_params.clear()
+    st.warning(f"Google Sign-In notice: {oauth_err}. You can continue below.")
+
 if 'code' in query_params:
     code = query_params['code']
     try:
@@ -1841,6 +1846,7 @@ if 'code' in query_params:
         user_email = get_user_email(creds) if 'get_user_email' in globals() and get_user_email else None
         
         # Reset entire session state to this freshly authenticated user
+        st.session_state.authenticated = True
         st.session_state.user_creds = creds
         st.session_state.service = svc
         st.session_state.service_v1 = svc_v1
@@ -1863,8 +1869,8 @@ if 'code' in query_params:
         st.query_params.clear()
         st.rerun()
     except Exception as e:
+        st.query_params.clear()
         if 'Scope has changed' in str(e):
-            st.query_params.clear()
             st.rerun()
         else:
             st.error(f"Web OAuth Error: {e}")
@@ -2986,41 +2992,17 @@ if page in ["📈 Performance", "📊 Overview"]:
 
     if is_connected and not real_active_sites:
         user_e = st.session_state.get('user_email') or 'your Google Account'
-        if is_dark:
-            zero_bg = "linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(15, 23, 42, 0.85) 100%)"
-            zero_border = "1px solid rgba(245, 158, 11, 0.35)"
-            zero_title = "#fbbf24"
-            zero_text = "#cbd5e1"
-            zero_shadow = "box-shadow:0 8px 32px rgba(0,0,0,0.4);"
-        else:
-            zero_bg = "#ffffff"
-            zero_border = "1px solid #f9ab00"
-            zero_title = "#b06000"
-            zero_text = "#3c4043"
-            zero_shadow = "box-shadow:0 1px 3px rgba(60,64,67,0.1);"
-
-        st.markdown(f"""
-        <div style="background:{zero_bg}; border:{zero_border}; border-radius:12px; padding:32px 24px; margin:24px auto; max-width:620px; text-align:center; {zero_shadow}">
-            <div style="font-size:36px; margin-bottom:10px;">⚠️</div>
-            <div style="font-size:18px; font-weight:700; color:{zero_title};">No Search Console Properties Found in 📧 {user_e}</div>
-            <div style="font-size:14px; color:{zero_text}; max-width:540px; margin:10px auto 20px auto; line-height:1.5;">
-                Google Search Console reported <b style="color:{zero_title};">0 verified properties</b> under this Gmail address.<br>
-                If your <b>websites</b> are registered under a different Google account, click below to switch accounts:
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        if auth_url:
-            c1, c2, c3 = st.columns([1, 2, 1])
-            with c2:
-                st.link_button("🔄 Switch Google Account (Sign In with Another Gmail)", auth_url, type="primary", use_container_width=True)
-                with st.expander("💡 How to Connect Your GSC Property (Step-by-Step)", expanded=False):
-                    st.markdown("""
-                    **1. Check Google Account**: Ensure you sign in with the exact Gmail/Workspace address that has Owner or Full permissions in Search Console.  
-                    **2. Check Property Verification**: Visit [Google Search Console](https://search.google.com/search-console) to confirm your property is verified.  
-                    **3. Domain vs URL-Prefix**: Domain properties (`sc-domain:example.com`) cover all subdomains (`www`, `blog`); URL-prefix (`https://example.com/`) covers only that prefix.
-                    """)
-        st.stop()
-    elif not is_connected and not real_active_sites:
+        st.info(f"💡 Connected to Google as **{user_e}**. Google Search Console reported 0 verified properties under this Gmail. We've loaded sample data so you can explore all features. You can also select **'➕ Enter Custom Property URL'** from the sidebar to inspect any live website.")
+        demo_site = "sc-domain:example-enterprise.com"
+        st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
+        st.session_state.sites_detailed = [
+            {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
+            {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
+        ]
+        st.session_state.current_site = demo_site
+        st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+        st.session_state.portfolio_needs_refresh = True
+    elif not is_authenticated and not real_active_sites:
         col_pad1, col_center, col_pad2 = st.columns([1, 1.4, 1])
         with col_center:
             # Claude Card Header & Subtitle
@@ -3075,37 +3057,38 @@ if page in ["📈 Performance", "📊 Overview"]:
             </div>
             """, unsafe_allow_html=True)
 
-            # 4. Email input
-            claude_email_input = st.text_input(
-                "Email address",
-                placeholder="Enter your email",
-                key="input_claude_login_email",
-                label_visibility="collapsed"
-            )
+            # 4. Email input + Continue with email (inside st.form so Enter key submits)
+            with st.form("claude_email_login_form", clear_on_submit=False, border=False):
+                claude_email_input = st.text_input(
+                    "Email address",
+                    placeholder="Enter your email",
+                    key="input_claude_login_email",
+                    label_visibility="collapsed"
+                )
+                st.markdown('<div class="claude-black-btn">', unsafe_allow_html=True)
+                btn_submit_email = st.form_submit_button("Continue with email", use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
 
-            # 5. Continue with email button (Direct instant login with ANY email)
-            st.markdown('<div class="claude-black-btn">', unsafe_allow_html=True)
-            if st.button("Continue with email", key="btn_claude_continue_email", use_container_width=True):
-                email_clean = claude_email_input.strip() if claude_email_input else ""
-                if email_clean and "@" in email_clean and "." in email_clean.split("@")[-1]:
-                    st.session_state.authenticated = True
-                    st.session_state.user_email = email_clean
-                    user_domain = email_clean.split("@")[-1]
-                    domain_name = user_domain if user_domain not in ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com'] else email_clean.split("@")[0] + ".com"
-                    default_site = f"sc-domain:{domain_name}"
-                    st.session_state.sites = [default_site, f"https://{domain_name}/"]
-                    st.session_state.sites_detailed = [
-                        {"siteUrl": default_site, "permissionLevel": "siteOwner"},
-                        {"siteUrl": f"https://{domain_name}/", "permissionLevel": "siteOwner"}
-                    ]
-                    st.session_state.current_site = default_site
-                    st.session_state.df = generate_mock_gsc_data(default_site, days=90)
-                    st.session_state.portfolio_needs_refresh = True
-                    st.toast(f"✅ Signed in as {email_clean}!", icon="🎉")
-                    st.rerun()
-                else:
-                    st.error("Please enter a valid email address (e.g., yourname@gmail.com).")
-            st.markdown('</div>', unsafe_allow_html=True)
+                if btn_submit_email:
+                    email_clean = claude_email_input.strip() if claude_email_input else ""
+                    if email_clean and "@" in email_clean and "." in email_clean.split("@")[-1]:
+                        st.session_state.authenticated = True
+                        st.session_state.user_email = email_clean
+                        user_domain = email_clean.split("@")[-1]
+                        domain_name = user_domain if user_domain not in ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com'] else email_clean.split("@")[0] + ".com"
+                        default_site = f"sc-domain:{domain_name}"
+                        st.session_state.sites = [default_site, f"https://{domain_name}/"]
+                        st.session_state.sites_detailed = [
+                            {"siteUrl": default_site, "permissionLevel": "siteOwner"},
+                            {"siteUrl": f"https://{domain_name}/", "permissionLevel": "siteOwner"}
+                        ]
+                        st.session_state.current_site = default_site
+                        st.session_state.df = generate_mock_gsc_data(default_site, days=90)
+                        st.session_state.portfolio_needs_refresh = True
+                        st.toast(f"✅ Signed in as {email_clean}!", icon="🎉")
+                        st.rerun()
+                    else:
+                        st.error("Please enter a valid email address (e.g., yourname@gmail.com).")
 
             # 6. Security Note
             st.markdown("""
