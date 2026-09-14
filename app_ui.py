@@ -162,21 +162,33 @@ st.markdown("""
         background: transparent !important;
         height: 2.8rem !important;
         pointer-events: none !important;
-        z-index: 1000000 !important;
+        z-index: 999998 !important;
     }
 
-    /* Native Streamlit sidebar toggle button MUST always be visible, clickable, and prioritized */
+    /* Preserve toolbar container as transparent & non-blocking so sidebar toggle remains active */
+    .stAppToolbar,
+    [data-testid="stToolbar"] {
+        background: transparent !important;
+        pointer-events: none !important;
+        height: 2.8rem !important;
+    }
+
+    /* Native Streamlit sidebar toggle & reopen buttons MUST always be visible, clickable, and prioritized */
     [data-testid="collapsedControl"],
     [data-testid="stSidebarCollapsedControl"],
     [data-testid="stSidebarCollapseButton"],
+    [data-testid="stExpandSidebarButton"],
+    div[class*="StyledOpenSidebarButton"],
+    div[class*="StyledOpenSidebarButton"] button,
     header[data-testid="stHeader"] button,
-    [data-testid="stHeader"] button {
+    [data-testid="stHeader"] button,
+    [data-testid="stToolbar"] button {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
         pointer-events: auto !important;
         cursor: pointer !important;
-        z-index: 1000001 !important;
+        z-index: 999999 !important;
     }
 
     /* Keep the collapsed sidebar button fixed cleanly on top-left */
@@ -185,17 +197,41 @@ st.markdown("""
         position: fixed !important;
         top: 12px !important;
         left: 14px !important;
+        z-index: 999999 !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        background: transparent !important;
+    }
+
+    [data-testid="stExpandSidebarButton"] {
+        z-index: 999999 !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+
+    [data-testid="collapsedControl"] *,
+    [data-testid="stSidebarCollapsedControl"] *,
+    [data-testid="stExpandSidebarButton"] * {
+        pointer-events: auto !important;
+        cursor: pointer !important;
     }
 
     /* Sidebar Guarantee: Ensure sidebar is never hidden or zeroed by custom styles */
     section[data-testid="stSidebar"] {
         visibility: visible !important;
         opacity: 1 !important;
+        transition: transform 0.3s ease, margin-left 0.3s ease, width 0.3s ease !important;
     }
 
     /* Hide ONLY unwanted Streamlit Cloud shell elements (Fork, GitHub, Status, Manage App, Badges) */
     [data-testid="stToolbarActions"],
-    .stAppToolbar,
+    div[class*="StyledHeaderRightSection"],
     #MainMenu,
     footer,
     [data-testid="stDecoration"],
@@ -365,7 +401,8 @@ if is_dark:
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px 20px 10px 56px !important;
+        padding: 10px 20px 10px 55px !important;
+        padding-left: 55px !important;
         flex-wrap: wrap !important;
         gap: 12px;
         min-height: 52px;
@@ -1005,7 +1042,8 @@ else:
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px 20px 10px 56px !important;
+        padding: 10px 20px 10px 55px !important;
+        padding-left: 55px !important;
         flex-wrap: wrap !important;
         gap: 12px;
         min-height: 52px;
@@ -2440,7 +2478,7 @@ def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, act
     icon_color = "#94a3b8" if is_dark_mode else "#5f6368"
 
     top_bar_html = (
-        f'<div class="gsc-top-bar">'
+        f'<div class="gsc-top-bar" style="padding-left: 55px !important;">'
         f'<div style="display:flex; align-items:center; gap:10px;">'
         f'<svg width="24" height="24" viewBox="0 0 48 48">'
         f'<path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>'
