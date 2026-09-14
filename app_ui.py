@@ -3030,7 +3030,7 @@ if page in ["📈 Performance", "📊 Overview"]:
             # 1. Continue with Google button
             if auth_url:
                 st.markdown(f"""
-                <a href="{auth_url}" target="_self" class="claude-google-btn">
+                <a href="{auth_url}" target="_top" class="claude-google-btn">
                     <svg width="18" height="18" viewBox="0 0 48 48">
                         <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
                         <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
@@ -3102,6 +3102,45 @@ if page in ["📈 Performance", "📊 Overview"]:
                 🔒 Read-Only &amp; In-Memory: Your credentials and Search Console data are processed securely in volatile session memory. Privacy Policy.
             </div>
             """, unsafe_allow_html=True)
+
+            # 7. 403 Resolution Guide Expander
+            with st.expander("🚨 Getting Google 403 Forbidden Error? (1-Click Fix)", expanded=False):
+                st.markdown("""
+                If Google shows **"403. That's an error. We're sorry, but you do not have access to this page"**, it means your Google account is not on the **Test users** list in Google Cloud Console.
+
+                #### ⚡ 2-Minute Fix:
+                1. 👉 **[Open Google Cloud Console OAuth Consent Screen](https://console.cloud.google.com/apis/credentials/consent?project=1092944785943)**
+                2. Scroll down to the **Test users** section.
+                3. Click **`+ ADD USERS`**.
+                4. Enter the Gmail address you want to log in with and click **Save**.
+                5. *(Optional)* Click **Publish App** under *Publishing status* to allow any account to log in.
+                6. Come back here and click **Continue with Google**!
+                """)
+
+            # 8. Service Account Alternative Expander
+            with st.expander("🔑 Alternative: Connect via Service Account JSON", expanded=False):
+                st.markdown("If you have a Google Cloud Service Account with Search Console permissions, you can connect directly without OAuth restrictions:")
+                sa_upload = st.file_uploader("Upload service_account.json", type=["json"], key="login_sa_uploader")
+                if sa_upload is not None:
+                    try:
+                        sa_content = json.load(sa_upload)
+                        if 'client_email' in sa_content or 'type' in sa_content:
+                            sa_creds, sa_svc, sa_svcv1, sa_sites = authenticate_service_account(sa_content)
+                            st.session_state.user_creds = sa_creds
+                            st.session_state.service = sa_svc
+                            st.session_state.service_v1 = sa_svcv1
+                            st.session_state.sites = sa_sites
+                            st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in sa_sites]
+                            st.session_state.user_email = sa_content.get('client_email', 'service-account')
+                            st.session_state.current_site = sa_sites[0] if sa_sites else None
+                            st.session_state.portfolio_needs_refresh = True
+                            st.session_state.df = pd.DataFrame()
+                            st.success(f"Connected as {st.session_state.user_email}!")
+                            st.rerun()
+                        else:
+                            st.error("Invalid Service Account JSON. Missing 'client_email'.")
+                    except Exception as sa_err:
+                        st.error(f"Service Account Error: {sa_err}")
 
             with st.expander("💡 How to Connect Your GSC Property (Step-by-Step Guide)", expanded=False):
                 st.markdown("""

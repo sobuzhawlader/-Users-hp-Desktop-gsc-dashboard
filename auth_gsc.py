@@ -9,7 +9,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow, Flow
 from googleapiclient.discovery import build
 
 SCOPES = [
-    'https://www.googleapis.com/auth/webmasters',
+    'https://www.googleapis.com/auth/webmasters.readonly',
     'openid',
     'https://www.googleapis.com/auth/userinfo.email'
 ]
