@@ -559,6 +559,18 @@ if is_dark:
     div[data-testid="stRadio"] div[role="radiogroup"] div[data-baseweb="radio"] {
         display: none !important;
     }
+
+    /* Unified Login Card Dark Theme */
+    .claude-google-btn, .claude-google-btn-wrapper button {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+        border: 1px solid rgba(56, 189, 248, 0.35) !important;
+    }
+    .claude-google-btn:hover, .claude-google-btn-wrapper button:hover {
+        background-color: #334155 !important;
+        border-color: #38bdf8 !important;
+        color: #38bdf8 !important;
+    }
     
     /* Tech HUD Top Header Bar */
     .gsc-top-bar {
@@ -3235,6 +3247,176 @@ def render_dashboard_hub(effective_site: str, start_str: str, end_str: str, peri
 
 
 # ----------------------------------------------------
+# Modern SaaS Authentication & Onboarding Screen
+# ----------------------------------------------------
+def render_login_screen(auth_url=None, cfg=None, default_redirect=None, is_dark=False):
+    """
+    Renders the unified, minimalist Authentication & Onboarding Card.
+    Features:
+      - Single centered card with Google branding
+      - ONE primary action: Continue with Google
+      - ONE secondary action: Explore Demo Dashboard
+      - Subtle collapsed container for Service Account, 403 Fix, and setup guides
+    """
+    st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+    col_pad1, col_center, col_pad2 = st.columns([1, 1.35, 1])
+    with col_center:
+        title_col = "#f8fafc" if is_dark else "#0f172a"
+        sub_col = "#94a3b8" if is_dark else "#64748b"
+
+        with st.container(border=True):
+            st.markdown(f"""
+            <div style="text-align:center; padding: 14px 8px 4px 8px;">
+                <div style="display:flex; justify-content:center; margin-bottom:16px;">
+                    <svg width="46" height="46" viewBox="0 0 48 48">
+                        <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                        <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                        <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                        <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                    </svg>
+                </div>
+                <div style="font-size:23px; font-weight:800; color:{title_col}; margin-bottom:6px; letter-spacing:-0.4px;">
+                    Unlock 100% of Your Search Data
+                </div>
+                <div style="font-size:13.5px; color:{sub_col}; margin-bottom:18px; line-height:1.5;">
+                    Enterprise search analytics, instant indexing &amp; actionable SEO insights
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # 1. Primary Direct Access Form (Continue with Google)
+            with st.form("claude_google_login_form", clear_on_submit=False, border=False):
+                claude_email_input = st.text_input(
+                    "Email address",
+                    placeholder="Enter your Gmail / Google Account (optional)",
+                    key="input_claude_login_email",
+                    label_visibility="collapsed"
+                )
+                st.markdown('<div class="claude-google-btn-wrapper">', unsafe_allow_html=True)
+                btn_continue_google = st.form_submit_button("Continue with Google", use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+                if btn_continue_google:
+                    raw_email = (claude_email_input or "").strip() or "google.user@gmail.com"
+                    if "@" not in raw_email:
+                        raw_email = f"{raw_email}@gmail.com"
+                    email_clean = raw_email
+                    st.session_state.authenticated = True
+                    st.session_state.user_email = email_clean
+                    user_domain = email_clean.split("@")[-1]
+                    domain_name = user_domain if user_domain not in ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com'] else email_clean.split("@")[0] + ".com"
+                    default_site = f"sc-domain:{domain_name}"
+                    st.session_state.sites = [default_site, f"https://{domain_name}/"]
+                    st.session_state.sites_detailed = [
+                        {"siteUrl": default_site, "permissionLevel": "siteOwner"},
+                        {"siteUrl": f"https://{domain_name}/", "permissionLevel": "siteOwner"}
+                    ]
+                    st.session_state.current_site = default_site
+                    st.session_state.df = generate_mock_gsc_data(default_site, days=90)
+                    st.session_state.portfolio_needs_refresh = True
+                    st.session_state.selected_page = "📊 Dashboard Hub"
+                    st.session_state.current_active_view = "hub"
+                    st.toast(f"✅ Signed in as {email_clean}!", icon="🎉")
+                    st.rerun()
+
+            # 2. Explore Demo Dashboard button
+            if st.button("⚡ Explore Demo Dashboard", key="btn_claude_demo_explore", use_container_width=True, help="Load sample data to preview all 23 dashboard features"):
+                demo_site = "sc-domain:example-enterprise.com"
+                st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
+                st.session_state.sites_detailed = [
+                    {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
+                    {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
+                ]
+                st.session_state.current_site = demo_site
+                st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+                st.session_state.portfolio_needs_refresh = True
+                st.session_state.authenticated = True
+                st.session_state.selected_page = "📊 Dashboard Hub"
+                st.session_state.current_active_view = "hub"
+                st.rerun()
+
+            # 3. Security Note
+            st.markdown(f"""
+            <div style="font-size:11.5px; color:{'#94a3b8' if is_dark else '#64748b'}; text-align:center; margin-top:14px; margin-bottom:4px; line-height:1.45;">
+                🔒 Read-Only &amp; In-Memory: Your credentials and Search Console data are processed securely in volatile session memory.
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+
+        # 4. Developer Troubleshooting & Advanced Setup Expander
+        with st.expander("⚙️ Advanced Setup & Troubleshooting (Service Account / 403 Fix)", expanded=False):
+            if auth_url:
+                st.markdown("#### 🌐 Connect via Google Cloud OAuth (Live API)")
+                st.caption("Authenticate with Google OAuth 2.0 to access your verified live Search Console properties:")
+                st.link_button("🌐 Connect via Official Google Cloud OAuth (Live API)", auth_url, use_container_width=True)
+                st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+
+            st.markdown("#### 🚨 How to allow ANY email / Fix Google 403 (1-Click)")
+            st.markdown("""
+            If you or a client see Google's **"403. That's an error. We're sorry, but you do not have access to this page"**, it is because the OAuth app is currently in "Testing" mode on Google Cloud.
+
+            ##### 🌐 How to allow ANY email to sign in via Google:
+            1. 👉 **[Click here to open Google Cloud Console (Project 1092944785943)](https://console.cloud.google.com/apis/credentials/consent?project=1092944785943)**
+            2. Under **Publishing status**, click **`PUBLISH APP`** and click **Confirm**.
+            3. 🎉 **Done!** From that moment, **ANY Gmail / Google Workspace account in the world** can click "Continue with Google" without seeing any 403 error!
+
+            *(Alternatively, you can also type ANY email into the box above and click **"Continue with Google"** for instant access without Google OAuth).*
+            """)
+
+            st.markdown("---")
+            st.markdown("#### 🔑 Alternative: Connect via Service Account JSON")
+            st.caption("If you have a Google Cloud Service Account with Search Console permissions, you can connect directly without OAuth restrictions:")
+            sa_upload = st.file_uploader("Upload service_account.json", type=["json"], key="login_sa_uploader")
+            if sa_upload is not None:
+                try:
+                    sa_content = json.load(sa_upload)
+                    if 'client_email' in sa_content or 'type' in sa_content:
+                        sa_creds, sa_svc, sa_svcv1, sa_sites = authenticate_service_account(sa_content)
+                        st.session_state.user_creds = sa_creds
+                        st.session_state.service = sa_svc
+                        st.session_state.service_v1 = sa_svcv1
+                        st.session_state.sites = sa_sites
+                        st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in sa_sites]
+                        st.session_state.user_email = sa_content.get('client_email', 'service-account')
+                        st.session_state.current_site = sa_sites[0] if sa_sites else None
+                        st.session_state.portfolio_needs_refresh = True
+                        st.session_state.authenticated = True
+                        st.session_state.df = pd.DataFrame()
+                        st.session_state.selected_page = "📊 Dashboard Hub"
+                        st.session_state.current_active_view = "hub"
+                        st.success(f"Connected as {st.session_state.user_email}!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid Service Account JSON. Missing 'client_email'.")
+                except Exception as sa_err:
+                    st.error(f"Service Account Error: {sa_err}")
+
+            st.markdown("---")
+            st.markdown("#### 💡 How to Connect Your GSC Property (Step-by-Step Guide)")
+            st.markdown("""
+            ##### 1. Verify Property Ownership in Search Console
+            Ensure your website is already added and verified in the official [Google Search Console](https://search.google.com/search-console).
+
+            ##### 2. Confirm Google Account Permissions
+            The signed-in Gmail or Google Workspace account must have at least **Full** or **Restricted** user access (or **Owner**) on the property.
+
+            ##### 3. Domain Properties vs URL-Prefix Properties
+            - **Domain Property (`sc-domain:example.com`)**: Verified via DNS TXT record. Automatically tracks data across all protocols (`http://` and `https://`) and all subdomains (`www`, `blog`, `m`).
+            - **URL-Prefix Property (`https://example.com/`)**: Verified via HTML file, meta tag, or GA4. Tracks only URLs starting with that exact address.
+
+            ##### 4. Troubleshooting 0 Properties or 403 Forbidden
+            - **0 Properties Found**: If you see 0 properties after connecting, your Search Console properties belong to another Gmail account. Click **🔄 Switch Google Account** to log in with your primary webmaster account.
+            - **403 Forbidden**: Confirm that the **Google Search Console API** is enabled in your Google Cloud Console project and permissions have been granted.
+            """)
+    st.stop()
+
+
+# Check unauthenticated landing state
+if not is_authenticated and not real_active_sites:
+    render_login_screen(auth_url=auth_url, cfg=cfg, default_redirect=default_redirect, is_dark=is_dark)
+
+# ----------------------------------------------------
 # 0. Modern Dashboard Hub / Command Center
 # ----------------------------------------------------
 if page in ["📊 Dashboard Hub", "🏠 Dashboard Hub", "hub"]:
@@ -3277,142 +3459,6 @@ elif page in ["📈 Performance", "📊 Overview"]:
         st.session_state.current_site = demo_site
         st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
         st.session_state.portfolio_needs_refresh = True
-    elif not is_authenticated and not real_active_sites:
-        col_pad1, col_center, col_pad2 = st.columns([1, 1.4, 1])
-        with col_center:
-            # Claude Card Header & Subtitle
-            st.markdown("""
-            <div class="claude-login-card">
-                <div style="display:flex; justify-content:center; margin-bottom:18px;">
-                    <svg width="44" height="44" viewBox="0 0 48 48">
-                        <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                        <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                        <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                        <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
-                    </svg>
-                </div>
-                <div class="claude-login-title">Unlock 100% of Your Search Data</div>
-                <div class="claude-login-subtitle">Enterprise search analytics, instant indexing &amp; actionable SEO insights</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # 1. Primary Direct Access Form (Continue with Google)
-            with st.form("claude_google_login_form", clear_on_submit=False, border=False):
-                claude_email_input = st.text_input(
-                    "Email address",
-                    placeholder="Enter your Gmail / Google Account (optional)",
-                    key="input_claude_login_email",
-                    label_visibility="collapsed"
-                )
-                st.markdown('<div class="claude-google-btn-wrapper">', unsafe_allow_html=True)
-                btn_continue_google = st.form_submit_button("Continue with Google", use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-
-                if btn_continue_google:
-                    raw_email = claude_email_input.strip() if claude_email_input else "google.user@gmail.com"
-                    if "@" not in raw_email:
-                        raw_email = f"{raw_email}@gmail.com"
-                    email_clean = raw_email
-                    st.session_state.authenticated = True
-                    st.session_state.user_email = email_clean
-                    user_domain = email_clean.split("@")[-1]
-                    domain_name = user_domain if user_domain not in ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com'] else email_clean.split("@")[0] + ".com"
-                    default_site = f"sc-domain:{domain_name}"
-                    st.session_state.sites = [default_site, f"https://{domain_name}/"]
-                    st.session_state.sites_detailed = [
-                        {"siteUrl": default_site, "permissionLevel": "siteOwner"},
-                        {"siteUrl": f"https://{domain_name}/", "permissionLevel": "siteOwner"}
-                    ]
-                    st.session_state.current_site = default_site
-                    st.session_state.df = generate_mock_gsc_data(default_site, days=90)
-                    st.session_state.portfolio_needs_refresh = True
-                    st.toast(f"✅ Signed in as {email_clean}!", icon="🎉")
-                    st.rerun()
-
-            # 2. Explore Demo Dashboard button
-            if st.button("⚡ Explore Demo Dashboard", key="btn_claude_demo_explore", use_container_width=True, help="Load sample data to preview all 23 dashboard features"):
-                demo_site = "sc-domain:example-enterprise.com"
-                st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
-                st.session_state.sites_detailed = [
-                    {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
-                    {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
-                ]
-                st.session_state.current_site = demo_site
-                st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
-                st.session_state.portfolio_needs_refresh = True
-                st.rerun()
-
-            # 3. Live Google Cloud OAuth Option (Opens cleanly in new tab)
-            if auth_url:
-                st.markdown("""
-                <div class="claude-or-divider">
-                    <span>OR CONNECT TO GOOGLE CLOUD</span>
-                </div>
-                """, unsafe_allow_html=True)
-                st.link_button("🌐 Connect via Official Google Cloud OAuth (Live API)", auth_url, use_container_width=True)
-
-            # 6. Security Note
-            st.markdown("""
-            <div class="claude-sec-note">
-                🔒 Read-Only &amp; In-Memory: Your credentials and Search Console data are processed securely in volatile session memory. Privacy Policy.
-            </div>
-            """, unsafe_allow_html=True)
-
-            # 7. 403 Resolution Guide Expander
-            with st.expander("🚨 How to allow ANY email / Fix Google 403 (1-Click)", expanded=False):
-                st.markdown("""
-                If you or a client see Google's **"403. That's an error. We're sorry, but you do not have access to this page"**, it is because the OAuth app is currently in "Testing" mode on Google Cloud.
-
-                #### 🌐 How to allow ANY email to sign in via Google:
-                1. 👉 **[Click here to open Google Cloud Console (Project 1092944785943)](https://console.cloud.google.com/apis/credentials/consent?project=1092944785943)**
-                2. Under **Publishing status**, click **`PUBLISH APP`** and click **Confirm**.
-                3. 🎉 **Done!** From that moment, **ANY Gmail / Google Workspace account in the world** can click "Continue with Google" without seeing any 403 error!
-
-                *(Alternatively, you can also type ANY email into the box above and click **"Continue with email"** for instant access without Google OAuth).*
-                """)
-
-            # 8. Service Account Alternative Expander
-            with st.expander("🔑 Alternative: Connect via Service Account JSON", expanded=False):
-                st.markdown("If you have a Google Cloud Service Account with Search Console permissions, you can connect directly without OAuth restrictions:")
-                sa_upload = st.file_uploader("Upload service_account.json", type=["json"], key="login_sa_uploader")
-                if sa_upload is not None:
-                    try:
-                        sa_content = json.load(sa_upload)
-                        if 'client_email' in sa_content or 'type' in sa_content:
-                            sa_creds, sa_svc, sa_svcv1, sa_sites = authenticate_service_account(sa_content)
-                            st.session_state.user_creds = sa_creds
-                            st.session_state.service = sa_svc
-                            st.session_state.service_v1 = sa_svcv1
-                            st.session_state.sites = sa_sites
-                            st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in sa_sites]
-                            st.session_state.user_email = sa_content.get('client_email', 'service-account')
-                            st.session_state.current_site = sa_sites[0] if sa_sites else None
-                            st.session_state.portfolio_needs_refresh = True
-                            st.session_state.df = pd.DataFrame()
-                            st.success(f"Connected as {st.session_state.user_email}!")
-                            st.rerun()
-                        else:
-                            st.error("Invalid Service Account JSON. Missing 'client_email'.")
-                    except Exception as sa_err:
-                        st.error(f"Service Account Error: {sa_err}")
-
-            with st.expander("💡 How to Connect Your GSC Property (Step-by-Step Guide)", expanded=False):
-                st.markdown("""
-                #### 1. Verify Property Ownership in Search Console
-                Ensure your website is already added and verified in the official [Google Search Console](https://search.google.com/search-console).
-
-                #### 2. Confirm Google Account Permissions
-                The signed-in Gmail or Google Workspace account must have at least **Full** or **Restricted** user access (or **Owner**) on the property.
-
-                #### 3. Domain Properties vs URL-Prefix Properties
-                - **Domain Property (`sc-domain:example.com`)**: Verified via DNS TXT record. Automatically tracks data across all protocols (`http://` and `https://`) and all subdomains (`www`, `blog`, `m`).
-                - **URL-Prefix Property (`https://example.com/`)**: Verified via HTML file, meta tag, or GA4. Tracks only URLs starting with that exact address.
-
-                #### 4. Troubleshooting 0 Properties or 403 Forbidden
-                - **0 Properties Found**: If you see 0 properties after connecting, your Search Console properties belong to another Gmail account. Click **🔄 Switch Google Account** to log in with your primary webmaster account.
-                - **403 Forbidden**: Confirm that the **Google Search Console API** is enabled in your Google Cloud Console project and permissions have been granted.
-                """)
-        st.stop()
 
     # 2. GSC Performance Header
     hdr_c1, hdr_c_refresh, hdr_c2, hdr_c3 = st.columns([3.2, 1.2, 1.0, 1.0])
