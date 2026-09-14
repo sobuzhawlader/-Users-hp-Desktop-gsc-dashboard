@@ -1155,6 +1155,30 @@ is_portfolio_mode = bool(current_site and current_site.startswith("🌐 [ALL SIT
 real_active_sites = [s for s in st.session_state.sites if s and not s.startswith("🧪") and "Consolidated" not in s and "Custom Property" not in s]
 effective_site = real_active_sites[0] if (is_portfolio_mode and real_active_sites) else (current_site or (real_active_sites[0] if real_active_sites else ""))
 
+# Auto-fetch or load cached analytics for active property when df is empty
+if not is_portfolio_mode and service and effective_site and not effective_site.startswith("🧪") and "Consolidated" not in effective_site:
+    auto_key = f"_auto_load_{effective_site}_{start_str}_{end_str}"
+    if df.empty and not st.session_state.get(auto_key, False):
+        st.session_state[auto_key] = True
+        try:
+            cached = load_data(effective_site, start_str, end_str)
+            if not cached.empty:
+                st.session_state.df = cached
+                df = cached
+        except Exception:
+            pass
+
+        if df.empty:
+            with st.spinner(f"⚡ Loading Search Console analytics for {effective_site}..."):
+                try:
+                    fetched = fetch_gsc_data(service, effective_site, start_str, end_str)
+                    if not fetched.empty:
+                        save_data(fetched, effective_site)
+                        st.session_state.df = fetched
+                        df = fetched
+                except Exception as ex:
+                    print(f"Auto-fetch notice for {effective_site}: {ex}")
+
 if is_portfolio_mode or page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
     if st.session_state.get('portfolio_data') is None or st.session_state.get('portfolio_needs_refresh', False):
         n_sites = len(real_active_sites)
@@ -1480,20 +1504,25 @@ if page in ["📈 Performance", "📊 Overview"]:
 
     if is_portfolio_mode and not portfolio_obj.get('df_daily', pd.DataFrame()).empty:
         df_all_daily = portfolio_obj['df_daily']
-        df_daily_curr = df_all_daily.groupby('date').agg(
-            clicks=('clicks', 'sum'),
-            impressions=('impressions', 'sum')
-        ).reset_index().sort_values('date')
+        agg_map = {'clicks': ('clicks', 'sum'), 'impressions': ('impressions', 'sum')}
+        if 'position' in df_all_daily.columns:
+            agg_map['position'] = ('position', 'mean')
+        df_daily_curr = df_all_daily.groupby('date').agg(**agg_map).reset_index().sort_values('date')
         df_daily_curr['ctr'] = np.where(df_daily_curr['impressions'] > 0, (df_daily_curr['clicks'] / df_daily_curr['impressions'] * 100).round(2), 0.0)
+        if 'position' in df_daily_curr.columns:
+            df_daily_curr['position'] = df_daily_curr['position'].round(1)
         df_daily_curr['day_index'] = list(range(len(df_daily_curr)))
-    elif df_daily_curr.empty and not df.empty and 'date' in df.columns:
-        df_daily_curr = df.groupby('date').agg(
-            clicks=('clicks', 'sum'),
-            impressions=('impressions', 'sum'),
-            position=('position', 'mean')
-        ).reset_index().sort_values('date')
+    elif not df.empty and 'date' in df.columns:
+        agg_map = {'clicks': ('clicks', 'sum'), 'impressions': ('impressions', 'sum')}
+        if 'position' in df.columns:
+            agg_map['position'] = ('position', 'mean')
+        df_daily_curr = df.groupby('date').agg(**agg_map).reset_index().sort_values('date')
         df_daily_curr['ctr'] = np.where(df_daily_curr['impressions'] > 0, (df_daily_curr['clicks'] / df_daily_curr['impressions'] * 100).round(2), 0.0)
+        if 'position' in df_daily_curr.columns:
+            df_daily_curr['position'] = df_daily_curr['position'].round(1)
         df_daily_curr['day_index'] = list(range(len(df_daily_curr)))
+    else:
+        df_daily_curr = pd.DataFrame()
 
     if not df_daily_curr.empty:
         use_secondary = show_impressions or show_position
@@ -1674,92 +1703,132 @@ if page in ["📈 Performance", "📊 Overview"]:
         gsc_t5 = gsc_tabs[5]
 
     with gsc_t1:
-        q_col1, q_col2 = st.columns([3, 1])
-        with q_col1:
-            q_search = st.text_input("Filter queries...", key="gsc_q_filter", placeholder="Filter by query...", label_visibility="collapsed")
-        q_df = df.groupby('query').agg(
-            clicks=('clicks', 'sum'),
-            impressions=('impressions', 'sum'),
-            position=('position', 'mean')
-        ).reset_index()
-        q_df['ctr'] = np.where(q_df['impressions'] > 0, (q_df['clicks'] / q_df['impressions'] * 100).round(2), 0.0)
-        q_df['position'] = q_df['position'].round(1)
-        q_df = q_df.sort_values('clicks', ascending=False)
-        if q_search:
-            q_df = q_df[q_df['query'].str.contains(q_search, case=False, na=False)]
-        with q_col2:
-            q_csv = q_df.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Export Queries (CSV)", q_csv, "gsc_queries.csv", "text/csv", use_container_width=True)
-        st.dataframe(
-            q_df[['query', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                'query': 'Top queries', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
-            }),
-            use_container_width=True, height=420
-        )
+        if not df.empty and 'query' in df.columns:
+            q_col1, q_col2 = st.columns([3, 1])
+            with q_col1:
+                q_search = st.text_input("Filter queries...", key="gsc_q_filter", placeholder="Filter by query...", label_visibility="collapsed")
+            q_df = df.groupby('query').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                position=('position', 'mean')
+            ).reset_index()
+            q_df['ctr'] = np.where(q_df['impressions'] > 0, (q_df['clicks'] / q_df['impressions'] * 100).round(2), 0.0)
+            q_df['position'] = q_df['position'].round(1)
+            q_df = q_df.sort_values('clicks', ascending=False)
+            if q_search:
+                q_df = q_df[q_df['query'].str.contains(q_search, case=False, na=False)]
+            with q_col2:
+                q_csv = q_df.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Export Queries (CSV)", q_csv, "gsc_queries.csv", "text/csv", use_container_width=True)
+            st.dataframe(
+                q_df[['query', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                    'query': 'Top queries', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
+                }),
+                use_container_width=True, height=420
+            )
+        elif not df.empty and 'query' not in df.columns:
+            st.info("💡 **Query breakdown is not available for this report type** (e.g. Google Discover and Google News do not disclose search query keywords per Google Search Console API specifications). Please switch to the **PAGES** or **COUNTRIES** tab.")
+        else:
+            st.markdown(f"""
+            <div style="background:rgba(15, 23, 42, 0.65); border:1px dashed rgba(56, 189, 248, 0.3); border-radius:10px; padding:24px 20px; text-align:center; margin:10px 0;">
+                <div style="font-size:28px; margin-bottom:8px;">🔍</div>
+                <div style="font-size:15px; font-weight:700; color:#f8fafc;">No Query Telemetry Loaded for {pill_site_text}</div>
+                <div style="font-size:12.5px; color:#94a3b8; max-width:480px; margin:6px auto 16px auto; line-height:1.5;">
+                    Search Console has not returned any query records for this property in the selected date range, or live data has not been fetched yet.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            col_f1, col_f2, col_f3 = st.columns([1, 2, 1])
+            with col_f2:
+                if st.button("🚀 Fetch Live Search Console Data", key="btn_fetch_empty_queries", type="primary", use_container_width=True):
+                    if st.session_state.service and effective_site:
+                        with st.spinner(f"Fetching GSC data for {effective_site}..."):
+                            try:
+                                fetched = fetch_gsc_data(st.session_state.service, effective_site, start_str, end_str)
+                                if not fetched.empty:
+                                    save_data(fetched, effective_site)
+                                    st.session_state.df = fetched
+                                    st.success(f"Successfully fetched {len(fetched):,} rows!")
+                                    st.rerun()
+                                else:
+                                    st.warning("Google Search Console returned 0 rows for this site/period.")
+                            except Exception as ex:
+                                st.error(f"Error fetching data: {ex}")
+                    else:
+                        st.info("Please connect your Google Account in the sidebar first.")
 
     with gsc_t2:
-        p_col1, p_col2 = st.columns([3, 1])
-        with p_col1:
-            p_search = st.text_input("Filter pages...", key="gsc_p_filter", placeholder="Filter by URL...", label_visibility="collapsed")
-        p_df = df.groupby('page').agg(
-            clicks=('clicks', 'sum'),
-            impressions=('impressions', 'sum'),
-            position=('position', 'mean')
-        ).reset_index()
-        p_df['ctr'] = np.where(p_df['impressions'] > 0, (p_df['clicks'] / p_df['impressions'] * 100).round(2), 0.0)
-        p_df['position'] = p_df['position'].round(1)
-        p_df = p_df.sort_values('clicks', ascending=False)
-        if p_search:
-            p_df = p_df[p_df['page'].str.contains(p_search, case=False, na=False)]
-        with p_col2:
-            p_csv = p_df.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Export Pages (CSV)", p_csv, "gsc_pages.csv", "text/csv", use_container_width=True)
-        st.dataframe(
-            p_df[['page', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                'page': 'Top pages', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
-            }),
-            use_container_width=True, height=420
-        )
+        if not df.empty and 'page' in df.columns:
+            p_col1, p_col2 = st.columns([3, 1])
+            with p_col1:
+                p_search = st.text_input("Filter pages...", key="gsc_p_filter", placeholder="Filter by URL...", label_visibility="collapsed")
+            p_df = df.groupby('page').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                position=('position', 'mean')
+            ).reset_index()
+            p_df['ctr'] = np.where(p_df['impressions'] > 0, (p_df['clicks'] / p_df['impressions'] * 100).round(2), 0.0)
+            p_df['position'] = p_df['position'].round(1)
+            p_df = p_df.sort_values('clicks', ascending=False)
+            if p_search:
+                p_df = p_df[p_df['page'].str.contains(p_search, case=False, na=False)]
+            with p_col2:
+                p_csv = p_df.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Export Pages (CSV)", p_csv, "gsc_pages.csv", "text/csv", use_container_width=True)
+            st.dataframe(
+                p_df[['page', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                    'page': 'Top pages', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
+                }),
+                use_container_width=True, height=420
+            )
+        else:
+            st.info("No page breakdown data available for this selection.")
 
     with gsc_t3:
-        c_col1, c_col2 = st.columns([3, 1])
-        c_df = df.groupby('country').agg(
-            clicks=('clicks', 'sum'),
-            impressions=('impressions', 'sum'),
-            position=('position', 'mean')
-        ).reset_index()
-        c_df['ctr'] = np.where(c_df['impressions'] > 0, (c_df['clicks'] / c_df['impressions'] * 100).round(2), 0.0)
-        c_df['position'] = c_df['position'].round(1)
-        c_df = c_df.sort_values('clicks', ascending=False)
-        with c_col2:
-            c_csv = c_df.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Export Countries (CSV)", c_csv, "gsc_countries.csv", "text/csv", use_container_width=True)
-        st.dataframe(
-            c_df[['country', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                'country': 'Country', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
-            }),
-            use_container_width=True, height=420
-        )
+        if not df.empty and 'country' in df.columns:
+            c_col1, c_col2 = st.columns([3, 1])
+            c_df = df.groupby('country').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                position=('position', 'mean')
+            ).reset_index()
+            c_df['ctr'] = np.where(c_df['impressions'] > 0, (c_df['clicks'] / c_df['impressions'] * 100).round(2), 0.0)
+            c_df['position'] = c_df['position'].round(1)
+            c_df = c_df.sort_values('clicks', ascending=False)
+            with c_col2:
+                c_csv = c_df.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Export Countries (CSV)", c_csv, "gsc_countries.csv", "text/csv", use_container_width=True)
+            st.dataframe(
+                c_df[['country', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                    'country': 'Country', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
+                }),
+                use_container_width=True, height=420
+            )
+        else:
+            st.info("No country breakdown data available for this selection.")
 
     with gsc_t4:
-        d_col1, d_col2 = st.columns([3, 1])
-        d_df = df.groupby('device').agg(
-            clicks=('clicks', 'sum'),
-            impressions=('impressions', 'sum'),
-            position=('position', 'mean')
-        ).reset_index()
-        d_df['ctr'] = np.where(d_df['impressions'] > 0, (d_df['clicks'] / d_df['impressions'] * 100).round(2), 0.0)
-        d_df['position'] = d_df['position'].round(1)
-        d_df = d_df.sort_values('clicks', ascending=False)
-        with d_col2:
-            d_csv = d_df.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Export Devices (CSV)", d_csv, "gsc_devices.csv", "text/csv", use_container_width=True)
-        st.dataframe(
-            d_df[['device', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
-                'device': 'Device', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
-            }),
-            use_container_width=True, height=250
-        )
+        if not df.empty and 'device' in df.columns:
+            d_col1, d_col2 = st.columns([3, 1])
+            d_df = df.groupby('device').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                position=('position', 'mean')
+            ).reset_index()
+            d_df['ctr'] = np.where(d_df['impressions'] > 0, (d_df['clicks'] / d_df['impressions'] * 100).round(2), 0.0)
+            d_df['position'] = d_df['position'].round(1)
+            d_df = d_df.sort_values('clicks', ascending=False)
+            with d_col2:
+                d_csv = d_df.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Export Devices (CSV)", d_csv, "gsc_devices.csv", "text/csv", use_container_width=True)
+            st.dataframe(
+                d_df[['device', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                    'device': 'Device', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
+                }),
+                use_container_width=True, height=250
+            )
+        else:
+            st.info("No device breakdown data available for this selection.")
 
     with gsc_t_app:
         sa_col1, sa_col2 = st.columns([3, 1])
@@ -1819,12 +1888,27 @@ if page in ["📈 Performance", "📊 Overview"]:
             with dt_col2:
                 dt_csv = df_daily_curr.to_csv(index=False).encode('utf-8')
                 st.download_button("📥 Export Dates (CSV)", dt_csv, "gsc_dates.csv", "text/csv", use_container_width=True)
+            cols_to_show = [c for c in ['date', 'clicks', 'impressions', 'ctr', 'position'] if c in df_daily_curr.columns]
             st.dataframe(
-                df_daily_curr[['date', 'clicks', 'impressions', 'ctr', 'position']].rename(columns={
+                df_daily_curr[cols_to_show].rename(columns={
                     'date': 'Date', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'
                 }),
                 use_container_width=True, height=420
             )
+        elif not df.empty and 'date' in df.columns:
+            date_df = df.groupby('date').agg(
+                clicks=('clicks', 'sum'),
+                impressions=('impressions', 'sum'),
+                position=('position', 'mean')
+            ).reset_index().sort_values('date')
+            date_df['ctr'] = np.where(date_df['impressions'] > 0, (date_df['clicks'] / date_df['impressions'] * 100).round(2), 0.0)
+            date_df['position'] = date_df['position'].round(1)
+            st.dataframe(
+                date_df.rename(columns={'date': 'Date', 'clicks': 'Clicks', 'impressions': 'Impressions', 'ctr': 'CTR', 'position': 'Position'}),
+                use_container_width=True, height=420
+            )
+        else:
+            st.info("No timeline or date breakdown data available for this selection.")
 
 
 # ----------------------------------------------------
