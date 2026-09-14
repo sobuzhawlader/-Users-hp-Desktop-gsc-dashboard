@@ -2248,72 +2248,56 @@ with st.sidebar:
     }
     VIEW_SLUG_TO_PAGE = {v: k for k, v in PAGE_TO_VIEW_SLUG.items()}
 
-    # 1. Check selected_module first (instant module switch without refresh)
-    if st.session_state.get('selected_module') in ['Performance on Search Results', 'Performance', 'Overview']:
-        st.session_state.selected_page = "📈 Performance"
-        st.query_params['view'] = 'overview'
-        st.session_state['selected_module'] = None
-    elif st.session_state.get('selected_module') in ALL_NAV_PAGES:
-        st.session_state.selected_page = st.session_state.get('selected_module')
-        st.query_params['view'] = PAGE_TO_VIEW_SLUG.get(st.session_state.selected_page, 'overview')
-        st.session_state['selected_module'] = None
+    # 1. Sync from browser query parameters ONLY on initial load or when view parameter changes externally
+    if 'current_active_view' not in st.session_state:
+        st.session_state.current_active_view = None
 
-    # 2. Sync from browser query parameters
     qp_view = st.query_params.get('view')
     qp_p = st.query_params.get('page')
 
-    if qp_view:
-        qp_v = str(qp_view).lower().strip()
-        if qp_v in ['overview', 'performance', 'home', 'performance on search results']:
+    # If selected_page not yet initialized, or URL has a genuinely new 'view' parameter
+    if 'selected_page' not in st.session_state or (qp_view and qp_view != st.session_state.current_active_view):
+        if qp_view:
+            qp_v = str(qp_view).lower().strip()
+            if qp_v in VIEW_SLUG_TO_PAGE:
+                st.session_state.selected_page = VIEW_SLUG_TO_PAGE[qp_v]
+            elif qp_v in ['overview', 'performance', 'home', 'performance on search results']:
+                st.session_state.selected_page = "📈 Performance"
+            else:
+                for k, v in PAGE_TO_VIEW_SLUG.items():
+                    if qp_v in v or v in qp_v:
+                        st.session_state.selected_page = k
+                        break
+            st.session_state.current_active_view = qp_view
+        elif qp_p and qp_p in ALL_NAV_PAGES:
+            st.session_state.selected_page = qp_p
+            st.session_state.current_active_view = PAGE_TO_VIEW_SLUG.get(qp_p, 'overview')
+
+    # Handle selected_module event
+    if st.session_state.get('selected_module'):
+        mod = st.session_state.get('selected_module')
+        if mod in ['Performance on Search Results', 'Performance', 'Overview']:
             st.session_state.selected_page = "📈 Performance"
-        elif qp_v in VIEW_SLUG_TO_PAGE:
-            st.session_state.selected_page = VIEW_SLUG_TO_PAGE[qp_v]
-        else:
-            for k, v in PAGE_TO_VIEW_SLUG.items():
-                if qp_v in v or v in qp_v:
-                    st.session_state.selected_page = k
-                    break
-    elif qp_p and qp_p in ALL_NAV_PAGES:
-        st.session_state.selected_page = qp_p
+        elif mod in ALL_NAV_PAGES:
+            st.session_state.selected_page = mod
+        st.session_state['selected_module'] = None
+        new_v = PAGE_TO_VIEW_SLUG.get(st.session_state.selected_page, 'overview')
+        st.session_state.current_active_view = new_v
+        st.query_params['view'] = new_v
 
     if 'selected_page' not in st.session_state:
         st.session_state.selected_page = "📈 Performance"
 
     # Normalize aliases if any
     if st.session_state.selected_page not in ALL_NAV_PAGES:
-        if st.session_state.selected_page in ["📊 Overview", "📈 Performance on Search Results"]:
-            st.session_state.selected_page = "📈 Performance"
-        elif st.session_state.selected_page in ["🟢 Real-Time Visitors"]:
-            st.session_state.selected_page = "🟢 Real-Time Active Users"
-        elif st.session_state.selected_page in ["🌐 Properties Manager"]:
-            st.session_state.selected_page = "🌐 All Sites & Properties"
-        elif st.session_state.selected_page in ["🔍 Keywords"]:
-            st.session_state.selected_page = "🎯 Top Keywords & Queries"
-        elif st.session_state.selected_page in ["📄 Pages"]:
-            st.session_state.selected_page = "📄 Pages & Indexing"
-        elif st.session_state.selected_page in ["⚡ Quick Wins"]:
-            st.session_state.selected_page = "⚡ Core Web Vitals & Quick Wins"
-        elif st.session_state.selected_page in ["🔍 URL inspection", "🔬 URL & Canonical Inspector"]:
-            st.session_state.selected_page = "🔍 URL inspection & Schema"
-        elif st.session_state.selected_page in ["🚀 Instant Indexing"]:
-            st.session_state.selected_page = "🚀 Instant Google Indexing API"
-        elif st.session_state.selected_page in ["🗺️ Sitemaps"]:
-            st.session_state.selected_page = "🗺️ Sitemaps Manager"
-        elif st.session_state.selected_page in ["🎯 Intent & Regex"]:
-            st.session_state.selected_page = "🎯 Search Intent & Regex"
-        elif st.session_state.selected_page in ["🤖 AEO & Preferred Sources"]:
-            st.session_state.selected_page = "🤖 AI Features & AEO"
-        elif st.session_state.selected_page in ["⚙️ Settings & Connection", "⚙️ 24/7 Automation"]:
-            st.session_state.selected_page = "⚙️ Settings & Google Connection"
-        elif st.session_state.selected_page in ["🚨 Alerts"]:
-            st.session_state.selected_page = "🚨 24/7 Anomaly & Telegram Bot"
-        elif st.session_state.selected_page in ["📤 Reports & Export"]:
-            st.session_state.selected_page = "📤 Reports & PDF Export"
-        else:
-            st.session_state.selected_page = "📈 Performance"
+        st.session_state.selected_page = "📈 Performance"
 
-    # Always keep view synchronized with selected page
-    st.query_params['view'] = PAGE_TO_VIEW_SLUG.get(st.session_state.selected_page, 'overview')
+    # Always keep query param view updated to match selected page
+    current_slug = PAGE_TO_VIEW_SLUG.get(st.session_state.selected_page, 'overview')
+    st.session_state.current_active_view = current_slug
+    st.query_params['view'] = current_slug
+    if 'page' in st.query_params:
+        del st.query_params['page']
 
     # Identify active category
     active_category = "📊 Core Performance & Traffic"
@@ -2339,33 +2323,65 @@ with st.sidebar:
     cur_cat_idx = cat_keys.index(active_category) if active_category in cat_keys else 0
 
     st.markdown(f"<div style='font-size:11px; font-weight:700; color:{'#94a3b8' if is_dark else '#5f6368'}; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.5px;'>📁 CATEGORY / SUITE:</div>", unsafe_allow_html=True)
+    
+    def _on_category_select():
+        new_c = st.session_state.sb_category_picker
+        if new_c in NAV_CATEGORIES:
+            new_p = NAV_CATEGORIES[new_c][0]
+            st.session_state.selected_page = new_p
+            new_slug = PAGE_TO_VIEW_SLUG.get(new_p, 'overview')
+            st.session_state.current_active_view = new_slug
+            st.query_params['view'] = new_slug
+
+    st.session_state['sb_category_picker'] = active_category
+
     chosen_cat = st.selectbox(
         "Category",
         cat_keys,
         index=cur_cat_idx,
         key="sb_category_picker",
+        on_change=_on_category_select,
         label_visibility="collapsed"
     )
 
-    # If user selected a new category from the dropdown, switch to its first page
+    # If user selected a new category from the dropdown without callback, switch safely
     if chosen_cat != active_category:
-        st.session_state.selected_page = NAV_CATEGORIES[chosen_cat][0]
-        st.query_params['page'] = st.session_state.selected_page
+        target_page = NAV_CATEGORIES[chosen_cat][0]
+        st.session_state.selected_page = target_page
+        target_slug = PAGE_TO_VIEW_SLUG.get(target_page, 'overview')
+        st.session_state.current_active_view = target_slug
+        st.query_params['view'] = target_slug
         st.rerun()
 
-    # 2. Features inside the chosen category (Immediately visible!)
-    cat_sub_pages = NAV_CATEGORIES[chosen_cat]
+    # 2. Features inside the chosen category (Radio buttons)
+    cat_sub_pages = NAV_CATEGORIES.get(chosen_cat, NAV_CATEGORIES[active_category])
     sub_page_idx = cat_sub_pages.index(st.session_state.selected_page) if st.session_state.selected_page in cat_sub_pages else 0
+    
+    radio_key = f"cat_feature_radio_{chosen_cat}"
+    if st.session_state.selected_page in cat_sub_pages:
+        st.session_state[radio_key] = st.session_state.selected_page
+
+    def _on_feature_radio_change():
+        new_p = st.session_state.get(radio_key)
+        if new_p and new_p in ALL_NAV_PAGES:
+            st.session_state.selected_page = new_p
+            new_slug = PAGE_TO_VIEW_SLUG.get(new_p, 'overview')
+            st.session_state.current_active_view = new_slug
+            st.query_params['view'] = new_slug
+
     picked_sub = st.radio(
         f"Features in {chosen_cat}",
         cat_sub_pages,
         index=sub_page_idx,
-        key=f"cat_feature_radio_{chosen_cat}",
+        key=radio_key,
+        on_change=_on_feature_radio_change,
         label_visibility="collapsed"
     )
     if picked_sub != st.session_state.selected_page:
         st.session_state.selected_page = picked_sub
-        st.query_params['page'] = picked_sub
+        new_slug = PAGE_TO_VIEW_SLUG.get(picked_sub, 'overview')
+        st.session_state.current_active_view = new_slug
+        st.query_params['view'] = new_slug
         st.rerun()
 
     page = st.session_state.selected_page
@@ -2373,10 +2389,21 @@ with st.sidebar:
     # 3. Quick Jump to Any Feature
     quick_idx = ALL_NAV_PAGES.index(st.session_state.selected_page) if st.session_state.selected_page in ALL_NAV_PAGES else 0
     with st.expander("🔍 Quick Jump to Any of the 23 Tools", expanded=False):
-        quick_choice = st.selectbox("Search all 23 tools", ALL_NAV_PAGES, index=quick_idx, key="sb_quick_jump_feature")
+        def _on_quick_jump_change():
+            q_p = st.session_state.sb_quick_jump_feature
+            if q_p in ALL_NAV_PAGES:
+                st.session_state.selected_page = q_p
+                new_slug = PAGE_TO_VIEW_SLUG.get(q_p, 'overview')
+                st.session_state.current_active_view = new_slug
+                st.query_params['view'] = new_slug
+
+        st.session_state['sb_quick_jump_feature'] = st.session_state.selected_page
+        quick_choice = st.selectbox("Search all 23 tools", ALL_NAV_PAGES, index=quick_idx, key="sb_quick_jump_feature", on_change=_on_quick_jump_change)
         if quick_choice != st.session_state.selected_page:
             st.session_state.selected_page = quick_choice
-            st.query_params['page'] = quick_choice
+            new_slug = PAGE_TO_VIEW_SLUG.get(quick_choice, 'overview')
+            st.session_state.current_active_view = new_slug
+            st.query_params['view'] = new_slug
             st.rerun()
 
     # 4. Collapsible Accordions for all 5 categories
@@ -2390,7 +2417,9 @@ with st.sidebar:
                 if st.button(f"{btn_prefix}{p}", key=f"nav_all_acc_btn_{abs(hash(p))}", use_container_width=True, type=btn_type):
                     if st.session_state.selected_page != p:
                         st.session_state.selected_page = p
-                        st.query_params['page'] = p
+                        new_slug = PAGE_TO_VIEW_SLUG.get(p, 'overview')
+                        st.session_state.current_active_view = new_slug
+                        st.query_params['view'] = new_slug
                         st.rerun()
 
     st.divider()
