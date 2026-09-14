@@ -137,9 +137,20 @@ st.set_page_config(
 )
 
 # ==============================
-# Custom CSS - Cyber Tech Vibe UI
+# Theme State & Mode Management
 # ==============================
-st.markdown("""
+if 'theme_mode' not in st.session_state:
+    params = st.query_params
+    url_theme = params.get('theme', 'dark')
+    st.session_state.theme_mode = 'Light' if str(url_theme).lower() == 'light' else 'Dark'
+
+is_dark = (st.session_state.get('theme_mode', 'Dark') == 'Dark')
+
+import plotly.io as pio
+pio.templates.default = "plotly_dark" if is_dark else "plotly_white"
+
+if is_dark:
+    st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
     * { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
@@ -564,7 +575,431 @@ st.markdown("""
         background: rgba(56, 189, 248, 0.5);
     }
 </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+else:
+    # Authentic Google Search Console Light Theme
+    st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    * { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    
+    /* Google Search Console Clean Light Canvas */
+    html, body, [class*="css"], .stApp, .main, [data-testid="stAppViewContainer"], [data-testid="stHeader"] { 
+        background-color: #f8f9fa !important; 
+        background-image: none !important;
+        color: #202124 !important;
+    }
+    
+    /* Clean Light Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff !important;
+        border-right: 1px solid #dadce0 !important;
+    }
+    
+    /* Light Sidebar Menu */
+    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] {
+        gap: 4px !important;
+    }
+    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label {
+        color: #3c4043 !important;
+        font-size: 13.5px !important;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+        padding: 8px 14px !important;
+        margin-right: 10px !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease-in-out !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label:hover {
+        background-color: #f1f3f4 !important;
+        color: #202124 !important;
+    }
+    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label[data-checked="true"] {
+        background: #e8f0fe !important;
+        color: #1a73e8 !important;
+        border-left: 3px solid #1a73e8 !important;
+        font-weight: 600 !important;
+        text-shadow: none !important;
+    }
+    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label > div:first-child {
+        display: none !important;
+    }
+    
+    /* Light Top Header Bar */
+    .gsc-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+        background: #ffffff !important;
+        border-bottom: 1px solid #dadce0 !important;
+        box-shadow: 0 1px 3px rgba(60,64,67,0.12) !important;
+        margin: -4rem -3rem 1.5rem -3rem;
+        position: sticky;
+        top: 0;
+        z-index: 999;
+    }
+    .gsc-search-pill {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #f1f3f4 !important;
+        border: 1px solid #dadce0 !important;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.05) !important;
+        border-radius: 24px;
+        padding: 7px 18px;
+        width: 48%;
+        max-width: 650px;
+        color: #3c4043 !important;
+        font-size: 13px;
+        transition: border-color 0.2s, background-color 0.2s;
+    }
+    .gsc-search-pill:hover {
+        background: #e8eaed !important;
+        border-color: #bdc1c6 !important;
+    }
+    
+    /* Filter Chips & Pills */
+    .gsc-chip-group {
+        display: inline-flex;
+        border: 1px solid #dadce0 !important;
+        background: #ffffff !important;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    .gsc-chip {
+        padding: 5px 12px;
+        font-size: 12px;
+        color: #5f6368 !important;
+        background: transparent !important;
+        border-right: 1px solid #dadce0 !important;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.15s;
+    }
+    .gsc-chip:hover {
+        color: #202124 !important;
+        background: #f1f3f4 !important;
+    }
+    .gsc-chip:last-child {
+        border-right: none !important;
+    }
+    .gsc-chip-active {
+        background: #e8f0fe !important;
+        color: #1a73e8 !important;
+        font-weight: 600 !important;
+        box-shadow: none !important;
+    }
+    .gsc-filter-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        border-radius: 20px;
+        border: 1px solid #dadce0 !important;
+        background: #ffffff !important;
+        font-size: 12px;
+        color: #3c4043 !important;
+        font-weight: 500;
+    }
+    
+    /* Authentic Google Search Console Scorecards */
+    .gsc-tile-wrapper {
+        border: 1px solid #dadce0 !important;
+        border-radius: 8px !important;
+        overflow: hidden;
+        margin-bottom: 12px;
+        background: #ffffff !important;
+        box-shadow: 0 1px 3px rgba(60,64,67,0.1) !important;
+        transition: all 0.2s ease;
+    }
+    .gsc-tile-wrapper:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(60,64,67,0.15) !important;
+        border-color: #bdc1c6 !important;
+    }
+    .gsc-card {
+        padding: 14px 16px;
+        min-height: 155px;
+        position: relative;
+        background: #ffffff !important;
+    }
+    .gsc-card-users-on {
+        background: #e6f4ea !important;
+        border-top: 3px solid #137333 !important;
+        color: #137333 !important;
+    }
+    .gsc-card-clicks-on {
+        background: #e8f0fe !important;
+        border-top: 3px solid #1a73e8 !important;
+        color: #1a73e8 !important;
+    }
+    .gsc-card-imps-on {
+        background: #f3e8fd !important;
+        border-top: 3px solid #9334e6 !important;
+        color: #7627bb !important;
+    }
+    .gsc-card-ctr-on {
+        background: #e6f4ea !important;
+        border-top: 3px solid #137333 !important;
+        color: #137333 !important;
+    }
+    .gsc-card-pos-on {
+        background: #fef7e0 !important;
+        border-top: 3px solid #e37400 !important;
+        color: #b06000 !important;
+    }
+    .gsc-card-off {
+        background: #ffffff !important;
+        color: #80868b !important;
+        border-top: 3px solid transparent !important;
+    }
+    
+    .gsc-card-title {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #5f6368 !important;
+    }
+    .gsc-card-val-big {
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-size: 32px !important;
+        font-weight: 700 !important;
+        line-height: 1.15 !important;
+        margin-top: 8px !important;
+        color: #202124 !important;
+        letter-spacing: -0.5px !important;
+    }
+    .gsc-card-sub {
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 3px;
+        color: #5f6368 !important;
+    }
+    .gsc-card-val-comp {
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-size: 17px !important;
+        font-weight: 600 !important;
+        line-height: 1.15 !important;
+        margin-top: 10px !important;
+        color: #5f6368 !important;
+    }
+    .gsc-card-info-icon {
+        position: absolute;
+        bottom: 12px;
+        right: 14px;
+        font-size: 11px;
+        color: #80868b !important;
+        border: 1px solid #dadce0 !important;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* AI Banner */
+    .gsc-ai-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f1f3f4 !important;
+        border: 1px solid #dadce0 !important;
+        border-radius: 8px;
+        padding: 12px 18px;
+        margin: 14px 0 18px 0;
+        box-shadow: none !important;
+    }
+    
+    /* Streamlit Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        border-bottom: 1px solid #dadce0 !important;
+        gap: 16px !important;
+        background: transparent !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        color: #5f6368 !important;
+        padding: 10px 16px !important;
+        background: transparent !important;
+    }
+    .stTabs [aria-selected="true"] {
+        color: #1a73e8 !important;
+        border-bottom: 2px solid #1a73e8 !important;
+        text-shadow: none !important;
+    }
+    
+    /* Buttons */
+    .stButton > button {
+        background: #1a73e8 !important;
+        color: white !important;
+        border: 1px solid #1a73e8 !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        font-size: 13px !important;
+        padding: 7px 18px !important;
+        box-shadow: 0 1px 2px rgba(60,64,67,0.2) !important;
+        transition: all 0.2s ease !important;
+    }
+    .stButton > button:hover {
+        background: #1765cc !important;
+        box-shadow: 0 1px 4px rgba(60,64,67,0.3) !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    /* Section Headers */
+    .section-header {
+        background: #f1f3f4 !important;
+        border: 1px solid #dadce0 !important;
+        border-left: 4px solid #1a73e8 !important;
+        border-radius: 6px;
+        padding: 10px 16px;
+        margin: 16px 0 12px 0;
+        color: #202124 !important;
+        font-size: 16px;
+        font-weight: 700;
+    }
+    
+    /* Real-Time Pulse */
+    .gsc-pulse-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #137333 !important;
+        border-radius: 50%;
+        display: inline-block;
+        vertical-align: middle;
+        box-shadow: 0 0 6px #137333 !important;
+    }
+    .gsc-live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #e6f4ea !important;
+        border: 1px solid #ceead6 !important;
+        border-radius: 16px;
+        padding: 4px 11px;
+        font-size: 11px;
+        color: #137333 !important;
+        font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .gsc-dash-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #e8f0fe !important;
+        border: 1px solid #d2e3fc !important;
+        border-radius: 16px;
+        padding: 4px 11px;
+        font-size: 11px;
+        color: #1a73e8 !important;
+        font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    
+    /* Inputs */
+    input, textarea, [data-baseweb="input"], [data-baseweb="select"] {
+        background-color: #ffffff !important;
+        color: #202124 !important;
+        border: 1px solid #dadce0 !important;
+        border-radius: 6px !important;
+    }
+    input:focus, textarea:focus {
+        border-color: #1a73e8 !important;
+        box-shadow: 0 0 0 2px rgba(26,115,232,0.2) !important;
+    }
+    
+    /* Checkboxes */
+    [data-testid="stCheckbox"] label span {
+        color: #3c4043 !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+    }
+    [data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] {
+        background-color: #1a73e8 !important;
+        border-color: #1a73e8 !important;
+        box-shadow: none !important;
+    }
+    
+    /* Dataframes */
+    [data-testid="stDataFrame"] {
+        border: 1px solid #dadce0 !important;
+        border-radius: 6px !important;
+        background: #ffffff !important;
+    }
+    
+    /* Expander */
+    .streamlit-expanderHeader {
+        background: #ffffff !important;
+        border: 1px solid #dadce0 !important;
+        border-radius: 6px !important;
+        color: #202124 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Light Mode Overrides for Dark Containers */
+    div[style*="background:rgba(15, 23, 42"],
+    div[style*="background: rgba(15, 23, 42"],
+    div[style*="background:linear-gradient(135deg, rgba(30, 58, 138"],
+    div[style*="background:linear-gradient(135deg, rgba(245, 158, 11"],
+    div[style*="background:linear-gradient(135deg, rgba(56, 189, 248"],
+    div[style*="background:linear-gradient(90deg, rgba(30, 58, 138"],
+    div[style*="background:linear-gradient(90deg, rgba(15, 23, 42"] {
+        background: #ffffff !important;
+        border-color: #dadce0 !important;
+        box-shadow: 0 1px 3px rgba(60,64,67,0.1) !important;
+    }
+    div[style*="background: linear-gradient(90deg, rgba(16, 185, 129"] {
+        background: #e6f4ea !important;
+        border-color: #ceead6 !important;
+        box-shadow: 0 1px 3px rgba(60,64,67,0.1) !important;
+    }
+    div[style*="color:#f8fafc"],
+    div[style*="color: #f8fafc"],
+    span[style*="color:#f8fafc"],
+    span[style*="color: #f8fafc"],
+    b[style*="color:#f8fafc"],
+    b[style*="color: #f8fafc"] {
+        color: #202124 !important;
+    }
+    div[style*="color:#94a3b8"],
+    div[style*="color: #94a3b8"],
+    span[style*="color:#94a3b8"],
+    span[style*="color: #94a3b8"] {
+        color: #5f6368 !important;
+    }
+    div[style*="color:#cbd5e1"],
+    span[style*="color:#cbd5e1"] {
+        color: #3c4043 !important;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #f8f9fa;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #dadce0;
+        border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #bdc1c6;
+    }
+</style>
+    """, unsafe_allow_html=True)
 
 # ==============================
 # Database & State Initialization (Per-User Session)
@@ -742,6 +1177,22 @@ with st.sidebar:
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # 1.1 Theme Mode Switcher Pill (Dark Mode vs Light Mode)
+    th_c1, th_c2 = st.columns(2)
+    with th_c1:
+        if st.button("🌙 Dark", key="side_theme_btn_dark", use_container_width=True, type="primary" if is_dark else "secondary"):
+            if not is_dark:
+                st.session_state.theme_mode = 'Dark'
+                st.query_params['theme'] = 'dark'
+                st.rerun()
+    with th_c2:
+        if st.button("☀️ Light", key="side_theme_btn_light", use_container_width=True, type="primary" if not is_dark else "secondary"):
+            if is_dark:
+                st.session_state.theme_mode = 'Light'
+                st.query_params['theme'] = 'light'
+                st.rerun()
+    st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
 
     # 2. Property Selector Pill & Account Header (Matching GSC)
     is_connected = bool(st.session_state.service)
@@ -1272,17 +1723,24 @@ if page in ["📈 Performance", "📊 Overview"]:
         st.stop()
 
     # 2. GSC Performance Header
-    hdr_c1, hdr_c2 = st.columns([4, 1])
+    hdr_c1, hdr_c2, hdr_c3 = st.columns([3.6, 1.2, 1.2])
     with hdr_c1:
+        text_theme_color = "#f8fafc" if is_dark else "#202124"
         if is_portfolio_mode:
             st.markdown(f"""
-            <div style="font-size:22px; font-weight:700; color:#f8fafc; margin-bottom:2px; letter-spacing:-0.3px;">Performance across All Verified Properties ({len(real_active_sites)} Sites)</div>
+            <div style="font-size:22px; font-weight:700; color:{text_theme_color}; margin-bottom:2px; letter-spacing:-0.3px;">Performance across All Verified Properties ({len(real_active_sites)} Sites)</div>
             """, unsafe_allow_html=True)
         else:
-            st.markdown("""
-            <div style="font-size:22px; font-weight:700; color:#f8fafc; margin-bottom:2px; letter-spacing:-0.3px;">Performance on Search Results</div>
+            st.markdown(f"""
+            <div style="font-size:22px; font-weight:700; color:{text_theme_color}; margin-bottom:2px; letter-spacing:-0.3px;">Performance on Search Results</div>
             """, unsafe_allow_html=True)
     with hdr_c2:
+        theme_btn_label = "☀️ Light Mode" if is_dark else "🌙 Dark Mode"
+        if st.button(theme_btn_label, key="btn_top_theme_toggle", use_container_width=True, help="Toggle between Light Mode & Dark Mode"):
+            st.session_state.theme_mode = 'Light' if is_dark else 'Dark'
+            st.query_params['theme'] = 'light' if st.session_state.theme_mode == 'Light' else 'dark'
+            st.rerun()
+    with hdr_c3:
         if is_portfolio_mode and st.session_state.get('portfolio_data'):
             p_df_export = st.session_state.portfolio_data.get('df_sites', pd.DataFrame())
             if not p_df_export.empty:
@@ -1528,13 +1986,25 @@ if page in ["📈 Performance", "📊 Overview"]:
         use_secondary = show_impressions or show_position
         fig = make_subplots(specs=[[{"secondary_y": use_secondary}]])
 
-        # Trace 1: Current Clicks (Solid #38bdf8 Neon Cyan)
+        clicks_col = '#38bdf8' if is_dark else '#1a73e8'
+        comp_clicks_col = 'rgba(56, 189, 248, 0.5)' if is_dark else 'rgba(26, 115, 232, 0.5)'
+        imps_col = '#a855f7' if is_dark else '#9334e6'
+        comp_imps_col = 'rgba(168, 85, 247, 0.5)' if is_dark else 'rgba(147, 52, 230, 0.5)'
+        ctr_col = '#10b981' if is_dark else '#137333'
+        pos_col = '#f59e0b' if is_dark else '#e37400'
+        chart_bg = 'rgba(15, 23, 42, 0.5)' if is_dark else '#ffffff'
+        chart_font_color = '#94a3b8' if is_dark else '#5f6368'
+        chart_grid_color = 'rgba(255, 255, 255, 0.06)' if is_dark else '#f1f3f4'
+        chart_line_color = 'rgba(255, 255, 255, 0.12)' if is_dark else '#dadce0'
+        chart_legend_color = '#cbd5e1' if is_dark else '#202124'
+
+        # Trace 1: Current Clicks
         if show_clicks and 'clicks' in df_daily_curr.columns:
             x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
             clicks_label = 'Total Combined Clicks' if is_portfolio_mode else 'Clicks'
             fig.add_trace(go.Scatter(
                 x=x_vals, y=df_daily_curr['clicks'], name=clicks_label,
-                line=dict(color='#38bdf8', width=2.8),
+                line=dict(color=clicks_col, width=2.8),
                 hoverinfo='y+name'
             ), secondary_y=False)
 
@@ -1550,71 +2020,71 @@ if page in ["📈 Performance", "📊 Overview"]:
                     hoverinfo='y+name'
                 ), secondary_y=False)
 
-        # Trace 2: Comp Clicks (Dashed #38bdf8)
+        # Trace 2: Comp Clicks
         if not is_portfolio_mode and show_clicks and not df_daily_comp.empty and 'clicks' in df_daily_comp.columns:
             x_vals = df_daily_comp['day_index'] if 'day_index' in df_daily_comp.columns else df_daily_comp['date']
             fig.add_trace(go.Scatter(
                 x=x_vals, y=df_daily_comp['clicks'], name='Clicks (Previous)',
-                line=dict(color='rgba(56, 189, 248, 0.5)', width=2.0, dash='dash'),
+                line=dict(color=comp_clicks_col, width=2.0, dash='dash'),
                 hoverinfo='y+name'
             ), secondary_y=False)
 
-        # Trace 3: Current Impressions (Solid #a855f7 Neon Violet)
+        # Trace 3: Current Impressions
         if show_impressions and 'impressions' in df_daily_curr.columns:
             x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
             imps_label = 'Total Combined Impressions' if is_portfolio_mode else 'Impressions'
             fig.add_trace(go.Scatter(
                 x=x_vals, y=df_daily_curr['impressions'], name=imps_label,
-                line=dict(color='#a855f7', width=2.4),
+                line=dict(color=imps_col, width=2.4),
                 hoverinfo='y+name'
             ), secondary_y=True if use_secondary else False)
 
-        # Trace 4: Comp Impressions (Dashed #a855f7)
+        # Trace 4: Comp Impressions
         if not is_portfolio_mode and show_impressions and not df_daily_comp.empty and 'impressions' in df_daily_comp.columns:
             x_vals = df_daily_comp['day_index'] if 'day_index' in df_daily_comp.columns else df_daily_comp['date']
             fig.add_trace(go.Scatter(
                 x=x_vals, y=df_daily_comp['impressions'], name='Impressions (Previous)',
-                line=dict(color='rgba(168, 85, 247, 0.5)', width=2.0, dash='dash'),
+                line=dict(color=comp_imps_col, width=2.0, dash='dash'),
                 hoverinfo='y+name'
             ), secondary_y=True if use_secondary else False)
 
-        # Trace 5: CTR (Solid #10b981 Cyber Emerald)
+        # Trace 5: CTR
         if show_ctr and 'ctr' in df_daily_curr.columns:
             x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
             fig.add_trace(go.Scatter(
                 x=x_vals, y=df_daily_curr['ctr'], name='CTR (%)',
-                line=dict(color='#10b981', width=2.0),
+                line=dict(color=ctr_col, width=2.0),
                 hoverinfo='y+name'
             ), secondary_y=False)
 
-        # Trace 6: Position (Solid #f59e0b Neon Amber)
+        # Trace 6: Position
         if show_position and 'position' in df_daily_curr.columns:
             x_vals = df_daily_curr['day_index'] if 'day_index' in df_daily_curr.columns else df_daily_curr['date']
             fig.add_trace(go.Scatter(
                 x=x_vals, y=df_daily_curr['position'], name='Position',
-                line=dict(color='#f59e0b', width=2.2),
+                line=dict(color=pos_col, width=2.2),
                 hoverinfo='y+name'
             ), secondary_y=True)
 
         fig.update_layout(
             paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(15, 23, 42, 0.5)',
-            font=dict(color='#94a3b8', family='Plus Jakarta Sans, sans-serif', size=11),
+            plot_bgcolor=chart_bg,
+            font=dict(color=chart_font_color, family='Plus Jakarta Sans, sans-serif', size=11),
             hovermode='x unified',
             showlegend=is_portfolio_mode,
-            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1, font=dict(color='#cbd5e1')),
+            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1, font=dict(color=chart_legend_color)),
             margin=dict(l=35, r=35, t=10, b=25),
             height=340
         )
         fig.update_xaxes(
-            showgrid=False, linecolor='rgba(255,255,255,0.12)', tickmode='linear', dtick=8,
-            title_text="", tickfont=dict(color='#94a3b8')
+            showgrid=False, linecolor=chart_line_color, tickmode='linear', dtick=8,
+            title_text="", tickfont=dict(color=chart_font_color)
         )
         fig.update_yaxes(
             title_text="Clicks" if show_clicks else "",
-            secondary_y=False, showgrid=True, gridcolor='rgba(255,255,255,0.06)',
-            linecolor='rgba(255,255,255,0.12)', rangemode='tozero', tickfont=dict(color='#94a3b8'),
-            title_font=dict(color='#94a3b8')
+            secondary_y=False, showgrid=True, gridcolor=chart_grid_color,
+            linecolor=chart_line_color, rangemode='tozero', tickfont=dict(color=chart_font_color),
+            title_font=dict(color=chart_font_color)
         )
         if use_secondary:
             if show_position:
