@@ -1376,8 +1376,12 @@ if not is_cloud_app and st.session_state.service is None:
 if 'df' not in st.session_state:
     st.session_state.df = pd.DataFrame()
 
-rt_metrics = get_site_realtime_metrics(st.session_state.current_site or "https://yourwebsite.com")
-live_site_users = rt_metrics["active_now"] if st.session_state.current_site else 0
+try:
+    rt_metrics = get_site_realtime_metrics(st.session_state.current_site or "https://yourwebsite.com")
+    live_site_users = rt_metrics.get("active_now", 0) if st.session_state.current_site else 0
+except Exception:
+    rt_metrics = {"active_now": 0, "users_last_30m": 0, "pageviews_per_min": 0}
+    live_site_users = 0
 
 # Runtime auto-sync if connected but detailed data missing
 if st.session_state.service:
@@ -1974,7 +1978,7 @@ with st.sidebar:
         </div>
         <div style="font-size:11px; color:{side_card_text}; line-height:1.6; font-family:'JetBrains Mono',monospace;">
             <div>🌐 Site: <b style="color:{side_val1};">{live_site_users}</b> online right now</div>
-            <div>⏱️ Last 30m: <b style="color:{side_val2};">{rt_metrics['users_last_30m']}</b> visitors</div>
+            <div>⏱️ Last 30m: <b style="color:{side_val2};">{rt_metrics.get('users_last_30m', 0)}</b> visitors</div>
             <div>👥 Dashboard: <b style="color:{side_val3};">{active_dash_users}</b> session{'s' if active_dash_users > 1 else ''}</div>
         </div>
     </div>
