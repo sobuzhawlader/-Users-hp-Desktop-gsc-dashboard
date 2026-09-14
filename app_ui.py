@@ -223,11 +223,15 @@ st.markdown("""
         transition: transform 0.3s ease, margin-left 0.3s ease, width 0.3s ease !important;
     }
 
-    /* Mobile Responsive Scorecard Grid */
+    /* Mobile Responsive Scorecard Grid & Wrapping Prevention */
     div[data-testid="stHorizontalBlock"]:has(.gsc-scorecard-card) {
         display: grid !important;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
         gap: 12px !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.gsc-scorecard-card) > div[data-testid="column"] {
+        min-width: 140px !important;
+        flex: 1 1 0 !important;
     }
     @media (max-width: 768px) {
         div[data-testid="stHorizontalBlock"]:has(.gsc-scorecard-card) {
@@ -239,6 +243,124 @@ st.markdown("""
         div[data-testid="stHorizontalBlock"]:has(.gsc-scorecard-card) {
             grid-template-columns: 1fr !important;
         }
+    }
+
+    /* Scorecard Number Wrapping Bug Fix */
+    .gsc-scorecard-card {
+        min-width: 140px !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+    }
+    .gsc-card-val-big {
+        white-space: nowrap !important;
+        overflow: visible !important;
+        font-size: clamp(1.7rem, 2.2vw, 1.9rem) !important;
+        line-height: 1.2 !important;
+        word-break: keep-all !important;
+        overflow-wrap: normal !important;
+        letter-spacing: -0.5px !important;
+    }
+    .gsc-card-trend-pill, .gsc-card-sub, .gsc-scorecard-card * {
+        white-space: nowrap !important;
+    }
+
+    /* Claude-Style Minimalist Centered Login Card */
+    .claude-login-card {
+        max-width: 440px;
+        width: 100%;
+        margin: 24px auto 14px auto;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        padding: 36px 32px 24px 32px;
+        box-sizing: border-box;
+        text-align: center;
+    }
+    .claude-login-title {
+        font-size: 24px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        text-align: center !important;
+        margin: 0 0 8px 0 !important;
+        letter-spacing: -0.4px !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+    }
+    .claude-login-subtitle {
+        font-size: 13.5px !important;
+        color: #64748b !important;
+        text-align: center !important;
+        margin: 0 0 20px 0 !important;
+        line-height: 1.5 !important;
+    }
+    .claude-google-btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        width: 100% !important;
+        height: 44px !important;
+        background-color: #ffffff !important;
+        color: #1f2937 !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 8px !important;
+        font-size: 14.5px !important;
+        font-weight: 500 !important;
+        text-decoration: none !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+        transition: all 0.15s ease !important;
+        cursor: pointer !important;
+        box-sizing: border-box !important;
+        margin-bottom: 12px !important;
+    }
+    .claude-google-btn:hover {
+        background-color: #f9fafb !important;
+        border-color: #9ca3af !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+        color: #111827 !important;
+    }
+    .claude-or-divider {
+        display: flex !important;
+        align-items: center !important;
+        text-align: center !important;
+        margin: 18px 0 !important;
+    }
+    .claude-or-divider::before, .claude-or-divider::after {
+        content: '' !important;
+        flex: 1 !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+    .claude-or-divider span {
+        padding: 0 14px !important;
+        color: #94a3b8 !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.8px !important;
+    }
+    .claude-black-btn button {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+        border: 1px solid #000000 !important;
+        border-radius: 8px !important;
+        height: 44px !important;
+        font-size: 14.5px !important;
+        font-weight: 600 !important;
+        transition: background-color 0.15s ease !important;
+    }
+    .claude-black-btn button:hover {
+        background-color: #1f2937 !important;
+        border-color: #1f2937 !important;
+        color: #ffffff !important;
+    }
+    .claude-sec-note {
+        font-size: 11.5px !important;
+        color: #94a3b8 !important;
+        text-align: center !important;
+        margin-top: 18px !important;
+        margin-bottom: 14px !important;
+        line-height: 1.45 !important;
     }
 
     /* Table Horizontal Scroll & Sticky First Column */
@@ -596,12 +718,16 @@ if is_dark:
     }
     .gsc-card-val-big {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 32px;
+        font-size: clamp(1.7rem, 2.2vw, 1.9rem) !important;
         font-weight: 700;
-        line-height: 1.15;
+        line-height: 1.2 !important;
         margin-top: 8px;
         color: #ffffff;
         letter-spacing: -0.5px;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        word-break: keep-all !important;
+        overflow-wrap: normal !important;
     }
     .gsc-card-sub {
         font-size: 11px;
@@ -1237,12 +1363,16 @@ else:
     }
     .gsc-card-val-big {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-size: 30px !important;
+        font-size: clamp(1.7rem, 2.2vw, 1.9rem) !important;
         font-weight: 700 !important;
-        line-height: 1.15 !important;
+        line-height: 1.2 !important;
         margin-top: 8px !important;
         color: #0f172a !important;
         letter-spacing: -0.5px !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        word-break: keep-all !important;
+        overflow-wrap: normal !important;
     }
     .gsc-card-sub {
         font-size: 11px;
@@ -1797,9 +1927,10 @@ if st.session_state.service:
 # Sidebar - Authentic Google Search Console
 # ==============================
 with st.sidebar:
-    # 1. GSC Logo & Brand Header
+    # 1. GSC Logo & Brand Header (Clickable to return to Overview)
     if is_dark:
         st.markdown("""
+        <a href="?view=overview" target="_self" style="text-decoration:none; display:block; cursor:pointer;" title="Return to Performance Overview">
         <div style='display:flex; align-items:center; gap:10px; padding:6px 6px 12px 6px; border-bottom:1px solid rgba(56, 189, 248, 0.15); margin-bottom:12px;'>
             <svg width="26" height="26" viewBox="0 0 48 48">
                 <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
@@ -1812,9 +1943,11 @@ with st.sidebar:
                 <div style='font-size:9.5px; font-family:"JetBrains Mono",monospace; color:#34d399; letter-spacing:0.5px;'>● ENTERPRISE AI SEO</div>
             </div>
         </div>
+        </a>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
+        <a href="?view=overview" target="_self" style="text-decoration:none; display:block; cursor:pointer;" title="Return to Performance Overview">
         <div style='display:flex; align-items:center; gap:10px; padding:6px 6px 12px 6px; border-bottom:1px solid #dadce0; margin-bottom:12px;'>
             <svg width="28" height="28" viewBox="0 0 48 48">
                 <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
@@ -1827,6 +1960,7 @@ with st.sidebar:
                 <div style='font-size:11px; color:#5f6368; font-weight:400;'>Enterprise Search Analytics</div>
             </div>
         </div>
+        </a>
         """, unsafe_allow_html=True)
 
     # 1.1 Sleek Theme Switcher (Both Toggle Switch & Quick Action Buttons)
@@ -1990,14 +2124,22 @@ with st.sidebar:
                     st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
                     st.rerun()
 
-    # Compact Status Indicator
+    # Compact Status Indicator & Multi-Account Switcher
     if is_authenticated:
-        user_mail = st.session_state.get('user_email') or 'Connected Account'
+        user_mail = st.session_state.get('user_email') or 'Connected Google Account'
         st.markdown(f"""
-        <div style="font-size:11px; color:{'#94a3b8' if is_dark else '#5f6368'}; margin:2px 0 8px 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{user_mail}">
-            🟢 <b>Session:</b> {user_mail} ({total_p} sites)
+        <div style="background:{'rgba(16, 185, 129, 0.12)' if is_dark else '#e6f4ea'}; border:1px solid {'rgba(16, 185, 129, 0.3)' if is_dark else '#ceead6'}; border-radius:8px; padding:6px 10px; margin:4px 0 6px 0; font-size:11.5px; color:{'#34d399' if is_dark else '#137333'}; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{user_mail}">
+            🟢 Active: {user_mail}
         </div>
         """, unsafe_allow_html=True)
+
+        if cfg:
+            try:
+                default_redirect = resolve_redirect_uri(cfg)
+                auth_url_switch, _ = get_auth_url(default_redirect, config=cfg, prompt="select_account consent")
+                st.link_button("🔄 Switch Account / Connect Another Google Account", auth_url_switch, use_container_width=True, help="Switch Google Account without clearing browser cookies")
+            except Exception:
+                pass
     else:
         st.markdown(f"""
         <div style="font-size:11px; color:{'#34d399' if is_dark else '#137333'}; margin:2px 0 8px 0;">
@@ -2048,12 +2190,63 @@ with st.sidebar:
     for cat_pages in NAV_CATEGORIES.values():
         ALL_NAV_PAGES.extend(cat_pages)
 
-    if 'selected_page' not in st.session_state:
-        qp_p = st.query_params.get('page')
-        if qp_p and qp_p in ALL_NAV_PAGES:
-            st.session_state.selected_page = qp_p
-        else:
+    PAGE_TO_VIEW_SLUG = {
+        "📈 Performance": "overview",
+        "🟢 Real-Time Active Users": "realtime",
+        "🌐 All Sites & Properties": "properties",
+        "📈 Custom CTR Curve": "ctr_curve",
+        "🔍 URL inspection & Schema": "url_inspection",
+        "🚀 Instant Google Indexing API": "indexing_api",
+        "📄 Pages & Indexing": "pages",
+        "🗺️ Sitemaps Manager": "sitemaps",
+        "🕷️ Technical On-Page Crawler": "crawler",
+        "🪵 Log Reconciliation": "log_reconciliation",
+        "🎯 Top Keywords & Queries": "keywords",
+        "⚔️ Keyword Cannibalization": "cannibalization",
+        "🧩 Semantic Keyword Clusters": "keyword_clusters",
+        "⚡ Core Web Vitals & Quick Wins": "quick_wins",
+        "📉 Algo Update Impact": "algo_updates",
+        "🎯 Search Intent & Regex": "intent_regex",
+        "✨ AI Meta & Schema Studio": "ai_studio",
+        "🔌 WordPress 1-Click Sync": "wp_sync",
+        "🚨 24/7 Anomaly & Telegram Bot": "alerts_bot",
+        "🤖 AI Features & AEO": "ai_aeo",
+        "💼 White-Label Client Portal": "client_portal",
+        "📤 Reports & PDF Export": "reports",
+        "⚙️ Settings & Google Connection": "settings",
+    }
+    VIEW_SLUG_TO_PAGE = {v: k for k, v in PAGE_TO_VIEW_SLUG.items()}
+
+    # 1. Check selected_module first (instant module switch without refresh)
+    if st.session_state.get('selected_module') in ['Performance on Search Results', 'Performance', 'Overview']:
+        st.session_state.selected_page = "📈 Performance"
+        st.query_params['view'] = 'overview'
+        st.session_state['selected_module'] = None
+    elif st.session_state.get('selected_module') in ALL_NAV_PAGES:
+        st.session_state.selected_page = st.session_state.get('selected_module')
+        st.query_params['view'] = PAGE_TO_VIEW_SLUG.get(st.session_state.selected_page, 'overview')
+        st.session_state['selected_module'] = None
+
+    # 2. Sync from browser query parameters
+    qp_view = st.query_params.get('view')
+    qp_p = st.query_params.get('page')
+
+    if qp_view:
+        qp_v = str(qp_view).lower().strip()
+        if qp_v in ['overview', 'performance', 'home', 'performance on search results']:
             st.session_state.selected_page = "📈 Performance"
+        elif qp_v in VIEW_SLUG_TO_PAGE:
+            st.session_state.selected_page = VIEW_SLUG_TO_PAGE[qp_v]
+        else:
+            for k, v in PAGE_TO_VIEW_SLUG.items():
+                if qp_v in v or v in qp_v:
+                    st.session_state.selected_page = k
+                    break
+    elif qp_p and qp_p in ALL_NAV_PAGES:
+        st.session_state.selected_page = qp_p
+
+    if 'selected_page' not in st.session_state:
+        st.session_state.selected_page = "📈 Performance"
 
     # Normalize aliases if any
     if st.session_state.selected_page not in ALL_NAV_PAGES:
@@ -2087,6 +2280,9 @@ with st.sidebar:
             st.session_state.selected_page = "📤 Reports & PDF Export"
         else:
             st.session_state.selected_page = "📈 Performance"
+
+    # Always keep view synchronized with selected page
+    st.query_params['view'] = PAGE_TO_VIEW_SLUG.get(st.session_state.selected_page, 'overview')
 
     # Identify active category
     active_category = "📊 Core Performance & Traffic"
@@ -2661,6 +2857,21 @@ def render_paginated_table(
 
 
 # ----------------------------------------------------
+# Return to Performance Overview Helper
+# ----------------------------------------------------
+def render_back_to_overview(module_name: str):
+    """Renders a prominent back button at the top of every sub-tool module to return to Overview without browser refresh."""
+    b_col1, _ = st.columns([2.8, 7.2])
+    with b_col1:
+        if st.button("← Back to Performance Overview", key=f"back_home_{module_name}", use_container_width=True):
+            st.session_state['selected_module'] = 'Performance on Search Results'
+            st.session_state.selected_page = "📈 Performance"
+            st.query_params['view'] = 'overview'
+            st.query_params['page'] = "📈 Performance"
+            st.rerun()
+
+
+# ----------------------------------------------------
 # GSC Top Navigation Bar Renderer (Theme Aware)
 # ----------------------------------------------------
 def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, active_users: int):
@@ -2680,7 +2891,7 @@ def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, act
 
     top_bar_html = (
         f'<div class="gsc-top-bar" style="padding-left: 55px !important;">'
-        f'<div style="display:flex; align-items:center; gap:10px;">'
+        f'<a href="?view=overview" target="_self" style="text-decoration:none; display:flex; align-items:center; gap:10px; cursor:pointer;" title="Return to Performance Overview">'
         f'<svg width="24" height="24" viewBox="0 0 48 48">'
         f'<path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>'
         f'<path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>'
@@ -2688,7 +2899,7 @@ def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, act
         f'<path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>'
         f'</svg>'
         f'{brand_logo_title}'
-        f'</div>'
+        f'</a>'
         f'<div class="gsc-search-pill">'
         f'<span style="color:{search_icon_color}; font-size:14px;">🔍</span>'
         f'<span style="color:{search_text_color}; font-size:12.5px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">Inspect any URL in "{site_label}"</span>'
@@ -2798,40 +3009,42 @@ if page in ["📈 Performance", "📊 Overview"]:
                     """)
         st.stop()
     elif not is_connected and not real_active_sites:
-        col_pad1, col_center, col_pad2 = st.columns([1, 2.2, 1])
+        col_pad1, col_center, col_pad2 = st.columns([1, 1.4, 1])
         with col_center:
-            card_bg = "#ffffff" if not is_dark else "linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%)"
-            card_border = "#e2e8f0" if not is_dark else "rgba(56, 189, 248, 0.3)"
-            card_title_col = "#0f172a" if not is_dark else "#f8fafc"
-            card_sub_col = "#64748b" if not is_dark else "#94a3b8"
-
-            login_card_html = (
-                f'<div style="background:{card_bg}; border:1px solid {card_border}; border-radius:16px; padding:36px 28px; margin:40px auto 20px auto; text-align:center; box-shadow:0 2px 12px rgba(60,64,67,0.08);">'
-                f'<div style="display:flex; justify-content:center; margin-bottom:16px;">'
-                f'<svg width="44" height="44" viewBox="0 0 48 48">'
-                f'<path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>'
-                f'<path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>'
-                f'<path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>'
-                f'<path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>'
-                f'</svg>'
-                f'</div>'
-                f'<div style="font-size:22px; font-weight:700; color:{card_title_col}; letter-spacing:-0.2px; margin-bottom:8px;">Sign in with Google</div>'
-                f'<div style="font-size:13.5px; color:{card_sub_col}; line-height:1.5; margin-bottom:20px;">Connect your Search Console account to load your verified sites & search performance data.</div>'
-                f'</div>'
-            )
-            st.markdown(login_card_html, unsafe_allow_html=True)
-
-            if auth_url:
-                st.link_button("🌐 Continue with Google", auth_url, type="primary", use_container_width=True)
-
-            sec_note_col = "#94a3b8" if is_dark else "#64748b"
-            st.markdown(f"""
-            <div style="font-size:11.5px; color:{sec_note_col}; line-height:1.45; text-align:center; margin:10px auto 16px auto; max-width:440px;">
-                🔒 <b>Read-Only & In-Memory</b>: Your credentials and Search Console data are accessed securely via Google OAuth2, processed in volatile session memory, and never permanently stored on external servers or sold.
+            # Claude Card Header & Subtitle
+            st.markdown("""
+            <div class="claude-login-card">
+                <div style="display:flex; justify-content:center; margin-bottom:18px;">
+                    <svg width="44" height="44" viewBox="0 0 48 48">
+                        <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                        <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                        <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                        <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                    </svg>
+                </div>
+                <div class="claude-login-title">Unlock 100% of Your Search Data</div>
+                <div class="claude-login-subtitle">Enterprise search analytics, instant indexing &amp; actionable SEO insights</div>
             </div>
             """, unsafe_allow_html=True)
 
-            if st.button("🧪 Explore Demo Dashboard", key="btn_login_demo_explore", use_container_width=True, help="Load sample data to preview all 23 dashboard features"):
+            # 1. Continue with Google button
+            if auth_url:
+                st.markdown(f"""
+                <a href="{auth_url}" target="_self" class="claude-google-btn">
+                    <svg width="18" height="18" viewBox="0 0 48 48">
+                        <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                        <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                        <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                        <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                    </svg>
+                    <span>Continue with Google</span>
+                </a>
+                """, unsafe_allow_html=True)
+            else:
+                st.info("OAuth client secrets not configured yet. You can explore the demo dashboard below.")
+
+            # 2. Explore Demo Dashboard button
+            if st.button("⚡ Explore Demo Dashboard", key="btn_claude_demo_explore", use_container_width=True, help="Load sample data to preview all 23 dashboard features"):
                 demo_site = "sc-domain:example-enterprise.com"
                 st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
                 st.session_state.sites_detailed = [
@@ -2842,6 +3055,53 @@ if page in ["📈 Performance", "📊 Overview"]:
                 st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
                 st.session_state.portfolio_needs_refresh = True
                 st.rerun()
+
+            # 3. OR divider
+            st.markdown("""
+            <div class="claude-or-divider">
+                <span>OR</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # 4. Email input
+            claude_email_input = st.text_input(
+                "Email address",
+                placeholder="Enter your email",
+                key="input_claude_login_email",
+                label_visibility="collapsed"
+            )
+
+            # 5. Continue with email button
+            st.markdown('<div class="claude-black-btn">', unsafe_allow_html=True)
+            if st.button("Continue with email", key="btn_claude_continue_email", use_container_width=True):
+                email_clean = claude_email_input.strip() if claude_email_input else ""
+                if email_clean and "@" in email_clean and "." in email_clean.split("@")[-1]:
+                    cfg_local = cfg or load_client_config()
+                    if cfg_local:
+                        try:
+                            redir = resolve_redirect_uri(cfg_local)
+                            auth_url_email, _ = get_auth_url(redir, config=cfg_local, login_hint=email_clean, prompt="select_account consent")
+                            st.markdown(f'<meta http-equiv="refresh" content="0; url={auth_url_email}">', unsafe_allow_html=True)
+                            try:
+                                import streamlit.components.v1 as components
+                                components.html(f"<script>window.top.location.href = '{auth_url_email}';</script>", height=0)
+                            except Exception:
+                                pass
+                            st.link_button("👉 Click here to proceed to Google Login", auth_url_email, type="primary", use_container_width=True)
+                        except Exception as ex:
+                            st.error(f"OAuth URL error: {ex}")
+                    else:
+                        st.error("Google OAuth client configuration not found in secrets.")
+                else:
+                    st.error("Please enter a valid email address (e.g., name@company.com).")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            # 6. Security Note
+            st.markdown("""
+            <div class="claude-sec-note">
+                🔒 Read-Only &amp; In-Memory: Your credentials and Search Console data are processed securely in volatile session memory. Privacy Policy.
+            </div>
+            """, unsafe_allow_html=True)
 
             with st.expander("💡 How to Connect Your GSC Property (Step-by-Step Guide)", expanded=False):
                 st.markdown("""
@@ -3232,9 +3492,9 @@ if page in ["📈 Performance", "📊 Overview"]:
         trend_clicks_html = f"{delta_clicks_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
 
         st.markdown(f"""
-        <div class="gsc-scorecard-card {click_card_class}">
-            <div class="gsc-card-val-big">{fmt_gsc_num(total_clicks)}</div>
-            <div class="gsc-card-trend-pill">{trend_clicks_html}</div>
+        <div class="gsc-scorecard-card {click_card_class}" style="white-space:nowrap !important;">
+            <div class="gsc-card-val-big" style="white-space:nowrap !important; word-break:keep-all !important;">{fmt_gsc_num(total_clicks)}</div>
+            <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_clicks_html}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -3248,9 +3508,9 @@ if page in ["📈 Performance", "📊 Overview"]:
         trend_imps_html = f"{delta_imps_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
 
         st.markdown(f"""
-        <div class="gsc-scorecard-card {imps_card_class}">
-            <div class="gsc-card-val-big">{imps_disp}</div>
-            <div class="gsc-card-trend-pill">{trend_imps_html}</div>
+        <div class="gsc-scorecard-card {imps_card_class}" style="white-space:nowrap !important;">
+            <div class="gsc-card-val-big" style="white-space:nowrap !important; word-break:keep-all !important;">{imps_disp}</div>
+            <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_imps_html}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -3264,9 +3524,9 @@ if page in ["📈 Performance", "📊 Overview"]:
         trend_ctr_html = f"{delta_ctr_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
 
         st.markdown(f"""
-        <div class="gsc-scorecard-card {ctr_card_class}">
-            <div class="gsc-card-val-big">{avg_ctr or 0}%</div>
-            <div class="gsc-card-trend-pill">{trend_ctr_html}</div>
+        <div class="gsc-scorecard-card {ctr_card_class}" style="white-space:nowrap !important;">
+            <div class="gsc-card-val-big" style="white-space:nowrap !important; word-break:keep-all !important;">{avg_ctr or 0}%</div>
+            <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_ctr_html}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -3280,9 +3540,9 @@ if page in ["📈 Performance", "📊 Overview"]:
         trend_pos_html = f"{delta_pos_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
 
         st.markdown(f"""
-        <div class="gsc-scorecard-card {pos_card_class}">
-            <div class="gsc-card-val-big">{avg_pos or 0.0}</div>
-            <div class="gsc-card-trend-pill">{trend_pos_html}</div>
+        <div class="gsc-scorecard-card {pos_card_class}" style="white-space:nowrap !important;">
+            <div class="gsc-card-val-big" style="white-space:nowrap !important; word-break:keep-all !important;">{avg_pos or 0.0}</div>
+            <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_pos_html}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -3910,6 +4170,7 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
     # 1. GSC Top Bar
     rt_site_label = current_site or (real_active_sites[0] if real_active_sites else 'selected property')
     render_gsc_top_bar(rt_site_label, is_dark, live_site_users, active_dash_users)
+    render_back_to_overview("realtime_users")
 
     # 2. Header & Live Controls
     hdr_c1, hdr_c2 = st.columns([3, 1])
@@ -4202,6 +4463,7 @@ elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
 # 1.2 All Sites & Properties Manager (100% GSC API Sites Scope)
 # ----------------------------------------------------
 elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
+    render_back_to_overview("all_sites")
     st.markdown("<div class='section-header'>🌐 Google Search Console — Consolidated Multi-Site Portfolio</div>", unsafe_allow_html=True)
     st.markdown("Executive portfolio overview, comparative analytics, and management for **all websites and properties** registered under your connected Google Account.")
 
@@ -4653,6 +4915,7 @@ elif page in ["🌐 All Sites & Properties", "🌐 Properties Manager"]:
 # 2. Keywords
 # ----------------------------------------------------
 elif page in ["🎯 Top Keywords & Queries", "🔍 Keywords"]:
+    render_back_to_overview("top_keywords")
     st.markdown("<div class='section-header'>🔍 Keyword Intelligence</div>", unsafe_allow_html=True)
     if df.empty:
         render_empty_state_action("Keywords")
@@ -4701,6 +4964,7 @@ elif page in ["🎯 Top Keywords & Queries", "🔍 Keywords"]:
 # 3. Pages
 # ----------------------------------------------------
 elif page in ["📄 Pages & Indexing", "📄 Pages"]:
+    render_back_to_overview("pages_indexing")
     st.markdown("<div class='section-header'>📄 Page Level Performance</div>", unsafe_allow_html=True)
     if df.empty:
         render_empty_state_action("Pages")
@@ -4725,6 +4989,7 @@ elif page in ["📄 Pages & Indexing", "📄 Pages"]:
 # 4. Quick Wins
 # ----------------------------------------------------
 elif page in ["⚡ Core Web Vitals & Quick Wins", "⚡ Quick Wins"]:
+    render_back_to_overview("quick_wins")
     st.markdown("<div class='section-header'>⚡ Quick Wins & Striking Distance Keywords</div>", unsafe_allow_html=True)
     if df.empty:
         render_empty_state_action("Quick Wins")
@@ -4877,6 +5142,7 @@ elif page in ["⚡ Core Web Vitals & Quick Wins", "⚡ Quick Wins"]:
 # 5. URL & Canonical Inspector
 # ----------------------------------------------------
 elif page in ["🔍 URL inspection & Schema", "🔍 URL inspection", "🔬 URL & Canonical Inspector"]:
+    render_back_to_overview("url_inspection")
     st.markdown("<div class='section-header'>🔬 Live URL Inspection, Canonical & Schema Validator</div>", unsafe_allow_html=True)
     st.markdown("""
     Queries Google's live **URL Inspection API** (or real-time crawler fallback).
@@ -4929,6 +5195,7 @@ elif page in ["🔍 URL inspection & Schema", "🔍 URL inspection", "🔬 URL &
 # 5.1 Instant Google Indexing API (NEW)
 # ----------------------------------------------------
 elif page in ["🚀 Instant Google Indexing API", "🚀 Instant Indexing"]:
+    render_back_to_overview("indexing_api")
     st.markdown("<div class='section-header'>🚀 Google Webmaster Instant Indexing API (URL_UPDATED & URL_DELETED)</div>", unsafe_allow_html=True)
     st.markdown("""
     Directly request Googlebot to crawl and index your web pages **within minutes** instead of waiting weeks!  
@@ -4984,6 +5251,7 @@ elif page in ["🚀 Instant Google Indexing API", "🚀 Instant Indexing"]:
 # 6. Algorithm Update Impact
 # ----------------------------------------------------
 elif page == "📉 Algo Update Impact":
+    render_back_to_overview("algo_impact")
     st.markdown("<div class='section-header'>📉 Google Algorithm Update Impact Analyzer (Before vs. After)</div>", unsafe_allow_html=True)
     st.markdown("Compare search visibility **before vs. after** major Google Core Updates or custom dates to find which pages/queries won or lost.")
 
@@ -5033,6 +5301,7 @@ elif page == "📉 Algo Update Impact":
 # 7. Custom CTR Curve & Traffic Forecaster (NEW)
 # ----------------------------------------------------
 elif page == "📈 Custom CTR Curve":
+    render_back_to_overview("ctr_curve")
     st.markdown("<div class='section-header'>📈 Custom Empirical CTR Curve & Traffic Opportunity Forecaster</div>", unsafe_allow_html=True)
     if df.empty:
         render_empty_state_action("Custom CTR Curve")
@@ -5074,6 +5343,7 @@ elif page == "📈 Custom CTR Curve":
 # 8. Sitemaps Manager (NEW)
 # ----------------------------------------------------
 elif page in ["🗺️ Sitemaps", "🗺️ Sitemaps Manager"]:
+    render_back_to_overview("sitemaps")
     st.markdown("<div class='section-header'>🗺️ GSC Sitemaps Manager & Health Inspector</div>", unsafe_allow_html=True)
     if not service or not effective_site:
         st.warning("⚠️ Please connect your Google account and select a site property.")
@@ -5108,6 +5378,7 @@ elif page in ["🗺️ Sitemaps", "🗺️ Sitemaps Manager"]:
 # 9. Log & Crawl Reconciliation (NEW)
 # ----------------------------------------------------
 elif page == "🪵 Log Reconciliation":
+    render_back_to_overview("log_reconciliation")
     st.markdown("<div class='section-header'>🪵 Server Log & Crawl Reconciliation (Orphan & Waste Finder)</div>", unsafe_allow_html=True)
     if df.empty:
         st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
@@ -5166,6 +5437,7 @@ elif page == "🪵 Log Reconciliation":
 # 10. Intent & Regex
 # ----------------------------------------------------
 elif page in ["🎯 Search Intent & Regex", "🎯 Intent & Regex"]:
+    render_back_to_overview("search_intent")
     st.markdown("<div class='section-header'>🎯 Search Intent & RE2 Regex Explorer</div>", unsafe_allow_html=True)
     if df.empty:
         render_empty_state_action("Search Intent")
@@ -5219,6 +5491,7 @@ elif page in ["🎯 Search Intent & Regex", "🎯 Intent & Regex"]:
 # 11. AEO & Preferred Sources
 # ----------------------------------------------------
 elif page in ["🤖 AI Features & AEO", "🤖 AEO & Preferred Sources"]:
+    render_back_to_overview("ai_aeo")
     st.markdown("<div class='section-header'>🤖 Generative Engine Optimization (GEO/AEO) & Preferred Sources</div>", unsafe_allow_html=True)
     current_domain = current_site or "yourdomain.com"
     clean_domain = current_domain.replace('sc-domain:', '').replace('https://', '').replace('http://', '').strip('/')
@@ -5237,6 +5510,7 @@ elif page in ["🤖 AI Features & AEO", "🤖 AEO & Preferred Sources"]:
 # 12. 24/7 Automation Generator (NEW)
 # ----------------------------------------------------
 elif page in ["⚙️ Settings & Google Connection", "⚙️ Settings & Connection", "⚙️ 24/7 Automation"]:
+    render_back_to_overview("settings")
     st.markdown("<div class='section-header'>⚙️ 24/7 Free Automated Monitoring & Settings</div>", unsafe_allow_html=True)
     st.markdown("""
     Run nightly GSC SEO audits completely free using **GitHub Actions**.
@@ -5260,6 +5534,7 @@ elif page in ["⚙️ Settings & Google Connection", "⚙️ Settings & Connecti
 # 13. 24/7 Anomaly Detection & Free Telegram Bot
 # ----------------------------------------------------
 elif page in ["🚨 24/7 Anomaly & Telegram Bot", "🚨 Alerts"]:
+    render_back_to_overview("anomaly_bot")
     st.markdown("""
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(239, 68, 68, 0.3); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -5325,6 +5600,7 @@ elif page in ["🚨 24/7 Anomaly & Telegram Bot", "🚨 Alerts"]:
 # 14. Reports & Export
 # ----------------------------------------------------
 elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
+    render_back_to_overview("reports")
     st.markdown("<div class='section-header'>📤 Branded Client PDF & CSV Exports</div>", unsafe_allow_html=True)
     if df.empty:
         st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
@@ -5353,6 +5629,7 @@ elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
 # 15. Keyword Cannibalization Matrix & Resolution Engine
 # ----------------------------------------------------
 elif page == "⚔️ Keyword Cannibalization":
+    render_back_to_overview("cannibalization")
     st.markdown("""
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(244, 63, 94, 0.3); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -5444,6 +5721,7 @@ elif page == "⚔️ Keyword Cannibalization":
 # 16. Semantic Keyword Clustering Engine
 # ----------------------------------------------------
 elif page == "🧩 Semantic Keyword Clusters":
+    render_back_to_overview("keyword_clusters")
     st.markdown("""
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(139, 92, 246, 0.35); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -5526,6 +5804,7 @@ elif page == "🧩 Semantic Keyword Clusters":
 # 17. Technical On-Page Crawler & Core Web Vitals Auditor
 # ----------------------------------------------------
 elif page == "🕷️ Technical On-Page Crawler":
+    render_back_to_overview("crawler")
     st.markdown("""
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(16, 185, 129, 0.3); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -5693,6 +5972,7 @@ elif page == "🕷️ Technical On-Page Crawler":
 # 18. AI High-CTR Meta & JSON-LD Schema Studio
 # ----------------------------------------------------
 elif page == "✨ AI Meta & Schema Studio":
+    render_back_to_overview("ai_studio")
     st.markdown("""
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(245, 158, 11, 0.35); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -5776,6 +6056,7 @@ elif page == "✨ AI Meta & Schema Studio":
 # 19. WordPress REST API 1-Click Publishing & Meta Sync
 # ----------------------------------------------------
 elif page == "🔌 WordPress 1-Click Sync":
+    render_back_to_overview("wp_sync")
     st.markdown("""
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(2, 132, 199, 0.35); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -5869,6 +6150,7 @@ elif page == "🔌 WordPress 1-Click Sync":
 # 20. White-Label Client Portal & Executive PDF Reporting
 # ----------------------------------------------------
 elif page == "💼 White-Label Client Portal":
+    render_back_to_overview("client_portal")
     st.markdown("""
     <div style="background:rgba(15, 23, 42, 0.7); border:1px solid rgba(56, 189, 248, 0.35); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(8px);">
         <div style="display:flex; justify-content:space-between; align-items:center;">

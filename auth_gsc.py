@@ -61,10 +61,11 @@ def load_client_config():
     return None
 
 
-def get_auth_url(redirect_uri: str, config: dict = None):
+def get_auth_url(redirect_uri: str, config: dict = None, login_hint: str = None, prompt: str = 'select_account consent'):
     """
     Generates a web OAuth authorization URL for multi-user browser authentication.
     Google will redirect back to redirect_uri with ?code=...
+    Supports login_hint for pre-filling the user email and custom prompt.
     """
     os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -80,10 +81,14 @@ def get_auth_url(redirect_uri: str, config: dict = None):
         redirect_uri=redirect_uri,
         autogenerate_code_verifier=False
     )
-    auth_url, state = flow.authorization_url(
-        prompt='select_account consent',
-        access_type='offline'
-    )
+    auth_kwargs = {
+        'prompt': prompt or 'select_account consent',
+        'access_type': 'offline'
+    }
+    if login_hint:
+        auth_kwargs['login_hint'] = str(login_hint).strip()
+
+    auth_url, state = flow.authorization_url(**auth_kwargs)
     return auth_url, state
 
 def exchange_code(code: str, redirect_uri: str, config: dict = None):
