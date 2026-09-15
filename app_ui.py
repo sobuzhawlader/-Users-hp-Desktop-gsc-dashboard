@@ -2858,6 +2858,9 @@ df = st.session_state.df
 service = st.session_state.service
 service_v1 = st.session_state.service_v1
 current_site = st.session_state.current_site
+is_authenticated = bool(st.session_state.get('authenticated')) or bool(service)
+is_connected = is_authenticated
+is_demo_mode = bool(st.session_state.get('demo_mode'))
 
 start_str = st.session_state.get('global_start_str', (datetime.now() - timedelta(days=28)).strftime('%Y-%m-%d'))
 end_str = st.session_state.get('global_end_str', datetime.now().strftime('%Y-%m-%d'))
