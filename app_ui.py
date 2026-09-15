@@ -1876,6 +1876,8 @@ if 'user_creds' not in st.session_state:
     st.session_state.user_creds = None
 if 'portfolio_data' not in st.session_state:
     st.session_state.portfolio_data = None
+if 'auth_login_email_input' not in st.session_state:
+    st.session_state.auth_login_email_input = ""
 
 def resolve_redirect_uri(cfg):
     """Picks the best redirect URI matching cloud or local environment."""
@@ -2303,6 +2305,15 @@ page = st.session_state.selected_page
 # ====================================================
 # Authentication Screen (Stitch SaaS Design Pixel-Perfect)
 # ====================================================
+def _render_safe_html(html_code: str):
+    """Renders HTML safely without Markdown parser treating indented HTML as code blocks."""
+    import textwrap
+    clean_html = textwrap.dedent(html_code).strip()
+    if hasattr(st, "html"):
+        st.html(clean_html)
+    else:
+        st.markdown(clean_html, unsafe_allow_html=True)
+
 def render_auth_page(auth_url=None, is_dark=False):
     """
     Renders the modern, clean, enterprise-grade Authentication Gate matching the Stitch SaaS design.
@@ -2321,7 +2332,7 @@ def render_auth_page(auth_url=None, is_dark=False):
       - Enterprise compliance footer bar (Privacy, Terms, Compliance, TLS, US-EAST-1, Manage app)
       - Completely suppresses operational sidebar
     """
-    st.markdown("""
+    _render_safe_html("""
     <style>
     /* 1. Hide Sidebar & Controls */
     [data-testid="stSidebar"], 
@@ -2430,11 +2441,21 @@ def render_auth_page(auth_url=None, is_dark=False):
         box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
     }
 
-    /* Primary Google Button */
+    /* Form wrapper styling inside card */
+    .st-key-auth_main_card div[data-testid="stForm"] {
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+    }
+
+    /* Primary Google Button (Form Submit & Link Button) */
+    .st-key-auth_main_card div[data-testid="stForm"] div:has(> button),
     .st-key-auth_btn_continue_google,
     .st-key-auth_main_card [data-testid="stLinkButton"] {
         margin: 0 32px 14px 32px !important;
     }
+    .st-key-auth_main_card div[data-testid="stForm"] button,
     .st-key-auth_btn_continue_google button,
     .st-key-auth_btn_continue_google a,
     .st-key-auth_main_card [data-testid="stLinkButton"] a {
@@ -2453,6 +2474,7 @@ def render_auth_page(auth_url=None, is_dark=False):
         text-decoration: none !important;
         width: 100% !important;
     }
+    .st-key-auth_main_card div[data-testid="stForm"] button:hover,
     .st-key-auth_btn_continue_google button:hover,
     .st-key-auth_btn_continue_google a:hover,
     .st-key-auth_main_card [data-testid="stLinkButton"] a:hover {
@@ -2460,6 +2482,7 @@ def render_auth_page(auth_url=None, is_dark=False):
         border-color: #cbd5e1 !important;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
     }
+    .st-key-auth_main_card div[data-testid="stForm"] button p::before,
     .st-key-auth_btn_continue_google button p::before,
     .st-key-auth_btn_continue_google a::before,
     .st-key-auth_main_card [data-testid="stLinkButton"] a::before,
@@ -2529,10 +2552,10 @@ def render_auth_page(auth_url=None, is_dark=False):
         box-sizing: border-box;
     }
     </style>
-    """, unsafe_allow_html=True)
+    """)
 
     # 1. Top SaaS Navigation Bar (Full Width)
-    st.markdown("""
+    _render_safe_html("""
     <div class="auth-top-nav">
         <div style="display: flex; align-items: center; gap: 10px;">
             <div style="width: 28px; height: 28px; background: #2563eb; border-radius: 7px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(37,99,235,0.25);">
@@ -2565,17 +2588,17 @@ def render_auth_page(auth_url=None, is_dark=False):
             </a>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # 2. Centered Stage
     with st.container(key="auth_center_stage"):
         # 3. Main Elevated Card
         with st.container(key="auth_main_card", border=True):
             # Top Cyan-Blue Accent Bar
-            st.markdown('<div class="auth-top-accent"></div>', unsafe_allow_html=True)
+            _render_safe_html('<div class="auth-top-accent"></div>')
 
             # Floating Google App Icon, Title, Subtitle, and 3 Feature Badges
-            st.markdown("""
+            _render_safe_html("""
             <div style="padding: 24px 32px 0 32px; text-align: center;">
                 <div style="width: 62px; height: 62px; background: #ffffff; border-radius: 18px; border: 1px solid #f1f5f9; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
                     <svg width="30" height="30" viewBox="0 0 48 48">
@@ -2603,35 +2626,42 @@ def render_auth_page(auth_url=None, is_dark=False):
                     </span>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
-            # Email Input Field
-            email_val = st.text_input(
-                "Google Account Email",
-                placeholder="Enter your Gmail or Workspace account (optional)",
-                key="auth_login_email_input",
-                label_visibility="collapsed"
-            )
+            # Callbacks for auth state transitions
+            def _handle_demo_login():
+                demo_site = "sc-domain:example-enterprise.com"
+                st.session_state.authenticated = True
+                st.session_state.demo_mode = True
+                st.session_state.user_email = "demo.analyst@example-enterprise.com"
+                st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
+                st.session_state.sites_detailed = [
+                    {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
+                    {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
+                ]
+                st.session_state.current_site = demo_site
+                st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+                st.session_state.portfolio_needs_refresh = True
+                st.session_state.selected_page = "📊 Dashboard Hub"
+                st.session_state.current_active_view = "hub"
+                st.toast("⚡ Loaded demo enterprise dataset!", icon="🚀")
 
-            # Primary Action: Continue with Google
-            # If auth_url is available, link directly to Google OAuth with login_hint support!
-            target_oauth_url = auth_url
-            if target_oauth_url and email_val and "@" in email_val:
-                try:
-                    import urllib.parse
-                    parsed = urllib.parse.urlparse(target_oauth_url)
-                    qs = urllib.parse.parse_qs(parsed.query)
-                    qs['login_hint'] = [email_val.strip()]
-                    target_oauth_url = urllib.parse.urlunparse(parsed._replace(query=urllib.parse.urlencode(qs, doseq=True)))
-                except Exception:
-                    pass
-
-            # Primary CTA
-            if target_oauth_url:
-                st.link_button("Continue with Google", target_oauth_url, use_container_width=True)
-            else:
-                if st.button("Continue with Google", key="auth_btn_continue_google", use_container_width=True):
-                    raw_email = (email_val or "").strip() or "google.user@gmail.com"
+            def _handle_google_login(auth_url=None):
+                email_val = (st.session_state.get('auth_login_email_input') or "").strip()
+                if auth_url:
+                    target_oauth_url = auth_url
+                    if email_val and "@" in email_val:
+                        try:
+                            import urllib.parse
+                            parsed = urllib.parse.urlparse(target_oauth_url)
+                            qs = urllib.parse.parse_qs(parsed.query)
+                            qs['login_hint'] = [email_val]
+                            target_oauth_url = urllib.parse.urlunparse(parsed._replace(query=urllib.parse.urlencode(qs, doseq=True)))
+                        except Exception:
+                            pass
+                    st.session_state.target_oauth_url = target_oauth_url
+                else:
+                    raw_email = email_val or "google.user@gmail.com"
                     if "@" not in raw_email:
                         raw_email = f"{raw_email}@gmail.com"
                     user_domain = raw_email.split("@")[-1]
@@ -2651,10 +2681,29 @@ def render_auth_page(auth_url=None, is_dark=False):
                     st.session_state.selected_page = "📊 Dashboard Hub"
                     st.session_state.current_active_view = "hub"
                     st.toast(f"✅ Signed in as {raw_email}!", icon="🎉")
-                    st.rerun()
+
+            # Email Input & Google Button inside Form (ensures clean lifecycle & no widget state KeyError)
+            with st.form("auth_google_login_form", clear_on_submit=False, border=False):
+                email_val = st.text_input(
+                    "Google Account Email",
+                    placeholder="Enter your Gmail or Workspace account (optional)",
+                    key="auth_login_email_input",
+                    label_visibility="collapsed"
+                )
+                btn_sign_in_google = st.form_submit_button(
+                    "Continue with Google",
+                    on_click=_handle_google_login,
+                    kwargs={"auth_url": auth_url},
+                    use_container_width=True
+                )
+
+                if st.session_state.get("target_oauth_url"):
+                    oauth_url_val = st.session_state.target_oauth_url
+                    _render_safe_html(f'<meta http-equiv="refresh" content="0; url={oauth_url_val}">')
+                    st.link_button("👉 Click here to complete Google Sign-In", oauth_url_val, use_container_width=True)
 
             # Divider: OR EXPLORE SANDBOX
-            st.markdown("""
+            _render_safe_html("""
             <div style="display: flex; align-items: center; margin: 16px 32px 18px 32px;">
                 <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
                 <span style="padding: 0 12px; color: #94a3b8; font-size: 10.5px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;">
@@ -2662,36 +2711,26 @@ def render_auth_page(auth_url=None, is_dark=False):
                 </span>
                 <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
             # Secondary Action: Explore Live Demo Sandbox
-            if st.button("⚡ Explore Live Demo Sandbox", key="btn_auth_demo_explore", use_container_width=True, help="Load enterprise sample dataset to preview all 23 dashboard tools"):
-                demo_site = "sc-domain:example-enterprise.com"
-                st.session_state.authenticated = True
-                st.session_state.demo_mode = True
-                st.session_state.user_email = "demo.analyst@example-enterprise.com"
-                st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
-                st.session_state.sites_detailed = [
-                    {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
-                    {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
-                ]
-                st.session_state.current_site = demo_site
-                st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
-                st.session_state.portfolio_needs_refresh = True
-                st.session_state.selected_page = "📊 Dashboard Hub"
-                st.session_state.current_active_view = "hub"
-                st.toast("⚡ Loaded demo enterprise dataset!", icon="🚀")
-                st.rerun()
+            st.button(
+                "⚡ Explore Live Demo Sandbox",
+                key="btn_auth_demo_explore",
+                on_click=_handle_demo_login,
+                use_container_width=True,
+                help="Load enterprise sample dataset to preview all 23 dashboard tools"
+            )
 
             # Read-Only Trust Banner (inside the card)
-            st.markdown("""
+            _render_safe_html("""
             <div style="margin: 18px 32px 0 32px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 10px;">
                 <span style="color: #059669; font-size: 16px;">🔒</span>
                 <div style="font-size: 11.5px; color: #475569; line-height: 1.45;">
                     <b style="color: #0f172a;">Read-Only &amp; In-Memory:</b> Your credentials and Search Console telemetry are processed in strictly isolated, volatile memory sessions.
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
         # 4. Expandable Options Below Card
         with st.expander("▶  Enterprise: Connect via Service Account JSON        [ Recommended for orgs ]", expanded=False):
@@ -2746,7 +2785,7 @@ def render_auth_page(auth_url=None, is_dark=False):
             """)
 
     # 5. Bottom Enterprise Compliance Footer (Full Width)
-    st.markdown("""
+    _render_safe_html("""
     <div class="auth-bottom-footer">
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <span>Privacy Policy</span>
@@ -2769,7 +2808,7 @@ def render_auth_page(auth_url=None, is_dark=False):
             </span>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
 
 # ====================================================
