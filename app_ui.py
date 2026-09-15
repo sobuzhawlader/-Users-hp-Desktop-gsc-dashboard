@@ -2346,7 +2346,7 @@ def render_auth_page(auth_url=None, is_dark=False):
                     Google Search Console Enterprise Suite
                 </div>
                 <div style="font-size:14px; color:{sub_col}; margin-bottom:22px; line-height:1.5;">
-                    Enterprise search performance analytics, instant URL indexing, and actionable SEO intelligence.
+                    Connect your Google account to access real-time SEO analytics, indexing, and keyword intelligence.
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -2386,8 +2386,8 @@ def render_auth_page(auth_url=None, is_dark=False):
                     st.toast(f"✅ Signed in as {raw_email}!", icon="🎉")
                     st.rerun()
 
-            # 2. Secondary Action: Explore with Demo Data
-            if st.button("⚡ Explore with Demo Data", key="btn_auth_demo_explore", use_container_width=True, help="Load enterprise sample dataset to preview all 23 dashboard tools without logging in"):
+            # 2. Secondary Action: Explore Demo Mode
+            if st.button("⚡ Explore Demo Mode", key="btn_auth_demo_explore", use_container_width=True, help="Load enterprise sample dataset to preview all 23 dashboard tools without logging in"):
                 demo_site = "sc-domain:example-enterprise.com"
                 st.session_state.authenticated = True
                 st.session_state.demo_mode = True
@@ -2415,7 +2415,7 @@ def render_auth_page(auth_url=None, is_dark=False):
         st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
 
         # 4. Advanced Options (Hidden inside st.expander)
-        with st.expander("⚙️ Advanced: Connect via Service Account JSON", expanded=False):
+        with st.expander("Enterprise: Connect via Service Account JSON", expanded=False):
             if auth_url:
                 st.markdown("##### 🌐 Connect via Google Cloud OAuth (Live API)")
                 st.caption("Authenticate directly using configured Google OAuth 2.0 Client credentials:")
@@ -2451,7 +2451,7 @@ def render_auth_page(auth_url=None, is_dark=False):
                     st.error(f"Service Account Error: {sa_err}")
 
         # 5. Help & Documentation Expander (Clean, enterprise user guide)
-        with st.expander("❓ Need help? (Permissions & Setup Guide)", expanded=False):
+        with st.expander("Setup Guide & Permissions", expanded=False):
             st.markdown("""
             ##### 1. Verify Property Ownership in Search Console
             Ensure your website is already added and verified in the official [Google Search Console](https://search.google.com/search-console).
@@ -2463,9 +2463,8 @@ def render_auth_page(auth_url=None, is_dark=False):
             - **Domain Property (`sc-domain:example.com`)**: Verified via DNS TXT record. Tracks traffic across all protocols (`http://` and `https://`) and all subdomains (`www`, `blog`, `shop`).
             - **URL-Prefix Property (`https://example.com/`)**: Verified via HTML tag or file. Tracks only URLs starting with that exact address.
 
-            ##### 4. Troubleshooting Empty Sites or API Access
-            - **No Properties Listed**: If your verified site doesn't appear, make sure you sign in with the Google Account that holds ownership or user rights in Search Console.
-            - **API Permissions**: Ensure the Google Search Console API is enabled in your Google Cloud organization or project.
+            ##### 4. Troubleshooting Empty Sites
+            If your verified site doesn't appear immediately, verify you are signed into the Google Account that holds ownership or user rights in Search Console.
             """)
 
 
@@ -2598,39 +2597,6 @@ def render_sidebar(cfg=None, auth_url=None, is_dark=False, live_site_users=0, ac
                 st.session_state.portfolio_needs_refresh = True
             st.rerun()
 
-        # Sync & Reload row
-        col_sb_sync, col_sb_action = st.columns([1.2, 1.0])
-        with col_sb_sync:
-            if st.button("🔄 Sync Sites", key="sb_sync_refresh_sites_top", use_container_width=True, help="Re-sync verified properties from GSC"):
-                with st.spinner("Syncing properties..."):
-                    try:
-                        if is_authenticated and st.session_state.service:
-                            fresh_sites = get_sites_detailed(st.session_state.service, force_refresh=True)
-                            st.session_state.sites_detailed = fresh_sites
-                            st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
-                            st.session_state.portfolio_needs_refresh = True
-                            if 'clear_portfolio_cache' in globals():
-                                clear_portfolio_cache()
-                            if 'clear_sites_cache' in globals():
-                                clear_sites_cache()
-                            st.session_state.df = pd.DataFrame()
-                            st.success(f"Synced {len(st.session_state.sites)} properties!")
-                            st.rerun()
-                        else:
-                            demo_site = st.session_state.current_site or "sc-domain:example-enterprise.com"
-                            st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
-                            st.session_state.portfolio_needs_refresh = True
-                            st.success("Refreshed demo properties!")
-                            st.rerun()
-                    except Exception as ex:
-                        st.error(f"Sync error: {ex}")
-
-        with col_sb_action:
-            if st.button("⚡ Reload", key="sb_quick_reload_btn", use_container_width=True, help="Reload active property data"):
-                st.session_state.portfolio_needs_refresh = True
-                st.session_state.df = pd.DataFrame()
-                st.rerun()
-
         st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
 
         # 4. Global Date Range Filter
@@ -2665,85 +2631,8 @@ def render_sidebar(cfg=None, auth_url=None, is_dark=False, live_site_users=0, ac
 
         st.divider()
 
-        # 5. Collapsible Settings (Account & Management)
-        with st.expander("⚙️ Account & Management", expanded=False):
-            if is_authenticated and not st.session_state.get('demo_mode'):
-                user_mail = st.session_state.get('user_email') or 'Connected Google Account'
-                st.markdown(f"""
-                <div style="background:{'rgba(16, 185, 129, 0.12)' if is_dark else '#e6f4ea'}; border:1px solid {'rgba(16, 185, 129, 0.3)' if is_dark else '#ceead6'}; border-radius:8px; padding:6px 10px; margin:4px 0 8px 0; font-size:11.5px; color:{'#34d399' if is_dark else '#137333'}; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{user_mail}">
-                    🟢 Connected: {user_mail}
-                </div>
-                """, unsafe_allow_html=True)
-
-                if cfg:
-                    try:
-                        default_redirect = resolve_redirect_uri(cfg)
-                        auth_url_switch, _ = get_auth_url(default_redirect, config=cfg, prompt="select_account consent")
-                        st.link_button("🔄 Switch Google Account", auth_url_switch, use_container_width=True, help="Switch Google Account without clearing browser cookies")
-                    except Exception:
-                        pass
-                if st.button("🚪 Sign Out", key="btn_expander_sign_out", use_container_width=True):
-                    delete_saved_credentials()
-                    if 'clear_portfolio_cache' in globals():
-                        clear_portfolio_cache()
-                    if 'clear_sites_cache' in globals():
-                        clear_sites_cache()
-                    st.session_state.authenticated = False
-                    st.session_state.demo_mode = False
-                    st.session_state.service = None
-                    st.session_state.service_v1 = None
-                    st.session_state.sites = []
-                    st.session_state.sites_detailed = []
-                    st.session_state.user_creds = None
-                    st.session_state.user_email = None
-                    st.session_state.current_site = None
-                    st.session_state.portfolio_data = None
-                    st.session_state.portfolio_needs_refresh = True
-                    st.session_state.df = pd.DataFrame()
-                    st.rerun()
-            else:
-                st.markdown(f"""
-                <div style="font-size:11px; color:{'#38bdf8' if is_dark else '#1a73e8'}; margin:2px 0 8px 0;">
-                    🧪 <b>Demo Mode Active</b> (Sample properties loaded)
-                </div>
-                """, unsafe_allow_html=True)
-                if auth_url:
-                    st.link_button("🌐 Connect Google Account", auth_url, type="primary", use_container_width=True)
-                c_dm1, c_dm2 = st.columns(2)
-                with c_dm1:
-                    if st.button("🧪 Reset Demo", key="btn_reset_demo_expander", use_container_width=True):
-                        demo_site = "sc-domain:example-enterprise.com"
-                        st.session_state.current_site = demo_site
-                        st.session_state.sites = [demo_site, "https://example-shop.com", "https://example-enterprise.com/blog/"]
-                        st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
-                        st.session_state.portfolio_needs_refresh = True
-                        st.rerun()
-                with c_dm2:
-                    if st.button("🚪 Exit Demo", key="btn_exit_demo_expander", use_container_width=True):
-                        st.session_state.authenticated = False
-                        st.session_state.demo_mode = False
-                        st.session_state.sites = []
-                        st.session_state.sites_detailed = []
-                        st.session_state.current_site = None
-                        st.session_state.df = pd.DataFrame()
-                        st.session_state.portfolio_needs_refresh = True
-                        st.rerun()
-
-            st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
-            st.markdown("**🌓 Theme Appearance**")
-            theme_toggle_val = st.toggle(
-                "🌙 Dark Mode",
-                value=is_dark,
-                key="side_theme_toggle_expander",
-                help="Switch between Clean Google Light Mode and Cyber Dark Mode"
-            )
-            if theme_toggle_val != is_dark:
-                st.session_state.theme_mode = 'Dark' if theme_toggle_val else 'Light'
-                st.query_params['theme'] = 'dark' if theme_toggle_val else 'light'
-                st.rerun()
-
-            st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
-            st.markdown(f"**📋 Bulk Sites & Properties ({total_p})**")
+        # 5. Bulk Sites Manager (Collapsible Expander)
+        with st.expander(f"📋 Bulk Sites Manager ({total_p})", expanded=False):
             pasted_text = st.text_area(
                 "Paste domain/URL properties (1 per line):", 
                 value="\n".join(clean_active_sites) if clean_active_sites else "", 
@@ -2768,6 +2657,42 @@ def render_sidebar(cfg=None, auth_url=None, is_dark=False, live_site_users=0, ac
                     st.session_state.current_site = None
                     st.session_state.portfolio_needs_refresh = True
                     st.rerun()
+
+        # 6. Demo Mode Controls (Strictly shown only when demo mode is active)
+        if st.session_state.get('demo_mode'):
+            with st.expander("🧪 Demo Options", expanded=False):
+                c_dm1, c_dm2 = st.columns(2)
+                with c_dm1:
+                    if st.button("🧪 Reset Demo", key="sb_reset_demo_btn", use_container_width=True):
+                        demo_site = "sc-domain:example-enterprise.com"
+                        st.session_state.current_site = demo_site
+                        st.session_state.sites = [demo_site, "https://example-shop.com", "https://example-enterprise.com/blog/"]
+                        st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+                        st.session_state.portfolio_needs_refresh = True
+                        st.rerun()
+                with c_dm2:
+                    if st.button("🚪 Exit Demo", key="sb_exit_demo_btn", use_container_width=True):
+                        st.session_state.authenticated = False
+                        st.session_state.demo_mode = False
+                        st.session_state.sites = []
+                        st.session_state.sites_detailed = []
+                        st.session_state.current_site = None
+                        st.session_state.df = pd.DataFrame()
+                        st.session_state.portfolio_needs_refresh = True
+                        st.rerun()
+
+        # 7. Dark Mode Toggle
+        st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
+        theme_toggle_val = st.toggle(
+            "🌙 Dark Mode",
+            value=is_dark,
+            key="side_theme_toggle_main",
+            help="Switch between Clean Google Light Mode and Cyber Dark Mode"
+        )
+        if theme_toggle_val != is_dark:
+            st.session_state.theme_mode = 'Dark' if theme_toggle_val else 'Light'
+            st.query_params['theme'] = 'dark' if theme_toggle_val else 'light'
+            st.rerun()
 
         # 6. Live Telemetry Status Card (Sidebar Footer)
         if is_dark:
@@ -3170,60 +3095,115 @@ def render_back_to_overview(module_name: str):
 # ----------------------------------------------------
 # GSC Top Navigation Bar Renderer (Theme Aware)
 # ----------------------------------------------------
-def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, active_users: int):
-    brand_logo_title = (
-        '<span style="font-size:17px; font-weight:700; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">Search Console <span style="font-size:10px; font-weight:700; color:#38bdf8; -webkit-text-fill-color:#38bdf8; background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px; border:1px solid rgba(56,189,248,0.3); vertical-align:middle; margin-left:4px;">TECH VIBE</span></span>'
-        if is_dark_mode else
-        '<span style="font-size:18px; font-weight:500; color:#5f6368; letter-spacing:-0.2px;"><b style="color:#202124; font-weight:600;">Google</b> Search Console</span>'
-    )
-    search_icon_color = "#38bdf8" if is_dark_mode else "#5f6368"
-    search_text_color = "#cbd5e1" if is_dark_mode else "#5f6368"
-    kbd_bg = "rgba(255,255,255,0.08)" if is_dark_mode else "#e8eaed"
-    kbd_border = "rgba(255,255,255,0.1)" if is_dark_mode else "#dadce0"
-    kbd_color = "#94a3b8" if is_dark_mode else "#5f6368"
-    avatar_bg = "linear-gradient(135deg, #3b82f6, #8b5cf6)" if is_dark_mode else "#1a73e8"
-    avatar_shadow = "box-shadow:0 0 10px rgba(59,130,246,0.5);" if is_dark_mode else ""
-    icon_color = "#94a3b8" if is_dark_mode else "#5f6368"
+def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, active_users: int, cfg=None, auth_url=None):
+    """
+    Renders the universal Top Navigation & Authentication Bar.
+    Features:
+      - Left: Brand Logo & Title with direct link to Dashboard Hub
+      - Center: Live Website Visitors & Dashboard Viewers Status Pills
+      - Right: Top-Right User Authentication & Profile Popover ('👤 Account')
+      - Sub-bar: Collapsible URL Inspector for the active property
+    """
+    is_authenticated = bool(st.session_state.get('authenticated')) or bool(st.session_state.get('service'))
+    is_demo = bool(st.session_state.get('demo_mode'))
 
-    top_bar_html = (
-        f'<div class="gsc-top-bar" style="padding-left: 55px !important;">'
-        f'<a href="?view=hub" target="_self" style="text-decoration:none; display:flex; align-items:center; gap:10px; cursor:pointer;" title="Return to Dashboard Hub">'
-        f'<svg width="24" height="24" viewBox="0 0 48 48">'
-        f'<path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>'
-        f'<path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>'
-        f'<path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>'
-        f'<path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>'
-        f'</svg>'
-        f'{brand_logo_title}'
-        f'</a>'
-        f'<div class="gsc-search-pill">'
-        f'<span style="color:{search_icon_color}; font-size:14px;">🔍</span>'
-        f'<span style="color:{search_text_color}; font-size:12.5px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">Inspect any URL in "{site_label}"</span>'
-        f'<span style="font-size:10px; font-family:\'JetBrains Mono\', monospace; background:{kbd_bg}; color:{kbd_color}; padding:2px 6px; border-radius:4px; border:1px solid {kbd_border};">⌘K</span>'
-        f'</div>'
-        f'<div style="display:flex; align-items:center; gap:8px;">'
-        f'<div class="gsc-live-badge" title="Real-time active visitors browsing your website right now">'
-        f'<span class="gsc-pulse-dot"></span>'
-        f'<span><b>{live_users}</b> LIVE VISITORS</span>'
-        f'</div>'
-        f'<div class="gsc-dash-badge" title="People currently viewing this dashboard">'
-        f'<span>👥</span>'
-        f'<span><b>{active_users}</b> ACTIVE VIEWERS</span>'
-        f'</div>'
-        f'<div style="display:flex; align-items:center; gap:10px; margin-left:6px;">'
-        f'<span style="color:{icon_color}; font-size:16px; cursor:pointer;" title="Help">❔</span>'
-        f'<span style="color:{icon_color}; font-size:16px; cursor:pointer;" title="Feedback">💬</span>'
-        f'<div style="position:relative; cursor:pointer;">'
-        f'<span style="color:{icon_color}; font-size:16px;">🔔</span>'
-        f'<span style="position:absolute; top:-4px; right:-6px; background:#ef4444; color:white; font-size:9px; font-weight:bold; border-radius:50%; width:14px; height:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 8px #ef4444;">0</span>'
-        f'</div>'
-        f'<div style="width:28px; height:28px; border-radius:50%; background:{avatar_bg}; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; {avatar_shadow}">S</div>'
-        f'</div>'
-        f'</div>'
-        f'</div>'
-    )
-    st.markdown(top_bar_html, unsafe_allow_html=True)
+    # Top row: 3 columns (Branding | Telemetry | Account Popover)
+    c_left, c_mid, c_right = st.columns([4.8, 3.2, 2.0], vertical_alignment="center")
 
+    with c_left:
+        brand_logo_title = (
+            '<span style="font-size:16px; font-weight:700; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">Search Console <span style="font-size:10px; font-weight:700; color:#38bdf8; -webkit-text-fill-color:#38bdf8; background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px; border:1px solid rgba(56,189,248,0.3); vertical-align:middle; margin-left:4px;">TECH VIBE</span></span>'
+            if is_dark_mode else
+            '<span style="font-size:16px; font-weight:500; color:#5f6368; letter-spacing:-0.2px;"><b style="color:#202124; font-weight:600;">Google</b> Search Console</span>'
+        )
+        st.markdown(f"""
+        <div style="display:flex; align-items:center; gap:8px;">
+            <a href="?view=hub" target="_self" style="text-decoration:none; display:flex; align-items:center; gap:8px; cursor:pointer;" title="Return to Dashboard Hub">
+                <svg width="24" height="24" viewBox="0 0 48 48">
+                    <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                    <path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                    <path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                    <path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                </svg>
+                {brand_logo_title}
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c_mid:
+        live_bg = "rgba(16, 185, 129, 0.12)" if is_dark_mode else "#e6f4ea"
+        live_border = "1px solid rgba(16, 185, 129, 0.3)" if is_dark_mode else "1px solid #ceead6"
+        live_col = "#34d399" if is_dark_mode else "#137333"
+        dash_bg = "rgba(56, 189, 248, 0.12)" if is_dark_mode else "#e8f0fe"
+        dash_border = "1px solid rgba(56, 189, 248, 0.3)" if is_dark_mode else "1px solid #d2e3fc"
+        dash_col = "#38bdf8" if is_dark_mode else "#1a73e8"
+
+        st.markdown(f"""
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+            <div style="background:{live_bg}; border:{live_border}; border-radius:14px; padding:4px 10px; font-size:11px; font-weight:700; color:{live_col}; font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:6px;" title="Real-time active website visitors">
+                <span class="gsc-pulse-dot"></span>
+                <span>{live_users} LIVE</span>
+            </div>
+            <div style="background:{dash_bg}; border:{dash_border}; border-radius:14px; padding:4px 10px; font-size:11px; font-weight:700; color:{dash_col}; font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:5px;" title="Active dashboard viewers">
+                <span>👥</span>
+                <span>{active_users} DASH</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c_right:
+        if is_authenticated or is_demo:
+            user_mail = st.session_state.get('user_email') or ('demo.analyst@example.com' if is_demo else 'Connected Account')
+            with st.popover("👤 Account", use_container_width=True):
+                st.markdown(f"""
+                <div style="padding:2px 0 4px 0;">
+                    <div style="font-size:10px; color:{'#94a3b8' if is_dark_mode else '#5f6368'}; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">SIGNED IN AS</div>
+                    <div style="font-size:12px; font-weight:700; color:{'#38bdf8' if is_dark_mode else '#1a73e8'}; word-break:break-all; font-family:'JetBrains Mono',monospace; margin-top:2px;">
+                        {user_mail}
+                    </div>
+                    <div style="font-size:10.5px; color:{'#34d399' if is_dark_mode else '#137333'}; margin-top:2px;">
+                        {'🧪 Demo Mode' if is_demo else '🟢 Google Account Verified'}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.divider()
+
+                if cfg and not is_demo:
+                    try:
+                        default_redirect = resolve_redirect_uri(cfg)
+                        auth_url_switch, _ = get_auth_url(default_redirect, config=cfg, prompt="select_account consent")
+                        st.link_button("🔄 Switch Account", auth_url_switch, use_container_width=True, help="Switch Google Account without clearing browser session")
+                    except Exception:
+                        pass
+                
+                if st.button("🚪 Sign Out", key="top_bar_account_signout_btn", use_container_width=True, type="secondary"):
+                    delete_saved_credentials()
+                    if 'clear_portfolio_cache' in globals():
+                        clear_portfolio_cache()
+                    if 'clear_sites_cache' in globals():
+                        clear_sites_cache()
+                    st.session_state.authenticated = False
+                    st.session_state.demo_mode = False
+                    st.session_state.service = None
+                    st.session_state.service_v1 = None
+                    st.session_state.sites = []
+                    st.session_state.sites_detailed = []
+                    st.session_state.user_creds = None
+                    st.session_state.user_email = None
+                    st.session_state.current_site = None
+                    st.session_state.portfolio_data = None
+                    st.session_state.portfolio_needs_refresh = True
+                    st.session_state.df = pd.DataFrame()
+                    st.rerun()
+        else:
+            if auth_url:
+                st.link_button("Sign In with Google", auth_url, type="primary", use_container_width=True)
+            else:
+                if st.button("Sign In", key="top_bar_signin_btn", type="primary", use_container_width=True):
+                    st.session_state.authenticated = False
+                    st.rerun()
+
+    # URL Inspector collapsible accordion
     with st.expander(f"🔍 URL Inspector — {site_label}", expanded=False):
         c_u1, c_u2 = st.columns([3.8, 1.2])
         with c_u1:
@@ -3268,17 +3248,13 @@ def render_dashboard_hub(effective_site: str, start_str: str, end_str: str, peri
     """
     Renders the modern SaaS Tool Directory Hub / Enterprise Command Center.
     Features:
-      - Top GSC Search Bar and Navigation
       - Active Workspace Hero Banner
-      - KPI Snapshot summary
-      - Real-time Tool Search & Category Filter Toolbar
-      - Responsive 3-Column Tool Cards Grid with direct 'Open Tool →' triggers
+      - KPI Snapshot summary (Clicks, Impressions, CTR, Position)
+      - Quick Search Bar across all 23 tools
+      - 4 Modern Logical Tabs (Performance & Queries, Indexing & Tech SEO, AI & Automation, Monitoring & Reports)
+      - Clean 2-column cards per tab with direct navigation
     """
-    # 1. Top GSC Navigation Bar
-    pill_site_text = f"Consolidated Portfolio ({len(real_active_sites)} properties)" if is_portfolio_mode else (current_site or (real_active_sites[0] if real_active_sites else "No Property Selected"))
-    render_gsc_top_bar(pill_site_text, is_dark, live_site_users, active_dash_users)
-
-    # 2. Hero Section
+    # 1. Hero Section
     theme_title_grad = "linear-gradient(90deg, #38bdf8, #818cf8)" if is_dark else "linear-gradient(90deg, #1a73e8, #4285f4)"
     hero_bg = "rgba(15, 23, 42, 0.65)" if is_dark else "#ffffff"
     hero_border = "1px solid rgba(56, 189, 248, 0.2)" if is_dark else "1px solid #e2e8f0"
@@ -3304,7 +3280,7 @@ def render_dashboard_hub(effective_site: str, start_str: str, end_str: str, peri
     </div>
     """, unsafe_allow_html=True)
 
-    # 3. KPI Snapshot Bar
+    # 2. KPI Snapshot Bar
     if not df.empty and 'clicks' in df.columns and 'impressions' in df.columns:
         tot_clicks = int(df['clicks'].sum())
         tot_imp = int(df['impressions'].sum())
@@ -3374,73 +3350,30 @@ def render_dashboard_hub(effective_site: str, start_str: str, end_str: str, peri
                         except Exception as ex:
                             st.error(f"Error: {ex}")
 
-    # 4. Search & Category Filter Toolbar
-    c_search, c_filter = st.columns([3.2, 2.8])
-    with c_search:
-        search_query = st.text_input(
-            "Filter tools",
-            placeholder="🔍 Search 23 tools (e.g. indexing, crawler, aeo, schema, keywords, sitemaps)...",
-            label_visibility="collapsed",
-            key="hub_search_input"
-        )
-    with c_filter:
-        cat_options = [
-            "All Tools (23)",
-            "📊 Performance & Traffic",
-            "⚙️ Technical SEO & Indexing",
-            "🎯 Keywords, Intent & SERP",
-            "🤖 AI & Automation",
-            "📄 Reporting & Agency"
-        ]
-        active_cat_filter = st.selectbox(
-            "Category Filter",
-            cat_options,
-            index=0,
-            label_visibility="collapsed",
-            key="hub_cat_filter_select"
-        )
+    # 3. Quick Tool Search
+    search_query = st.text_input(
+        "Search tools",
+        placeholder="🔍 Quick search across all 23 tools (e.g. indexing, keywords, schema, crawler, aeo)...",
+        label_visibility="collapsed",
+        key="hub_search_input"
+    )
 
-    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+    badge_colors = {
+        "📊 Performance & Traffic": ("#38bdf8", "rgba(56, 189, 248, 0.15)"),
+        "⚙️ Technical SEO & Indexing": ("#f59e0b", "rgba(245, 158, 11, 0.15)"),
+        "🎯 Keywords, Intent & SERP": ("#10b981", "rgba(16, 185, 129, 0.15)"),
+        "🤖 AI & Automation": ("#a855f7", "rgba(168, 85, 247, 0.15)"),
+        "📄 Reporting & Agency": ("#ec4899", "rgba(236, 72, 153, 0.15)"),
+    }
 
-    # 5. Filter Tools Catalog
-    filtered_tools = []
-    q = (search_query or "").strip().lower()
-    for t in TOOLS_CATALOG:
-        if active_cat_filter != "All Tools (23)" and t["category"] != active_cat_filter:
-            continue
-        if q:
-            match = (
-                q in t["name"].lower() or 
-                q in t["desc"].lower() or 
-                q in t["category"].lower() or 
-                q in t["id"].lower() or
-                q in t["badge"].lower()
-            )
-            if not match:
-                continue
-        filtered_tools.append(t)
-
-    # 6. Render Responsive 3-Column Card Grid
-    if not filtered_tools:
-        st.info(f"No tools found matching '{search_query}'. Try another keyword or reset the category filter.")
-    else:
-        st.markdown(f"<div style='font-size:12px; font-weight:700; color:{'#94a3b8' if is_dark else '#5f6368'}; margin-bottom:12px; text-transform:uppercase;'>Showing {len(filtered_tools)} of 23 Enterprise Tools:</div>", unsafe_allow_html=True)
-        
-        badge_colors = {
-            "📊 Performance & Traffic": ("#38bdf8", "rgba(56, 189, 248, 0.15)"),
-            "⚙️ Technical SEO & Indexing": ("#f59e0b", "rgba(245, 158, 11, 0.15)"),
-            "🎯 Keywords, Intent & SERP": ("#10b981", "rgba(16, 185, 129, 0.15)"),
-            "🤖 AI & Automation": ("#a855f7", "rgba(168, 85, 247, 0.15)"),
-            "📄 Reporting & Agency": ("#ec4899", "rgba(236, 72, 153, 0.15)"),
-        }
-
-        num_cols = 3
-        for i in range(0, len(filtered_tools), num_cols):
-            chunk = filtered_tools[i:i+num_cols]
+    def render_tool_card_grid(tools_list, key_suffix=""):
+        num_cols = 2
+        for i in range(0, len(tools_list), num_cols):
+            chunk = tools_list[i:i+num_cols]
             row_cols = st.columns(num_cols)
             for col_idx, tool in enumerate(chunk):
                 with row_cols[col_idx]:
-                    b_color, b_bg = badge_colors.get(tool["category"], ("#38bdf8", "rgba(56, 189, 248, 0.15)"))
+                    b_color, b_bg = badge_colors.get(tool.get("category", ""), ("#38bdf8", "rgba(56, 189, 248, 0.15)"))
                     card_bg = "rgba(30, 41, 59, 0.65)" if is_dark else "#ffffff"
                     card_border = "1px solid rgba(56, 189, 248, 0.22)" if is_dark else "1px solid #e2e8f0"
                     card_shadow = "0 4px 16px rgba(0, 0, 0, 0.2)" if is_dark else "0 2px 10px rgba(0, 0, 0, 0.04)"
@@ -3448,28 +3381,90 @@ def render_dashboard_hub(effective_site: str, start_str: str, end_str: str, peri
                     desc_col = "#94a3b8" if is_dark else "#64748b"
 
                     st.markdown(f"""
-                    <div style="background:{card_bg}; border:{card_border}; border-radius:14px; padding:18px 18px 14px 18px; box-shadow:{card_shadow}; margin-bottom:14px; min-height:165px; display:flex; flex-direction:column; justify-content:space-between;">
+                    <div style="background:{card_bg}; border:{card_border}; border-radius:12px; padding:16px 18px 12px 18px; box-shadow:{card_shadow}; margin-bottom:12px; min-height:140px; display:flex; flex-direction:column; justify-content:space-between;">
                         <div>
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                 <span style="font-size:10px; font-weight:800; color:{b_color}; background:{b_bg}; border:1px solid {b_color}40; padding:2px 7px; border-radius:6px; font-family:'JetBrains Mono',monospace; text-transform:uppercase;">
-                                    {tool['badge']}
+                                    {tool.get('badge', 'Tool')}
                                 </span>
                             </div>
-                            <div style="font-size:15px; font-weight:700; color:{title_col}; margin-bottom:6px; line-height:1.3;">
+                            <div style="font-size:15px; font-weight:700; color:{title_col}; margin-bottom:4px; line-height:1.3;">
                                 {tool['name']}
                             </div>
-                            <div style="font-size:12px; color:{desc_col}; line-height:1.45; min-height:36px;">
+                            <div style="font-size:12px; color:{desc_col}; line-height:1.45; min-height:34px;">
                                 {tool['desc']}
                             </div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    if st.button("Open Tool →", key=f"btn_hub_open_{tool['id']}", use_container_width=True, type="secondary"):
-                        st.session_state.selected_page = tool['name']
+                    btn_k = f"btn_hub_tab_{key_suffix}_{tool['id']}"
+                    if st.button("Open Tool →", key=btn_k, use_container_width=True, type="secondary"):
+                        target_page = VIEW_SLUG_TO_PAGE.get(tool['id'], tool['name'])
+                        st.session_state.selected_page = target_page
                         st.session_state.current_active_view = tool['id']
                         st.query_params['view'] = tool['id']
                         st.rerun()
+
+    q = (search_query or "").strip().lower()
+    if q:
+        # Render direct search results across all 23 tools
+        matched = []
+        for t in TOOLS_CATALOG:
+            m = (
+                q in t["name"].lower() or 
+                q in t["desc"].lower() or 
+                q in t["category"].lower() or 
+                q in t["id"].lower() or 
+                q in t["badge"].lower()
+            )
+            if m:
+                matched.append(t)
+
+        st.markdown(f"<div style='font-size:12px; font-weight:700; color:{'#94a3b8' if is_dark else '#5f6368'}; margin:10px 0 12px 0; text-transform:uppercase;'>Search Results ({len(matched)} matching tools):</div>", unsafe_allow_html=True)
+        if matched:
+            render_tool_card_grid(matched, key_suffix="search")
+        else:
+            st.info(f"No tools found matching '{search_query}'. Clear your search query to browse by categories.")
+    else:
+        # 4. Modern Logical Tabs (4 Categories)
+        tab_perf, tab_tech, tab_ai, tab_rep = st.tabs([
+            "📊 Performance & Queries",
+            "🛠️ Indexing & Tech SEO",
+            "🤖 AI & Automation",
+            "⚙️ Monitoring & Reports"
+        ])
+
+        # Category mapping for tools
+        perf_ids = ["overview", "keywords", "quick_wins", "cannibalization", "keyword_clusters", "intent_regex", "ctr_curve"]
+        tech_ids = ["url_inspection", "indexing_api", "pages", "sitemaps", "crawler", "log_reconciliation"]
+        ai_ids = ["ai_studio", "wp_sync", "alerts_bot", "ai_aeo", "algo_updates"]
+        rep_ids = ["realtime", "properties", "client_portal", "reports", "settings"]
+
+        tools_by_id = {t["id"]: t for t in TOOLS_CATALOG}
+
+        with tab_perf:
+            tools_perf = [tools_by_id[tid] for tid in perf_ids if tid in tools_by_id]
+            render_tool_card_grid(tools_perf, key_suffix="perf")
+
+        with tab_tech:
+            tools_tech = [tools_by_id[tid] for tid in tech_ids if tid in tools_by_id]
+            render_tool_card_grid(tools_tech, key_suffix="tech")
+
+        with tab_ai:
+            tools_ai = [tools_by_id[tid] for tid in ai_ids if tid in tools_by_id]
+            render_tool_card_grid(tools_ai, key_suffix="ai")
+
+        with tab_rep:
+            tools_rep = [tools_by_id[tid] for tid in rep_ids if tid in tools_by_id]
+            render_tool_card_grid(tools_rep, key_suffix="rep")
+
+
+# ----------------------------------------------------
+# Universal GSC Top Navigation Header & Auth Popover
+# ----------------------------------------------------
+pill_site_text = f"Consolidated Portfolio ({len(real_active_sites)} properties)" if is_portfolio_mode else (current_site or (real_active_sites[0] if real_active_sites else "No Property Selected"))
+render_gsc_top_bar(pill_site_text, is_dark, live_site_users, active_dash_users, cfg=cfg, auth_url=auth_url)
 
 # ----------------------------------------------------
 # 0. Modern Dashboard Hub / Command Center
@@ -3489,10 +3484,6 @@ if page in ["📊 Dashboard Hub", "🏠 Dashboard Hub", "hub"]:
 # 1. Performance Overview
 # ----------------------------------------------------
 elif page in ["📈 Performance", "📊 Overview"]:
-    # 1. GSC Top Navigation Header
-    pill_site_text = f"Consolidated Portfolio ({len(real_active_sites)} verified properties)" if is_portfolio_mode else (current_site or (real_active_sites[0] if real_active_sites else "No Property Selected"))
-    render_gsc_top_bar(pill_site_text, is_dark, live_site_users, active_dash_users)
-
     # Return to Dashboard Hub button
     col_hub_back, _ = st.columns([2.5, 7.5])
     with col_hub_back:
@@ -4561,9 +4552,6 @@ elif page in ["📈 Performance", "📊 Overview"]:
 # 1.1 Real-Time Active Users & Live Site Traffic
 # ----------------------------------------------------
 elif page in ["🟢 Real-Time Active Users", "🟢 Real-Time Visitors"]:
-    # 1. GSC Top Bar
-    rt_site_label = current_site or (real_active_sites[0] if real_active_sites else 'selected property')
-    render_gsc_top_bar(rt_site_label, is_dark, live_site_users, active_dash_users)
     render_back_to_overview("realtime_users")
 
     # 2. Header & Live Controls
