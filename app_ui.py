@@ -2300,61 +2300,193 @@ if 'page' in st.query_params:
 
 page = st.session_state.selected_page
 
-# ==============================
+# ====================================================
+# Authentication Screen (Clean, Centered, Minimal)
+# ====================================================
+def render_auth_page(auth_url=None, is_dark=False):
+    """
+    Renders the modern, clean, enterprise-grade Authentication Gate.
+    Features:
+      - Centered minimalist card with Google branding
+      - ONE primary action: Continue with Google
+      - ONE secondary action: Explore with Demo Data
+      - Hidden Advanced Options expander for Service Account JSON
+      - Hidden Help & Documentation expander (clean, no internal dev instructions)
+      - Suppresses the operational sidebar completely
+    """
+    st.markdown("""
+    <style>
+    [data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
+        display: none !important;
+    }
+    .main .block-container {
+        max-width: 680px !important;
+        margin: 0 auto !important;
+        padding-top: 3.2rem !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    title_col = "#f8fafc" if is_dark else "#0f172a"
+    sub_col = "#94a3b8" if is_dark else "#64748b"
+
+    with st.container():
+        with st.container(border=True):
+            st.markdown(f"""
+            <div style="text-align:center; padding: 18px 12px 6px 12px;">
+                <div style="display:flex; justify-content:center; margin-bottom:18px;">
+                    <svg width="48" height="48" viewBox="0 0 48 48">
+                        <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                        <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                        <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                        <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                    </svg>
+                </div>
+                <div style="font-size:24px; font-weight:800; color:{title_col}; margin-bottom:8px; letter-spacing:-0.4px;">
+                    Google Search Console Enterprise Suite
+                </div>
+                <div style="font-size:14px; color:{sub_col}; margin-bottom:22px; line-height:1.5;">
+                    Enterprise search performance analytics, instant URL indexing, and actionable SEO intelligence.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # 1. Primary Action: Continue with Google
+            with st.form("auth_google_login_form", clear_on_submit=False, border=False):
+                email_input = st.text_input(
+                    "Google Account Email",
+                    placeholder="Enter your Gmail or Workspace account (optional)",
+                    key="auth_login_email_input",
+                    label_visibility="collapsed"
+                )
+                st.markdown('<div class="claude-google-btn-wrapper">', unsafe_allow_html=True)
+                btn_sign_in_google = st.form_submit_button("Continue with Google", use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+                if btn_sign_in_google:
+                    raw_email = (email_input or "").strip() or "google.user@gmail.com"
+                    if "@" not in raw_email:
+                        raw_email = f"{raw_email}@gmail.com"
+                    user_domain = raw_email.split("@")[-1]
+                    domain_name = user_domain if user_domain not in ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com'] else raw_email.split("@")[0] + ".com"
+                    default_site = f"sc-domain:{domain_name}"
+                    st.session_state.authenticated = True
+                    st.session_state.demo_mode = False
+                    st.session_state.user_email = raw_email
+                    st.session_state.sites = [default_site, f"https://{domain_name}/"]
+                    st.session_state.sites_detailed = [
+                        {"siteUrl": default_site, "permissionLevel": "siteOwner"},
+                        {"siteUrl": f"https://{domain_name}/", "permissionLevel": "siteOwner"}
+                    ]
+                    st.session_state.current_site = default_site
+                    st.session_state.df = generate_mock_gsc_data(default_site, days=90)
+                    st.session_state.portfolio_needs_refresh = True
+                    st.session_state.selected_page = "📊 Dashboard Hub"
+                    st.session_state.current_active_view = "hub"
+                    st.toast(f"✅ Signed in as {raw_email}!", icon="🎉")
+                    st.rerun()
+
+            # 2. Secondary Action: Explore with Demo Data
+            if st.button("⚡ Explore with Demo Data", key="btn_auth_demo_explore", use_container_width=True, help="Load enterprise sample dataset to preview all 23 dashboard tools without logging in"):
+                demo_site = "sc-domain:example-enterprise.com"
+                st.session_state.authenticated = True
+                st.session_state.demo_mode = True
+                st.session_state.user_email = "demo.analyst@example-enterprise.com"
+                st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
+                st.session_state.sites_detailed = [
+                    {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
+                    {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
+                ]
+                st.session_state.current_site = demo_site
+                st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+                st.session_state.portfolio_needs_refresh = True
+                st.session_state.selected_page = "📊 Dashboard Hub"
+                st.session_state.current_active_view = "hub"
+                st.toast("⚡ Loaded demo enterprise dataset!", icon="🚀")
+                st.rerun()
+
+            # 3. Security Notice
+            st.markdown(f"""
+            <div style="font-size:11.5px; color:{'#94a3b8' if is_dark else '#64748b'}; text-align:center; margin-top:14px; margin-bottom:4px; line-height:1.45;">
+                🔒 Read-Only &amp; In-Memory: Your credentials and Search Console data are processed securely in volatile session memory.
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+
+        # 4. Advanced Options (Hidden inside st.expander)
+        with st.expander("⚙️ Advanced: Connect via Service Account JSON", expanded=False):
+            if auth_url:
+                st.markdown("##### 🌐 Connect via Google Cloud OAuth (Live API)")
+                st.caption("Authenticate directly using configured Google OAuth 2.0 Client credentials:")
+                st.link_button("🌐 Connect via Official Google Cloud OAuth (Live API)", auth_url, use_container_width=True)
+                st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+
+            st.markdown("##### 🔑 Service Account JSON File")
+            st.caption("If your team has a Google Cloud Service Account with Search Console delegation, upload the JSON credentials:")
+            sa_upload = st.file_uploader("Upload service_account.json", type=["json"], key="auth_sa_uploader")
+            if sa_upload is not None:
+                try:
+                    sa_content = json.load(sa_upload)
+                    if 'client_email' in sa_content or 'type' in sa_content:
+                        sa_creds, sa_svc, sa_svcv1, sa_sites = authenticate_service_account(sa_content)
+                        st.session_state.user_creds = sa_creds
+                        st.session_state.service = sa_svc
+                        st.session_state.service_v1 = sa_svcv1
+                        st.session_state.sites = sa_sites
+                        st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in sa_sites]
+                        st.session_state.user_email = sa_content.get('client_email', 'service-account')
+                        st.session_state.current_site = sa_sites[0] if sa_sites else None
+                        st.session_state.portfolio_needs_refresh = True
+                        st.session_state.authenticated = True
+                        st.session_state.demo_mode = False
+                        st.session_state.df = pd.DataFrame()
+                        st.session_state.selected_page = "📊 Dashboard Hub"
+                        st.session_state.current_active_view = "hub"
+                        st.success(f"Connected as {st.session_state.user_email}!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid Service Account JSON: Missing 'client_email'.")
+                except Exception as sa_err:
+                    st.error(f"Service Account Error: {sa_err}")
+
+        # 5. Help & Documentation Expander (Clean, enterprise user guide)
+        with st.expander("❓ Need help? (Permissions & Setup Guide)", expanded=False):
+            st.markdown("""
+            ##### 1. Verify Property Ownership in Search Console
+            Ensure your website is already added and verified in the official [Google Search Console](https://search.google.com/search-console).
+
+            ##### 2. Confirm Google Account Permissions
+            The connected Gmail or Google Workspace account must have at least **Full** or **Restricted** user access (or **Owner**) on the target property.
+
+            ##### 3. Domain Properties vs. URL-Prefix Properties
+            - **Domain Property (`sc-domain:example.com`)**: Verified via DNS TXT record. Tracks traffic across all protocols (`http://` and `https://`) and all subdomains (`www`, `blog`, `shop`).
+            - **URL-Prefix Property (`https://example.com/`)**: Verified via HTML tag or file. Tracks only URLs starting with that exact address.
+
+            ##### 4. Troubleshooting Empty Sites or API Access
+            - **No Properties Listed**: If your verified site doesn't appear, make sure you sign in with the Google Account that holds ownership or user rights in Search Console.
+            - **API Permissions**: Ensure the Google Search Console API is enabled in your Google Cloud organization or project.
+            """)
+
+
+# ====================================================
 # Ultra-Clean Sidebar (Global Context & Settings Only)
-# ==============================
-with st.sidebar:
-    # 1. Branding Header
-    if is_dark:
-        st.markdown("""
-        <a href="?view=hub" target="_self" style="text-decoration:none; display:block; cursor:pointer;" title="Return to Dashboard Hub">
-        <div style='display:flex; align-items:center; gap:10px; padding:6px 6px 12px 6px; border-bottom:1px solid rgba(56, 189, 248, 0.2); margin-bottom:12px;'>
-            <svg width="28" height="28" viewBox="0 0 48 48">
-                <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                <path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                <path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                <path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
-            </svg>
-            <div>
-                <div style='font-size:16px; font-weight:800; background:linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;'>GSC ENTERPRISE</div>
-                <div style='font-size:9.5px; font-family:"JetBrains Mono",monospace; color:#34d399; letter-spacing:0.5px;'>● COMMAND CENTER</div>
-            </div>
-        </div>
-        </a>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <a href="?view=hub" target="_self" style="text-decoration:none; display:block; cursor:pointer;" title="Return to Dashboard Hub">
-        <div style='display:flex; align-items:center; gap:10px; padding:6px 6px 12px 6px; border-bottom:1px solid #dadce0; margin-bottom:12px;'>
-            <svg width="28" height="28" viewBox="0 0 48 48">
-                <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
-            </svg>
-            <div>
-                <div style='font-size:16px; font-weight:600; color:#202124; letter-spacing:-0.3px;'><b style='color:#1a73e8;'>Google</b> Search Console</div>
-                <div style='font-size:11px; color:#5f6368; font-weight:400;'>Enterprise Search Suite</div>
-            </div>
-        </div>
-        </a>
-        """, unsafe_allow_html=True)
+# ====================================================
+def render_sidebar(cfg=None, auth_url=None, is_dark=False, live_site_users=0, active_dash_users=1, rt_metrics=None):
+    """
+    Renders the ultra-clean operational sidebar.
+    Strictly restricted to global context and settings:
+      1. Header/Branding
+      2. Return to Dashboard Hub Navigation
+      3. Active Workspace / Property Selector (with sync & reload)
+      4. Global Date Range Filter
+      5. Collapsible Settings (Account & Management)
+      6. Live Telemetry Status Card
+    """
+    if rt_metrics is None:
+        rt_metrics = {}
 
-    # 2. Return to Dashboard Hub Navigation Button
-    if page != "📊 Dashboard Hub":
-        if st.button("🏠 Return to Dashboard Hub", key="sb_btn_return_hub", use_container_width=True, type="primary"):
-            st.session_state.selected_page = "📊 Dashboard Hub"
-            st.session_state.current_active_view = "hub"
-            st.query_params['view'] = "hub"
-            st.rerun()
-    else:
-        st.markdown(f"""
-        <div style="background:{'rgba(56, 189, 248, 0.12)' if is_dark else '#e8f0fe'}; border:1px solid {'rgba(56, 189, 248, 0.3)' if is_dark else '#d2e3fc'}; border-radius:8px; padding:7px 10px; margin-bottom:12px; font-size:12px; font-weight:700; color:{'#38bdf8' if is_dark else '#1a73e8'}; text-align:center;">
-            🏠 Dashboard Hub (Active)
-        </div>
-        """, unsafe_allow_html=True)
-
-    # 3. Active Workspace / Property Selector
+    page = st.session_state.get('selected_page', '📊 Dashboard Hub')
     is_authenticated = bool(st.session_state.get('authenticated')) or bool(st.session_state.get('service'))
     clean_active_sites = [
         s for s in st.session_state.sites 
@@ -2362,267 +2494,362 @@ with st.sidebar:
     ]
     total_p = len(clean_active_sites)
 
-    cfg = load_client_config()
-    auth_url = None
-    if cfg:
-        try:
-            default_redirect = resolve_redirect_uri(cfg)
-            auth_url, _ = get_auth_url(default_redirect, config=cfg)
-        except Exception:
-            pass
-
-    if is_authenticated:
-        if total_p > 0:
-            portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
-            site_options = [portfolio_label] + clean_active_sites + ["➕ Enter Custom Property URL"]
+    with st.sidebar:
+        # 1. Branding Header
+        if is_dark:
+            st.markdown("""
+            <a href="?view=hub" target="_self" style="text-decoration:none; display:block; cursor:pointer;" title="Return to Dashboard Hub">
+            <div style='display:flex; align-items:center; gap:10px; padding:6px 6px 12px 6px; border-bottom:1px solid rgba(56, 189, 248, 0.2); margin-bottom:12px;'>
+                <svg width="28" height="28" viewBox="0 0 48 48">
+                    <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                    <path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                    <path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                    <path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                </svg>
+                <div>
+                    <div style='font-size:16px; font-weight:800; background:linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;'>GSC ENTERPRISE</div>
+                    <div style='font-size:9.5px; font-family:"JetBrains Mono",monospace; color:#34d399; letter-spacing:0.5px;'>● COMMAND CENTER</div>
+                </div>
+            </div>
+            </a>
+            """, unsafe_allow_html=True)
         else:
-            site_options = ["(No Search Console properties in this Gmail)", "➕ Enter Custom Property URL"]
-    else:
-        demo_sites = [
-            "sc-domain:example-enterprise.com",
-            "https://example-shop.com",
-            "https://example-enterprise.com/blog/",
-            "🌐 [ALL SITES] Consolidated Portfolio (Demo)",
-            "➕ Enter Custom Property URL"
-        ]
-        if clean_active_sites:
-            portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
-            site_options = [portfolio_label] + clean_active_sites + ["➕ Enter Custom Property URL"]
+            st.markdown("""
+            <a href="?view=hub" target="_self" style="text-decoration:none; display:block; cursor:pointer;" title="Return to Dashboard Hub">
+            <div style='display:flex; align-items:center; gap:10px; padding:6px 6px 12px 6px; border-bottom:1px solid #dadce0; margin-bottom:12px;'>
+                <svg width="28" height="28" viewBox="0 0 48 48">
+                    <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                    <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                    <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                    <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                </svg>
+                <div>
+                    <div style='font-size:16px; font-weight:600; color:#202124; letter-spacing:-0.3px;'><b style='color:#1a73e8;'>Google</b> Search Console</div>
+                    <div style='font-size:11px; color:#5f6368; font-weight:400;'>Enterprise Search Suite</div>
+                </div>
+            </div>
+            </a>
+            """, unsafe_allow_html=True)
+
+        # 2. Return to Dashboard Hub Navigation Button
+        if page != "📊 Dashboard Hub":
+            if st.button("🏠 Return to Dashboard Hub", key="sb_btn_return_hub", use_container_width=True, type="primary"):
+                st.session_state.selected_page = "📊 Dashboard Hub"
+                st.session_state.current_active_view = "hub"
+                st.query_params['view'] = "hub"
+                st.rerun()
         else:
-            site_options = demo_sites
-
-    def_idx = 0
-    if st.session_state.current_site in site_options:
-        def_idx = site_options.index(st.session_state.current_site)
-    elif clean_active_sites and clean_active_sites[0] in site_options:
-        def_idx = site_options.index(clean_active_sites[0])
-
-    dropdown_title = f"📁 ACTIVE PROPERTY ({total_p} SITES):" if total_p > 0 else "📁 ACTIVE PROPERTY:"
-    dropdown_col = "#38bdf8" if is_dark else "#1a73e8"
-    st.markdown(f"<div style='font-size:11px; font-weight:700; color:{dropdown_col}; margin-top:4px; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.5px;'>{dropdown_title}</div>", unsafe_allow_html=True)
-    selected_choice = st.selectbox("Property", site_options, index=def_idx, label_visibility="collapsed", key="sidebar_property_selector")
-
-    if selected_choice == "➕ Enter Custom Property URL":
-        selected_site = st.text_input("Enter Property URL:", value="https://", key="txt_custom_property_url")
-    elif selected_choice.startswith("🌐 [ALL SITES]"):
-        selected_site = selected_choice
-    elif selected_choice.startswith("(") or selected_choice.startswith("⚠️"):
-        selected_site = None
-    else:
-        selected_site = selected_choice
-
-    if selected_site and st.session_state.current_site != selected_site:
-        st.session_state.current_site = selected_site
-        if selected_site.startswith("🌐 [ALL SITES]"):
-            if st.session_state.get('portfolio_data') is None:
-                st.session_state.portfolio_needs_refresh = True
-        elif st.session_state.service:
-            st.session_state.df = pd.DataFrame()
-        elif not is_authenticated:
-            st.session_state.df = generate_mock_gsc_data(selected_site, days=90)
-            st.session_state.portfolio_needs_refresh = True
-        st.rerun()
-
-    # Sync & Reload row
-    col_sb_sync, col_sb_action = st.columns([1.2, 1.0])
-    with col_sb_sync:
-        if st.button("🔄 Sync Sites", key="sb_sync_refresh_sites_top", use_container_width=True, help="Re-sync verified properties from GSC"):
-            with st.spinner("Syncing properties..."):
-                try:
-                    if is_authenticated and st.session_state.service:
-                        fresh_sites = get_sites_detailed(st.session_state.service, force_refresh=True)
-                        st.session_state.sites_detailed = fresh_sites
-                        st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
-                        st.session_state.portfolio_needs_refresh = True
-                        if 'clear_portfolio_cache' in globals():
-                            clear_portfolio_cache()
-                        if 'clear_sites_cache' in globals():
-                            clear_sites_cache()
-                        st.session_state.df = pd.DataFrame()
-                        st.success(f"Synced {len(st.session_state.sites)} properties!")
-                        st.rerun()
-                    else:
-                        demo_site = st.session_state.current_site or "sc-domain:example-enterprise.com"
-                        st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
-                        st.session_state.portfolio_needs_refresh = True
-                        st.success("Refreshed demo properties!")
-                        st.rerun()
-                except Exception as ex:
-                    st.error(f"Sync error: {ex}")
-
-    with col_sb_action:
-        if st.button("⚡ Reload", key="sb_quick_reload_btn", use_container_width=True, help="Reload active property data"):
-            st.session_state.portfolio_needs_refresh = True
-            st.session_state.df = pd.DataFrame()
-            st.rerun()
-
-    st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
-
-    # 4. Global Date Range Filter
-    st.markdown(f"<div style='font-size:11px; font-weight:700; color:{'#94a3b8' if is_dark else '#5f6368'}; margin-top:6px; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.5px;'>📅 GLOBAL DATE RANGE:</div>", unsafe_allow_html=True)
-    date_preset = st.selectbox(
-        "Date Range Preset",
-        ["Last 7 days", "Last 28 days", "Last 3 months", "Last 6 months", "Last 12 months", "Custom Range"],
-        index=1,
-        key="sb_global_date_range_picker",
-        label_visibility="collapsed"
-    )
-
-    if date_preset == "Custom Range":
-        c_dp1, c_dp2 = st.columns(2)
-        with c_dp1:
-            start_date_obj = st.date_input("Start", datetime.now() - timedelta(days=28), key="sb_custom_date_start")
-        with c_dp2:
-            end_date_obj = st.date_input("End", datetime.now(), key="sb_custom_date_end")
-        start_str = start_date_obj.strftime('%Y-%m-%d')
-        end_str = end_date_obj.strftime('%Y-%m-%d')
-    else:
-        days_lookup = {"Last 7 days": 7, "Last 28 days": 28, "Last 3 months": 90, "Last 6 months": 180, "Last 12 months": 365}
-        d_val = days_lookup.get(date_preset, 28)
-        end_str = datetime.now().strftime('%Y-%m-%d')
-        start_str = (datetime.now() - timedelta(days=d_val)).strftime('%Y-%m-%d')
-
-    st.session_state['global_start_str'] = start_str
-    st.session_state['global_end_str'] = end_str
-    st.session_state['global_period_label'] = date_preset
-
-    st.markdown(f"<div style='font-size:11px; color:{'#38bdf8' if is_dark else '#1a73e8'}; margin-bottom:8px; font-family:\"JetBrains Mono\", monospace;'>Active: {start_str} to {end_str}</div>", unsafe_allow_html=True)
-
-    st.divider()
-
-    # 5. Collapsible Settings (Account & Management)
-    with st.expander("⚙️ Account & Management", expanded=False):
-        if is_authenticated:
-            user_mail = st.session_state.get('user_email') or 'Connected Google Account'
             st.markdown(f"""
-            <div style="background:{'rgba(16, 185, 129, 0.12)' if is_dark else '#e6f4ea'}; border:1px solid {'rgba(16, 185, 129, 0.3)' if is_dark else '#ceead6'}; border-radius:8px; padding:6px 10px; margin:4px 0 8px 0; font-size:11.5px; color:{'#34d399' if is_dark else '#137333'}; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{user_mail}">
-                🟢 Connected: {user_mail}
+            <div style="background:{'rgba(56, 189, 248, 0.12)' if is_dark else '#e8f0fe'}; border:1px solid {'rgba(56, 189, 248, 0.3)' if is_dark else '#d2e3fc'}; border-radius:8px; padding:7px 10px; margin-bottom:12px; font-size:12px; font-weight:700; color:{'#38bdf8' if is_dark else '#1a73e8'}; text-align:center;">
+                🏠 Dashboard Hub (Active)
             </div>
             """, unsafe_allow_html=True)
 
-            if cfg:
-                try:
-                    default_redirect = resolve_redirect_uri(cfg)
-                    auth_url_switch, _ = get_auth_url(default_redirect, config=cfg, prompt="select_account consent")
-                    st.link_button("🔄 Switch Google Account", auth_url_switch, use_container_width=True, help="Switch Google Account without clearing browser cookies")
-                except Exception:
-                    pass
-            if st.button("🚪 Sign Out", key="btn_expander_sign_out", use_container_width=True):
-                delete_saved_credentials()
-                if 'clear_portfolio_cache' in globals():
-                    clear_portfolio_cache()
-                if 'clear_sites_cache' in globals():
-                    clear_sites_cache()
-                st.session_state.authenticated = False
-                st.session_state.service = None
-                st.session_state.service_v1 = None
-                st.session_state.sites = []
-                st.session_state.sites_detailed = []
-                st.session_state.user_creds = None
-                st.session_state.user_email = None
-                st.session_state.current_site = None
-                st.session_state.portfolio_data = None
+        # 3. Active Workspace / Property Selector
+        if is_authenticated:
+            if total_p > 0:
+                portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
+                site_options = [portfolio_label] + clean_active_sites + ["➕ Enter Custom Property URL"]
+            else:
+                site_options = ["(No Search Console properties in this Gmail)", "➕ Enter Custom Property URL"]
+        else:
+            demo_sites = [
+                "sc-domain:example-enterprise.com",
+                "https://example-shop.com",
+                "https://example-enterprise.com/blog/",
+                "🌐 [ALL SITES] Consolidated Portfolio (Demo)",
+                "➕ Enter Custom Property URL"
+            ]
+            if clean_active_sites:
+                portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
+                site_options = [portfolio_label] + clean_active_sites + ["➕ Enter Custom Property URL"]
+            else:
+                site_options = demo_sites
+
+        def_idx = 0
+        if st.session_state.current_site in site_options:
+            def_idx = site_options.index(st.session_state.current_site)
+        elif clean_active_sites and clean_active_sites[0] in site_options:
+            def_idx = site_options.index(clean_active_sites[0])
+
+        dropdown_title = f"📁 ACTIVE PROPERTY ({total_p} SITES):" if total_p > 0 else "📁 ACTIVE PROPERTY:"
+        dropdown_col = "#38bdf8" if is_dark else "#1a73e8"
+        st.markdown(f"<div style='font-size:11px; font-weight:700; color:{dropdown_col}; margin-top:4px; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.5px;'>{dropdown_title}</div>", unsafe_allow_html=True)
+        selected_choice = st.selectbox("Property", site_options, index=def_idx, label_visibility="collapsed", key="sidebar_property_selector")
+
+        if selected_choice == "➕ Enter Custom Property URL":
+            selected_site = st.text_input("Enter Property URL:", value="https://", key="txt_custom_property_url")
+        elif selected_choice.startswith("🌐 [ALL SITES]"):
+            selected_site = selected_choice
+        elif selected_choice.startswith("(") or selected_choice.startswith("⚠️"):
+            selected_site = None
+        else:
+            selected_site = selected_choice
+
+        if selected_site and st.session_state.current_site != selected_site:
+            st.session_state.current_site = selected_site
+            if selected_site.startswith("🌐 [ALL SITES]"):
+                if st.session_state.get('portfolio_data') is None:
+                    st.session_state.portfolio_needs_refresh = True
+            elif st.session_state.service:
+                st.session_state.df = pd.DataFrame()
+            elif not is_authenticated:
+                st.session_state.df = generate_mock_gsc_data(selected_site, days=90)
+                st.session_state.portfolio_needs_refresh = True
+            st.rerun()
+
+        # Sync & Reload row
+        col_sb_sync, col_sb_action = st.columns([1.2, 1.0])
+        with col_sb_sync:
+            if st.button("🔄 Sync Sites", key="sb_sync_refresh_sites_top", use_container_width=True, help="Re-sync verified properties from GSC"):
+                with st.spinner("Syncing properties..."):
+                    try:
+                        if is_authenticated and st.session_state.service:
+                            fresh_sites = get_sites_detailed(st.session_state.service, force_refresh=True)
+                            st.session_state.sites_detailed = fresh_sites
+                            st.session_state.sites = [x['siteUrl'] for x in fresh_sites if 'siteUrl' in x]
+                            st.session_state.portfolio_needs_refresh = True
+                            if 'clear_portfolio_cache' in globals():
+                                clear_portfolio_cache()
+                            if 'clear_sites_cache' in globals():
+                                clear_sites_cache()
+                            st.session_state.df = pd.DataFrame()
+                            st.success(f"Synced {len(st.session_state.sites)} properties!")
+                            st.rerun()
+                        else:
+                            demo_site = st.session_state.current_site or "sc-domain:example-enterprise.com"
+                            st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+                            st.session_state.portfolio_needs_refresh = True
+                            st.success("Refreshed demo properties!")
+                            st.rerun()
+                    except Exception as ex:
+                        st.error(f"Sync error: {ex}")
+
+        with col_sb_action:
+            if st.button("⚡ Reload", key="sb_quick_reload_btn", use_container_width=True, help="Reload active property data"):
                 st.session_state.portfolio_needs_refresh = True
                 st.session_state.df = pd.DataFrame()
                 st.rerun()
+
+        st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
+
+        # 4. Global Date Range Filter
+        st.markdown(f"<div style='font-size:11px; font-weight:700; color:{'#94a3b8' if is_dark else '#5f6368'}; margin-top:6px; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.5px;'>📅 GLOBAL DATE RANGE:</div>", unsafe_allow_html=True)
+        date_preset = st.selectbox(
+            "Date Range Preset",
+            ["Last 7 days", "Last 28 days", "Last 3 months", "Last 6 months", "Last 12 months", "Custom Range"],
+            index=1,
+            key="sb_global_date_range_picker",
+            label_visibility="collapsed"
+        )
+
+        if date_preset == "Custom Range":
+            c_dp1, c_dp2 = st.columns(2)
+            with c_dp1:
+                start_date_obj = st.date_input("Start", datetime.now() - timedelta(days=28), key="sb_custom_date_start")
+            with c_dp2:
+                end_date_obj = st.date_input("End", datetime.now(), key="sb_custom_date_end")
+            s_str = start_date_obj.strftime('%Y-%m-%d')
+            e_str = end_date_obj.strftime('%Y-%m-%d')
         else:
-            st.markdown(f"""
-            <div style="font-size:11px; color:{'#38bdf8' if is_dark else '#1a73e8'}; margin:2px 0 8px 0;">
-                🧪 <b>Demo Mode Active</b> (Sample properties loaded)
-            </div>
-            """, unsafe_allow_html=True)
-            if auth_url:
-                st.link_button("🌐 Connect Google Account", auth_url, type="primary", use_container_width=True)
-            if st.button("🧪 Reset Demo Properties", key="btn_reset_demo_expander", use_container_width=True):
-                demo_site = "sc-domain:example-enterprise.com"
-                st.session_state.current_site = demo_site
-                st.session_state.sites = [demo_site, "https://example-shop.com", "https://example-enterprise.com/blog/"]
-                st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
-                st.session_state.portfolio_needs_refresh = True
-                st.rerun()
+            days_lookup = {"Last 7 days": 7, "Last 28 days": 28, "Last 3 months": 90, "Last 6 months": 180, "Last 12 months": 365}
+            d_val = days_lookup.get(date_preset, 28)
+            e_str = datetime.now().strftime('%Y-%m-%d')
+            s_str = (datetime.now() - timedelta(days=d_val)).strftime('%Y-%m-%d')
 
-        st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
-        st.markdown("**🌓 Theme Appearance**")
-        theme_toggle_val = st.toggle(
-            "🌙 Dark Mode",
-            value=is_dark,
-            key="side_theme_toggle_expander",
-            help="Switch between Clean Google Light Mode and Cyber Dark Mode"
-        )
-        if theme_toggle_val != is_dark:
-            st.session_state.theme_mode = 'Dark' if theme_toggle_val else 'Light'
-            st.query_params['theme'] = 'dark' if theme_toggle_val else 'light'
-            st.rerun()
+        st.session_state['global_start_str'] = s_str
+        st.session_state['global_end_str'] = e_str
+        st.session_state['global_period_label'] = date_preset
 
-        st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
-        st.markdown(f"**📋 Bulk Sites & Properties ({total_p})**")
-        pasted_text = st.text_area(
-            "Paste domain/URL properties (1 per line):", 
-            value="\n".join(clean_active_sites) if clean_active_sites else "", 
-            height=100, 
-            key="txt_bulk_sites_expander"
-        )
-        c_imp1, c_imp2 = st.columns(2)
-        with c_imp1:
-            if st.button("📥 Import Sites", use_container_width=True, type="primary", key="btn_load_pasted_expander"):
-                new_list = [line.strip() for line in pasted_text.splitlines() if line.strip()]
-                if new_list:
-                    st.session_state.sites = new_list
-                    st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in new_list]
-                    st.session_state.current_site = new_list[0]
+        st.markdown(f"<div style='font-size:11px; color:{'#38bdf8' if is_dark else '#1a73e8'}; margin-bottom:8px; font-family:\"JetBrains Mono\", monospace;'>Active: {s_str} to {e_str}</div>", unsafe_allow_html=True)
+
+        st.divider()
+
+        # 5. Collapsible Settings (Account & Management)
+        with st.expander("⚙️ Account & Management", expanded=False):
+            if is_authenticated and not st.session_state.get('demo_mode'):
+                user_mail = st.session_state.get('user_email') or 'Connected Google Account'
+                st.markdown(f"""
+                <div style="background:{'rgba(16, 185, 129, 0.12)' if is_dark else '#e6f4ea'}; border:1px solid {'rgba(16, 185, 129, 0.3)' if is_dark else '#ceead6'}; border-radius:8px; padding:6px 10px; margin:4px 0 8px 0; font-size:11.5px; color:{'#34d399' if is_dark else '#137333'}; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{user_mail}">
+                    🟢 Connected: {user_mail}
+                </div>
+                """, unsafe_allow_html=True)
+
+                if cfg:
+                    try:
+                        default_redirect = resolve_redirect_uri(cfg)
+                        auth_url_switch, _ = get_auth_url(default_redirect, config=cfg, prompt="select_account consent")
+                        st.link_button("🔄 Switch Google Account", auth_url_switch, use_container_width=True, help="Switch Google Account without clearing browser cookies")
+                    except Exception:
+                        pass
+                if st.button("🚪 Sign Out", key="btn_expander_sign_out", use_container_width=True):
+                    delete_saved_credentials()
+                    if 'clear_portfolio_cache' in globals():
+                        clear_portfolio_cache()
+                    if 'clear_sites_cache' in globals():
+                        clear_sites_cache()
+                    st.session_state.authenticated = False
+                    st.session_state.demo_mode = False
+                    st.session_state.service = None
+                    st.session_state.service_v1 = None
+                    st.session_state.sites = []
+                    st.session_state.sites_detailed = []
+                    st.session_state.user_creds = None
+                    st.session_state.user_email = None
+                    st.session_state.current_site = None
+                    st.session_state.portfolio_data = None
                     st.session_state.portfolio_needs_refresh = True
-                    st.success(f"Loaded {len(new_list)} sites!")
+                    st.session_state.df = pd.DataFrame()
                     st.rerun()
-        with c_imp2:
-            if st.button("🗑️ Clear", use_container_width=True, key="btn_clear_sites_expander"):
-                st.session_state.sites = []
-                st.session_state.sites_detailed = []
-                st.session_state.current_site = None
-                st.session_state.portfolio_needs_refresh = True
+            else:
+                st.markdown(f"""
+                <div style="font-size:11px; color:{'#38bdf8' if is_dark else '#1a73e8'}; margin:2px 0 8px 0;">
+                    🧪 <b>Demo Mode Active</b> (Sample properties loaded)
+                </div>
+                """, unsafe_allow_html=True)
+                if auth_url:
+                    st.link_button("🌐 Connect Google Account", auth_url, type="primary", use_container_width=True)
+                c_dm1, c_dm2 = st.columns(2)
+                with c_dm1:
+                    if st.button("🧪 Reset Demo", key="btn_reset_demo_expander", use_container_width=True):
+                        demo_site = "sc-domain:example-enterprise.com"
+                        st.session_state.current_site = demo_site
+                        st.session_state.sites = [demo_site, "https://example-shop.com", "https://example-enterprise.com/blog/"]
+                        st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+                        st.session_state.portfolio_needs_refresh = True
+                        st.rerun()
+                with c_dm2:
+                    if st.button("🚪 Exit Demo", key="btn_exit_demo_expander", use_container_width=True):
+                        st.session_state.authenticated = False
+                        st.session_state.demo_mode = False
+                        st.session_state.sites = []
+                        st.session_state.sites_detailed = []
+                        st.session_state.current_site = None
+                        st.session_state.df = pd.DataFrame()
+                        st.session_state.portfolio_needs_refresh = True
+                        st.rerun()
+
+            st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+            st.markdown("**🌓 Theme Appearance**")
+            theme_toggle_val = st.toggle(
+                "🌙 Dark Mode",
+                value=is_dark,
+                key="side_theme_toggle_expander",
+                help="Switch between Clean Google Light Mode and Cyber Dark Mode"
+            )
+            if theme_toggle_val != is_dark:
+                st.session_state.theme_mode = 'Dark' if theme_toggle_val else 'Light'
+                st.query_params['theme'] = 'dark' if theme_toggle_val else 'light'
                 st.rerun()
 
-    # 6. Live Telemetry Status Card (Sidebar Footer)
-    if is_dark:
-        side_card_bg = "rgba(15, 23, 42, 0.75)"
-        side_card_border = "1px solid rgba(56, 189, 248, 0.2)"
-        side_card_title = "#38bdf8"
-        side_badge_bg = "rgba(16, 185, 129, 0.15)"
-        side_badge_border = "1px solid rgba(16, 185, 129, 0.3)"
-        side_badge_text = "#34d399"
-        side_card_text = "#94a3b8"
-        side_val1 = "#f8fafc"
-        side_val2 = "#38bdf8"
-        side_val3 = "#a855f7"
-    else:
-        side_card_bg = "#ffffff"
-        side_card_border = "1px solid #dadce0"
-        side_card_title = "#1a73e8"
-        side_badge_bg = "#e6f4ea"
-        side_badge_border = "1px solid #ceead6"
-        side_badge_text = "#137333"
-        side_card_text = "#5f6368"
-        side_val1 = "#202124"
-        side_val2 = "#1a73e8"
-        side_val3 = "#9334e6"
+            st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+            st.markdown(f"**📋 Bulk Sites & Properties ({total_p})**")
+            pasted_text = st.text_area(
+                "Paste domain/URL properties (1 per line):", 
+                value="\n".join(clean_active_sites) if clean_active_sites else "", 
+                height=100, 
+                key="txt_bulk_sites_expander"
+            )
+            c_imp1, c_imp2 = st.columns(2)
+            with c_imp1:
+                if st.button("📥 Import Sites", use_container_width=True, type="primary", key="btn_load_pasted_expander"):
+                    new_list = [line.strip() for line in pasted_text.splitlines() if line.strip()]
+                    if new_list:
+                        st.session_state.sites = new_list
+                        st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in new_list]
+                        st.session_state.current_site = new_list[0]
+                        st.session_state.portfolio_needs_refresh = True
+                        st.success(f"Loaded {len(new_list)} sites!")
+                        st.rerun()
+            with c_imp2:
+                if st.button("🗑️ Clear", use_container_width=True, key="btn_clear_sites_expander"):
+                    st.session_state.sites = []
+                    st.session_state.sites_detailed = []
+                    st.session_state.current_site = None
+                    st.session_state.portfolio_needs_refresh = True
+                    st.rerun()
 
-    st.markdown(f"""
-    <div style="background:{side_card_bg}; border:{side_card_border}; border-radius:10px; padding:12px 14px; margin-top:16px; box-shadow: 0 1px 3px rgba(60,64,67,0.08);">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span class="gsc-pulse-dot"></span>
-                <span style="font-size:11px; font-weight:700; color:{side_card_title}; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">LIVE VISITORS</span>
+        # 6. Live Telemetry Status Card (Sidebar Footer)
+        if is_dark:
+            side_card_bg = "rgba(15, 23, 42, 0.75)"
+            side_card_border = "1px solid rgba(56, 189, 248, 0.2)"
+            side_card_title = "#38bdf8"
+            side_badge_bg = "rgba(16, 185, 129, 0.15)"
+            side_badge_border = "1px solid rgba(16, 185, 129, 0.3)"
+            side_badge_text = "#34d399"
+            side_card_text = "#94a3b8"
+            side_val1 = "#f8fafc"
+            side_val2 = "#38bdf8"
+            side_val3 = "#a855f7"
+        else:
+            side_card_bg = "#ffffff"
+            side_card_border = "1px solid #dadce0"
+            side_card_title = "#1a73e8"
+            side_badge_bg = "#e6f4ea"
+            side_badge_border = "1px solid #ceead6"
+            side_badge_text = "#137333"
+            side_card_text = "#5f6368"
+            side_val1 = "#202124"
+            side_val2 = "#1a73e8"
+            side_val3 = "#9334e6"
+
+        st.markdown(f"""
+        <div style="background:{side_card_bg}; border:{side_card_border}; border-radius:10px; padding:12px 14px; margin-top:16px; box-shadow: 0 1px 3px rgba(60,64,67,0.08);">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="gsc-pulse-dot"></span>
+                    <span style="font-size:11px; font-weight:700; color:{side_card_title}; text-transform:uppercase; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">LIVE VISITORS</span>
+                </div>
+                <span style="font-size:11px; background:{side_badge_bg}; color:{side_badge_text}; border:{side_badge_border}; font-weight:700; padding:2px 8px; border-radius:12px; font-family:'JetBrains Mono',monospace;">
+                    {live_site_users} ACTIVE
+                </span>
             </div>
-            <span style="font-size:11px; background:{side_badge_bg}; color:{side_badge_text}; border:{side_badge_border}; font-weight:700; padding:2px 8px; border-radius:12px; font-family:'JetBrains Mono',monospace;">
-                {live_site_users} ACTIVE
-            </span>
+            <div style="font-size:11px; color:{side_card_text}; line-height:1.6; font-family:'JetBrains Mono',monospace;">
+                <div>🌐 Site: <b style="color:{side_val1};">{live_site_users}</b> online right now</div>
+                <div>⏱️ Last 30m: <b style="color:{side_val2};">{rt_metrics.get('users_last_30m', 0)}</b> visitors</div>
+                <div>👥 Dashboard: <b style="color:{side_val3};">{active_dash_users}</b> active viewer{'s' if active_dash_users > 1 else ''}</div>
+            </div>
         </div>
-        <div style="font-size:11px; color:{side_card_text}; line-height:1.6; font-family:'JetBrains Mono',monospace;">
-            <div>🌐 Site: <b style="color:{side_val1};">{live_site_users}</b> online right now</div>
-            <div>⏱️ Last 30m: <b style="color:{side_val2};">{rt_metrics.get('users_last_30m', 0)}</b> visitors</div>
-            <div>👥 Dashboard: <b style="color:{side_val3};">{active_dash_users}</b> active viewer{'s' if active_dash_users > 1 else ''}</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+
+
+# ====================================================
+# Authentication Gate
+# ====================================================
+cfg = load_client_config()
+auth_url = None
+default_redirect = None
+if cfg:
+    try:
+        default_redirect = resolve_redirect_uri(cfg)
+        auth_url, _ = get_auth_url(default_redirect, config=cfg)
+    except Exception:
+        pass
+
+is_authenticated = bool(st.session_state.get('authenticated')) or bool(st.session_state.get('service'))
+is_demo_mode = bool(st.session_state.get('demo_mode'))
+
+# Auto-mark as authenticated if active sites or credentials are present
+if not is_authenticated and not is_demo_mode:
+    if st.session_state.get('sites') or st.session_state.get('user_creds'):
+        is_authenticated = True
+        st.session_state.authenticated = True
+
+is_logged_in = is_authenticated or is_demo_mode
+
+if not is_logged_in:
+    render_auth_page(auth_url=auth_url, is_dark=is_dark)
+    st.stop()
+
+# Operational Sidebar (Strictly rendered ONLY when logged in or in demo mode)
+render_sidebar(
+    cfg=cfg,
+    auth_url=auth_url,
+    is_dark=is_dark,
+    live_site_users=live_site_users,
+    active_dash_users=active_dash_users,
+    rt_metrics=rt_metrics
+)
 
 # ==============================
 # Main Content
@@ -2631,13 +2858,9 @@ df = st.session_state.df
 service = st.session_state.service
 service_v1 = st.session_state.service_v1
 current_site = st.session_state.current_site
-is_authenticated = bool(st.session_state.get('authenticated')) or bool(service)
-is_connected = is_authenticated
 
-if 'start_str' not in locals():
-    start_str = (datetime.now() - timedelta(days=28)).strftime('%Y-%m-%d')
-if 'end_str' not in locals():
-    end_str = datetime.now().strftime('%Y-%m-%d')
+start_str = st.session_state.get('global_start_str', (datetime.now() - timedelta(days=28)).strftime('%Y-%m-%d'))
+end_str = st.session_state.get('global_end_str', datetime.now().strftime('%Y-%m-%d'))
 
 is_portfolio_mode = bool(current_site and current_site.startswith("🌐 [ALL SITES]"))
 real_active_sites = [s for s in st.session_state.sites if s and not s.startswith("🧪") and "Consolidated" not in s and "Custom Property" not in s]
@@ -3244,177 +3467,6 @@ def render_dashboard_hub(effective_site: str, start_str: str, end_str: str, peri
                         st.session_state.current_active_view = tool['id']
                         st.query_params['view'] = tool['id']
                         st.rerun()
-
-
-# ----------------------------------------------------
-# Modern SaaS Authentication & Onboarding Screen
-# ----------------------------------------------------
-def render_login_screen(auth_url=None, cfg=None, default_redirect=None, is_dark=False):
-    """
-    Renders the unified, minimalist Authentication & Onboarding Card.
-    Features:
-      - Single centered card with Google branding
-      - ONE primary action: Continue with Google
-      - ONE secondary action: Explore Demo Dashboard
-      - Subtle collapsed container for Service Account, 403 Fix, and setup guides
-    """
-    st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-    col_pad1, col_center, col_pad2 = st.columns([1, 1.35, 1])
-    with col_center:
-        title_col = "#f8fafc" if is_dark else "#0f172a"
-        sub_col = "#94a3b8" if is_dark else "#64748b"
-
-        with st.container(border=True):
-            st.markdown(f"""
-            <div style="text-align:center; padding: 14px 8px 4px 8px;">
-                <div style="display:flex; justify-content:center; margin-bottom:16px;">
-                    <svg width="46" height="46" viewBox="0 0 48 48">
-                        <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                        <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                        <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                        <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
-                    </svg>
-                </div>
-                <div style="font-size:23px; font-weight:800; color:{title_col}; margin-bottom:6px; letter-spacing:-0.4px;">
-                    Unlock 100% of Your Search Data
-                </div>
-                <div style="font-size:13.5px; color:{sub_col}; margin-bottom:18px; line-height:1.5;">
-                    Enterprise search analytics, instant indexing &amp; actionable SEO insights
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # 1. Primary Direct Access Form (Continue with Google)
-            with st.form("claude_google_login_form", clear_on_submit=False, border=False):
-                claude_email_input = st.text_input(
-                    "Email address",
-                    placeholder="Enter your Gmail / Google Account (optional)",
-                    key="input_claude_login_email",
-                    label_visibility="collapsed"
-                )
-                st.markdown('<div class="claude-google-btn-wrapper">', unsafe_allow_html=True)
-                btn_continue_google = st.form_submit_button("Continue with Google", use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-
-                if btn_continue_google:
-                    raw_email = (claude_email_input or "").strip() or "google.user@gmail.com"
-                    if "@" not in raw_email:
-                        raw_email = f"{raw_email}@gmail.com"
-                    email_clean = raw_email
-                    st.session_state.authenticated = True
-                    st.session_state.user_email = email_clean
-                    user_domain = email_clean.split("@")[-1]
-                    domain_name = user_domain if user_domain not in ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com'] else email_clean.split("@")[0] + ".com"
-                    default_site = f"sc-domain:{domain_name}"
-                    st.session_state.sites = [default_site, f"https://{domain_name}/"]
-                    st.session_state.sites_detailed = [
-                        {"siteUrl": default_site, "permissionLevel": "siteOwner"},
-                        {"siteUrl": f"https://{domain_name}/", "permissionLevel": "siteOwner"}
-                    ]
-                    st.session_state.current_site = default_site
-                    st.session_state.df = generate_mock_gsc_data(default_site, days=90)
-                    st.session_state.portfolio_needs_refresh = True
-                    st.session_state.selected_page = "📊 Dashboard Hub"
-                    st.session_state.current_active_view = "hub"
-                    st.toast(f"✅ Signed in as {email_clean}!", icon="🎉")
-                    st.rerun()
-
-            # 2. Explore Demo Dashboard button
-            if st.button("⚡ Explore Demo Dashboard", key="btn_claude_demo_explore", use_container_width=True, help="Load sample data to preview all 23 dashboard features"):
-                demo_site = "sc-domain:example-enterprise.com"
-                st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
-                st.session_state.sites_detailed = [
-                    {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
-                    {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
-                ]
-                st.session_state.current_site = demo_site
-                st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
-                st.session_state.portfolio_needs_refresh = True
-                st.session_state.authenticated = True
-                st.session_state.selected_page = "📊 Dashboard Hub"
-                st.session_state.current_active_view = "hub"
-                st.rerun()
-
-            # 3. Security Note
-            st.markdown(f"""
-            <div style="font-size:11.5px; color:{'#94a3b8' if is_dark else '#64748b'}; text-align:center; margin-top:14px; margin-bottom:4px; line-height:1.45;">
-                🔒 Read-Only &amp; In-Memory: Your credentials and Search Console data are processed securely in volatile session memory.
-            </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
-
-        # 4. Developer Troubleshooting & Advanced Setup Expander
-        with st.expander("⚙️ Advanced Setup & Troubleshooting (Service Account / 403 Fix)", expanded=False):
-            if auth_url:
-                st.markdown("#### 🌐 Connect via Google Cloud OAuth (Live API)")
-                st.caption("Authenticate with Google OAuth 2.0 to access your verified live Search Console properties:")
-                st.link_button("🌐 Connect via Official Google Cloud OAuth (Live API)", auth_url, use_container_width=True)
-                st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
-
-            st.markdown("#### 🚨 How to allow ANY email / Fix Google 403 (1-Click)")
-            st.markdown("""
-            If you or a client see Google's **"403. That's an error. We're sorry, but you do not have access to this page"**, it is because the OAuth app is currently in "Testing" mode on Google Cloud.
-
-            ##### 🌐 How to allow ANY email to sign in via Google:
-            1. 👉 **[Click here to open Google Cloud Console (Project 1092944785943)](https://console.cloud.google.com/apis/credentials/consent?project=1092944785943)**
-            2. Under **Publishing status**, click **`PUBLISH APP`** and click **Confirm**.
-            3. 🎉 **Done!** From that moment, **ANY Gmail / Google Workspace account in the world** can click "Continue with Google" without seeing any 403 error!
-
-            *(Alternatively, you can also type ANY email into the box above and click **"Continue with Google"** for instant access without Google OAuth).*
-            """)
-
-            st.markdown("---")
-            st.markdown("#### 🔑 Alternative: Connect via Service Account JSON")
-            st.caption("If you have a Google Cloud Service Account with Search Console permissions, you can connect directly without OAuth restrictions:")
-            sa_upload = st.file_uploader("Upload service_account.json", type=["json"], key="login_sa_uploader")
-            if sa_upload is not None:
-                try:
-                    sa_content = json.load(sa_upload)
-                    if 'client_email' in sa_content or 'type' in sa_content:
-                        sa_creds, sa_svc, sa_svcv1, sa_sites = authenticate_service_account(sa_content)
-                        st.session_state.user_creds = sa_creds
-                        st.session_state.service = sa_svc
-                        st.session_state.service_v1 = sa_svcv1
-                        st.session_state.sites = sa_sites
-                        st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in sa_sites]
-                        st.session_state.user_email = sa_content.get('client_email', 'service-account')
-                        st.session_state.current_site = sa_sites[0] if sa_sites else None
-                        st.session_state.portfolio_needs_refresh = True
-                        st.session_state.authenticated = True
-                        st.session_state.df = pd.DataFrame()
-                        st.session_state.selected_page = "📊 Dashboard Hub"
-                        st.session_state.current_active_view = "hub"
-                        st.success(f"Connected as {st.session_state.user_email}!")
-                        st.rerun()
-                    else:
-                        st.error("Invalid Service Account JSON. Missing 'client_email'.")
-                except Exception as sa_err:
-                    st.error(f"Service Account Error: {sa_err}")
-
-            st.markdown("---")
-            st.markdown("#### 💡 How to Connect Your GSC Property (Step-by-Step Guide)")
-            st.markdown("""
-            ##### 1. Verify Property Ownership in Search Console
-            Ensure your website is already added and verified in the official [Google Search Console](https://search.google.com/search-console).
-
-            ##### 2. Confirm Google Account Permissions
-            The signed-in Gmail or Google Workspace account must have at least **Full** or **Restricted** user access (or **Owner**) on the property.
-
-            ##### 3. Domain Properties vs URL-Prefix Properties
-            - **Domain Property (`sc-domain:example.com`)**: Verified via DNS TXT record. Automatically tracks data across all protocols (`http://` and `https://`) and all subdomains (`www`, `blog`, `m`).
-            - **URL-Prefix Property (`https://example.com/`)**: Verified via HTML file, meta tag, or GA4. Tracks only URLs starting with that exact address.
-
-            ##### 4. Troubleshooting 0 Properties or 403 Forbidden
-            - **0 Properties Found**: If you see 0 properties after connecting, your Search Console properties belong to another Gmail account. Click **🔄 Switch Google Account** to log in with your primary webmaster account.
-            - **403 Forbidden**: Confirm that the **Google Search Console API** is enabled in your Google Cloud Console project and permissions have been granted.
-            """)
-    st.stop()
-
-
-# Check unauthenticated landing state
-if not is_authenticated and not real_active_sites:
-    render_login_screen(auth_url=auth_url, cfg=cfg, default_redirect=default_redirect, is_dark=is_dark)
 
 # ----------------------------------------------------
 # 0. Modern Dashboard Hub / Command Center
