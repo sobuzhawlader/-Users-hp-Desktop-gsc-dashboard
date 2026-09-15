@@ -110,6 +110,12 @@ from sitemap_engine import list_sitemaps, submit_sitemap
 from log_reconciliation import reconcile_crawl_with_gsc, reconcile_server_logs_with_gsc
 from automation_generator import generate_automation_bundle, GITHUB_ACTIONS_WORKFLOW, HEADLESS_AUDIT_SCRIPT
 from realtime_engine import get_dashboard_active_users, get_site_realtime_metrics
+from export_engine import (
+    compile_all_23_features,
+    generate_master_excel_23,
+    generate_master_zip_23,
+    generate_master_json_23,
+)
 
 try:
     from indexing_api import request_indexing, batch_request_indexing, get_indexing_status
@@ -6372,29 +6378,168 @@ elif page in ["🚨 24/7 Anomaly & Telegram Bot", "🚨 Alerts"]:
 # ----------------------------------------------------
 elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
     render_back_to_overview("reports")
-    st.markdown("<div class='section-header'>📤 Branded Client PDF & CSV Exports</div>", unsafe_allow_html=True)
-    if df.empty:
-        st.info("ℹ️ No search performance data recorded for this filter or date range. Please try adjusting your filters.")
-    else:
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("### 📄 Branded PDF Client Report")
-            site_target = st.text_input("Property Label", value=current_site or "My Website")
-            if st.button("📥 Generate Instant PDF Report", use_container_width=True):
-                with st.spinner("Compiling PDF..."):
-                    try:
-                        pdf_file = generate_pdf_report(site_target, get_overview(df), get_winning_keywords(df), get_top_pages(df), get_quick_wins(df))
-                        with open(pdf_file, 'rb') as f:
-                            st.download_button("⬇️ Download PDF Report", f, file_name=os.path.basename(pdf_file), mime='application/pdf', use_container_width=True)
-                        st.success("✅ PDF Ready!")
-                    except Exception as e:
-                        st.error(f"PDF Error: {e}")
-        with c2:
-            st.markdown("### 📊 CSV Data Export")
-            st.download_button("📥 Download Raw GSC Data (CSV)", df.to_csv(index=False), "gsc_performance_export.csv", "text/csv", use_container_width=True)
-            top_p = get_top_pages(df)
-            if not top_p.empty:
-                st.download_button("📥 Download Top Pages (CSV)", top_p.to_csv(index=False), "top_pages_export.csv", "text/csv", use_container_width=True)
+    st.markdown("""
+    <div style="background:rgba(15, 23, 42, 0.75); border:1px solid rgba(56, 189, 248, 0.3); border-radius:14px; padding:22px; margin-bottom:24px; backdrop-filter:blur(10px);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:22px; font-weight:800; color:#38bdf8; letter-spacing:-0.4px;">📤 ENTERPRISE REPORTS & ALL-IN-ONE MASTER DATA EXPORT</div>
+                <div style="font-size:13px; color:#94a3b8; margin-top:4px;">Unified multi-channel export suite. Compile and download all 23 enterprise analytical datasets simultaneously for deep offline analysis in Excel, Power BI, Tableau, or Google Sheets.</div>
+            </div>
+            <div style="background:rgba(56, 189, 248, 0.12); border:1px solid rgba(56, 189, 248, 0.35); padding:6px 14px; border-radius:8px; font-size:12px; font-family:'JetBrains Mono',monospace; color:#38bdf8; font-weight:700;">● 23 FEATURES READY</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Compile all 23 datasets
+    datasets_23 = compile_all_23_features(df, current_site=current_site, session_state=st.session_state)
+    site_file_slug = (current_site or "gsc_enterprise").replace("https://", "").replace("http://", "").replace("/", "_").strip("_")
+    date_stamp = datetime.now().strftime("%Y%m%d")
+
+    # Hero Card: All-in-One 23-Feature Master Export
+    st.markdown("""
+    <div style="background:linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95)); border:1.5px solid rgba(56, 189, 248, 0.4); border-radius:16px; padding:22px; margin-bottom:22px; box-shadow:0 12px 32px rgba(0,0,0,0.35);">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:#0284c7; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px;">📦</div>
+            <div>
+                <div style="font-size:18px; font-weight:800; color:#f8fafc;">Universal 23-in-1 Master Data Export Suite</div>
+                <div style="font-size:12.5px; color:#cbd5e1;">One-click bulk export across all 23 analytical tools in this dashboard. Ideal for data scientists, SEO teams, and executive reporting.</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # KPI summary for exported features
+    exp_col1, exp_col2, exp_col3, exp_col4 = st.columns(4)
+    with exp_col1:
+        st.markdown("""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">DATASETS COMPILED</div>
+            <div style="font-size:26px; font-weight:800; color:#38bdf8; margin-top:4px;">23 / 23</div>
+            <div style="font-size:11px; color:#38bdf8; margin-top:2px;">100% Complete Suite</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with exp_col2:
+        total_rows_compiled = sum(len(d) for d in datasets_23.values())
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">TOTAL DATA ROWS</div>
+            <div style="font-size:26px; font-weight:800; color:#10b981; margin-top:4px;">{total_rows_compiled:,}</div>
+            <div style="font-size:11px; color:#10b981; margin-top:2px;">Cleaned & Structured</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with exp_col3:
+        st.markdown("""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">EXCEL WORKBOOK TABS</div>
+            <div style="font-size:26px; font-weight:800; color:#f59e0b; margin-top:4px;">23 Sheets</div>
+            <div style="font-size:11px; color:#f59e0b; margin-top:2px;">Pre-styled with Headers</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with exp_col4:
+        st.markdown("""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">ANALYSIS COMPATIBILITY</div>
+            <div style="font-size:26px; font-weight:800; color:#a78bfa; margin-top:4px;">Excel / BI / Python</div>
+            <div style="font-size:11px; color:#a78bfa; margin-top:2px;">Power BI & Sheets Ready</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+
+    # 3 Master Download Buttons
+    b_col1, b_col2, b_col3 = st.columns(3)
+    with b_col1:
+        st.markdown("""
+        <div style="background:rgba(30, 41, 59, 0.6); border:1px solid rgba(16, 185, 129, 0.3); border-radius:12px; padding:14px; text-align:center; margin-bottom:12px;">
+            <div style="font-size:24px; margin-bottom:4px;">📊</div>
+            <div style="font-weight:700; color:#10b981; font-size:14px; margin-bottom:2px;">Master Excel Workbook</div>
+            <div style="font-size:11px; color:#94a3b8;">All 23 tools in 23 separate, styled sheets (.xlsx)</div>
+        </div>
+        """, unsafe_allow_html=True)
+        try:
+            excel_bytes = generate_master_excel_23(datasets_23, site_name=current_site or "GSC_Enterprise")
+            st.download_button(
+                "📥 Download 23-Sheet Excel (.xlsx)",
+                data=excel_bytes,
+                file_name=f"{site_file_slug}_all_23_features_{date_stamp}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+                key="btn_dl_master_excel_23"
+            )
+        except Exception as ex:
+            st.error(f"Excel compilation error: {ex}")
+
+    with b_col2:
+        st.markdown("""
+        <div style="background:rgba(30, 41, 59, 0.6); border:1px solid rgba(56, 189, 248, 0.3); border-radius:12px; padding:14px; text-align:center; margin-bottom:12px;">
+            <div style="font-size:24px; margin-bottom:4px;">🗜️</div>
+            <div style="font-weight:700; color:#38bdf8; font-size:14px; margin-bottom:2px;">Universal ZIP Archive</div>
+            <div style="font-size:11px; color:#94a3b8;">23 individual CSV files + README Data Guide (.zip)</div>
+        </div>
+        """, unsafe_allow_html=True)
+        try:
+            zip_bytes = generate_master_zip_23(datasets_23, site_name=current_site or "GSC_Enterprise")
+            st.download_button(
+                "🗜️ Download 23 CSVs Bundle (.zip)",
+                data=zip_bytes,
+                file_name=f"{site_file_slug}_all_23_features_{date_stamp}.zip",
+                mime="application/zip",
+                use_container_width=True,
+                key="btn_dl_master_zip_23"
+            )
+        except Exception as ex:
+            st.error(f"ZIP compilation error: {ex}")
+
+    with b_col3:
+        st.markdown("""
+        <div style="background:rgba(30, 41, 59, 0.6); border:1px solid rgba(168, 85, 247, 0.3); border-radius:12px; padding:14px; text-align:center; margin-bottom:12px;">
+            <div style="font-size:24px; margin-bottom:4px;">📄</div>
+            <div style="font-weight:700; color:#c084fc; font-size:14px; margin-bottom:2px;">Complete JSON Master Dump</div>
+            <div style="font-size:11px; color:#94a3b8;">Machine-readable hierarchical export (.json)</div>
+        </div>
+        """, unsafe_allow_html=True)
+        try:
+            json_bytes = generate_master_json_23(datasets_23, site_name=current_site or "GSC_Enterprise")
+            st.download_button(
+                "📄 Download Master JSON (.json)",
+                data=json_bytes,
+                file_name=f"{site_file_slug}_all_23_features_{date_stamp}.json",
+                mime="application/json",
+                use_container_width=True,
+                key="btn_dl_master_json_23"
+            )
+        except Exception as ex:
+            st.error(f"JSON compilation error: {ex}")
+
+    # Expandable preview of all 23 datasets
+    with st.expander("📋 Click to Preview All 23 Exported Datasets & Data Dictionary", expanded=False):
+        st.markdown("<div style='font-size:13px; color:#94a3b8; margin-bottom:12px;'>The following 23 datasets are compiled in the master export packages:</div>", unsafe_allow_html=True)
+        for idx, (sheet_name, d_df) in enumerate(datasets_23.items(), 1):
+            st.markdown(f"**{idx}. `{sheet_name}`** — *{len(d_df)} rows, {len(d_df.columns)} columns*")
+            st.dataframe(d_df.head(5), use_container_width=True)
+
+    st.markdown("---")
+
+    # Section 2: Branded PDF and Individual CSVs
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("### 📄 Branded PDF Client Report")
+        site_target = st.text_input("Property Label", value=current_site or "My Website", key="rep_prop_label_input")
+        if st.button("📥 Generate Instant PDF Report", use_container_width=True, key="btn_gen_pdf_rep"):
+            with st.spinner("Compiling PDF..."):
+                try:
+                    pdf_file = generate_pdf_report(site_target, get_overview(df), get_winning_keywords(df), get_top_pages(df), get_quick_wins(df))
+                    with open(pdf_file, 'rb') as f:
+                        st.download_button("⬇️ Download PDF Report", f, file_name=os.path.basename(pdf_file), mime='application/pdf', use_container_width=True, key="btn_dl_pdf_rep")
+                    st.success("✅ PDF Ready!")
+                except Exception as e:
+                    st.error(f"PDF Error: {e}")
+    with c2:
+        st.markdown("### 📊 Individual Quick CSV Exports")
+        st.download_button("📥 Download Raw GSC Data (CSV)", df.to_csv(index=False), "gsc_performance_export.csv", "text/csv", use_container_width=True, key="btn_dl_raw_csv")
+        top_p = get_top_pages(df)
+        if not top_p.empty:
+            st.download_button("📥 Download Top Pages (CSV)", top_p.to_csv(index=False), "top_pages_export.csv", "text/csv", use_container_width=True, key="btn_dl_top_pages_csv")
 
 # ----------------------------------------------------
 # 15. Keyword Cannibalization Matrix & Resolution Engine

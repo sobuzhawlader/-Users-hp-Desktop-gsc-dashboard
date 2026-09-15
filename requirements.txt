@@ -8,4 +8,5 @@ fpdf2
 requests
 python-dotenv
 numpy
+openpyxl>=3.1.0
 
