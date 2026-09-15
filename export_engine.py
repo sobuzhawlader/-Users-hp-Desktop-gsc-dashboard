@@ -637,13 +637,13 @@ def generate_master_zip_23(datasets: Dict[str, pd.DataFrame], site_name: str = "
 
         # Write README / Data Dictionary
         readme_content = f"""================================================================================
-GOOGLE SEARCH CONSOLE ENTERPRISE SUITE — 23-FEATURE MASTER DATA EXPORT
+GOOGLE SEARCH CONSOLE ENTERPRISE SUITE — 27-FEATURE MASTER DATA EXPORT
 ================================================================================
 Generated for: {site_name}
 Export Timestamp: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 Version: Enterprise Suite v2.4
 
-CATALOG OF EXPORTED DATASETS (23 FILES):
+CATALOG OF EXPORTED DATASETS (27 FILES):
 --------------------------------------------------------------------------------
 01_Performance_Overview.csv      : High-level KPI metrics & daily search timelines
 02_RealTime_Active_Users.csv      : Live active visitor traffic & server latency
@@ -668,11 +668,15 @@ CATALOG OF EXPORTED DATASETS (23 FILES):
 21_Client_Portal.csv              : White-label portal client accounts & access rules
 22_Reports_Executive.csv          : Executive scorecard & health status metrics
 23_Settings_Google_Connection.csv : Active property connection, API quotas & credentials
+24_Traffic_Forecasting.csv        : Predictive traffic forecasting, trends & confidence intervals
+25_Internal_Linking_Graph.csv     : Internal link architecture, PageRank scores & orphan nodes
+26_SEO_Action_Plan_Kanban.csv     : Algorithmic SEO action items, impact scores & Kanban stages
+27_Competitor_Onpage_Audit.csv    : Side-by-side on-page content gap & semantic comparison
 
 HOW TO ANALYZE THIS DATA:
 --------------------------------------------------------------------------------
 1. Microsoft Excel: Open the individual CSVs or import directly into Power Query.
-2. Power BI / Tableau: Connect via Folder data source to import all 23 CSVs at once.
+2. Power BI / Tableau: Connect via Folder data source to import all 27 CSVs at once.
 3. Python / Pandas:
    import pandas as pd
    df_queries = pd.read_csv("11_Top_Keywords_Queries.csv")

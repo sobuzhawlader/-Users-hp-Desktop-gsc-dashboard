@@ -116,6 +116,10 @@ from export_engine import (
     generate_master_zip_23,
     generate_master_json_23,
 )
+from forecast_engine import generate_traffic_forecast
+from linking_graph_engine import build_internal_link_network
+from kanban_engine import generate_seo_action_plan
+from competitor_engine import audit_competitor_comparison
 
 try:
     from indexing_api import request_indexing, batch_request_indexing, get_indexing_status
@@ -2180,6 +2184,34 @@ TOOLS_CATALOG = [
         "category": "📄 Reporting & Agency",
         "desc": "OAuth tokens, API quotas, Telegram bot webhooks, client branding, and custom configurations.",
         "badge": "Settings"
+    },
+    {
+        "id": "traffic_forecast",
+        "name": "🔮 Predictive AI Traffic Forecaster",
+        "category": "📊 Performance & Traffic",
+        "desc": "Time-series machine learning forecasting future organic clicks, impressions, and estimated revenue value.",
+        "badge": "AI Forecast"
+    },
+    {
+        "id": "internal_links_graph",
+        "name": "🕸️ Internal Linking Network Graph",
+        "category": "⚙️ Technical SEO & Indexing",
+        "desc": "Interactive internal PageRank node graph identifying link equity flow, hub pages, and orphan pages.",
+        "badge": "PageRank Graph"
+    },
+    {
+        "id": "competitor_audit",
+        "name": "⚔️ Free Competitor On-Page Auditor",
+        "category": "🎯 Keywords, Intent & SERP",
+        "desc": "Side-by-side on-page content gap, headings structure, and technical comparison against any ranking competitor.",
+        "badge": "SERP Benchmark"
+    },
+    {
+        "id": "seo_kanban",
+        "name": "📋 Automated Action Plan & Kanban",
+        "category": "🤖 AI & Automation",
+        "desc": "Synthesizes cannibalization, quick wins, and decay into prioritized, actionable task cards for execution.",
+        "badge": "Kanban Board"
     }
 ]
 
@@ -2189,6 +2221,7 @@ NAV_CATEGORIES = {
         "🟢 Real-Time Active Users",
         "🌐 All Sites & Properties",
         "📈 Custom CTR Curve",
+        "🔮 Predictive AI Traffic Forecaster",
     ],
     "⚙️ Technical SEO & Indexing": [
         "🔍 URL inspection & Schema",
@@ -2197,6 +2230,7 @@ NAV_CATEGORIES = {
         "🗺️ Sitemaps Manager",
         "🕷️ Technical On-Page Crawler",
         "🪵 Log Reconciliation",
+        "🕸️ Internal Linking Network Graph",
     ],
     "🎯 Keywords, Intent & SERP": [
         "🎯 Top Keywords & Queries",
@@ -2205,12 +2239,14 @@ NAV_CATEGORIES = {
         "⚡ Core Web Vitals & Quick Wins",
         "📉 Algo Update Impact",
         "🎯 Search Intent & Regex",
+        "⚔️ Free Competitor On-Page Auditor",
     ],
     "🤖 AI & Automation": [
         "✨ AI Meta & Schema Studio",
         "🔌 WordPress 1-Click Sync",
         "🚨 24/7 Anomaly & Telegram Bot",
         "🤖 AI Features & AEO",
+        "📋 Automated Action Plan & Kanban",
     ],
     "📄 Reporting & Agency": [
         "💼 White-Label Client Portal",
@@ -2225,22 +2261,26 @@ PAGE_TO_VIEW_SLUG = {
     "🟢 Real-Time Active Users": "realtime",
     "🌐 All Sites & Properties": "properties",
     "📈 Custom CTR Curve": "ctr_curve",
+    "🔮 Predictive AI Traffic Forecaster": "traffic_forecast",
     "🔍 URL inspection & Schema": "url_inspection",
     "🚀 Instant Google Indexing API": "indexing_api",
     "📄 Pages & Indexing": "pages",
     "🗺️ Sitemaps Manager": "sitemaps",
     "🕷️ Technical On-Page Crawler": "crawler",
     "🪵 Log Reconciliation": "log_reconciliation",
+    "🕸️ Internal Linking Network Graph": "internal_links_graph",
     "🎯 Top Keywords & Queries": "keywords",
     "⚔️ Keyword Cannibalization": "cannibalization",
     "🧩 Semantic Keyword Clusters": "keyword_clusters",
     "⚡ Core Web Vitals & Quick Wins": "quick_wins",
     "📉 Algo Update Impact": "algo_updates",
     "🎯 Search Intent & Regex": "intent_regex",
+    "⚔️ Free Competitor On-Page Auditor": "competitor_audit",
     "✨ AI Meta & Schema Studio": "ai_studio",
     "🔌 WordPress 1-Click Sync": "wp_sync",
     "🚨 24/7 Anomaly & Telegram Bot": "alerts_bot",
     "🤖 AI Features & AEO": "ai_aeo",
+    "📋 Automated Action Plan & Kanban": "seo_kanban",
     "💼 White-Label Client Portal": "client_portal",
     "📤 Reports & PDF Export": "reports",
     "⚙️ Settings & Google Connection": "settings",
@@ -2254,7 +2294,7 @@ if 'current_active_view' not in st.session_state:
 if 'hub_search_input' not in st.session_state:
     st.session_state['hub_search_input'] = ""
 if 'hub_cat_filter_select' not in st.session_state:
-    st.session_state['hub_cat_filter_select'] = "All Tools (23)"
+    st.session_state['hub_cat_filter_select'] = "All Tools (27)"
 
 qp_view = st.query_params.get('view')
 qp_p = st.query_params.get('page')
@@ -2755,7 +2795,7 @@ def render_auth_page(auth_url=None, is_dark=False):
                 key="btn_auth_demo_explore",
                 on_click=_handle_demo_login,
                 use_container_width=True,
-                help="Load enterprise sample dataset to preview all 23 dashboard tools"
+                help="Load enterprise sample dataset to preview all 27 dashboard tools"
             )
 
             # Read-Only Trust Banner (inside the card)
@@ -3645,7 +3685,7 @@ def render_dashboard_hub(effective_site: str, start_str: str, end_str: str, peri
     Features:
       - Active Workspace Hero Banner
       - KPI Snapshot summary (Clicks, Impressions, CTR, Position)
-      - Quick Search Bar across all 23 tools
+      - Quick Search Bar across all 27 tools
       - 4 Modern Logical Tabs (Performance & Queries, Indexing & Tech SEO, AI & Automation, Monitoring & Reports)
       - Clean 2-column cards per tab with direct navigation
     """
@@ -3668,7 +3708,7 @@ def render_dashboard_hub(effective_site: str, start_str: str, end_str: str, peri
             </div>
             <div>
                 <span style="font-size:11px; background:{'rgba(16,185,129,0.15)' if is_dark else '#e6f4ea'}; color:{'#34d399' if is_dark else '#137333'}; padding:4px 12px; border-radius:20px; font-weight:700; border:1px solid {'rgba(16,185,129,0.3)' if is_dark else '#ceead6'}; font-family:'JetBrains Mono',monospace;">
-                    ● 23 TOOLS ONLINE
+                    ● 27 TOOLS ONLINE
                 </span>
             </div>
         </div>
@@ -3731,7 +3771,7 @@ def render_dashboard_hub(effective_site: str, start_str: str, end_str: str, peri
     else:
         c_fetch_hub1, c_fetch_hub2 = st.columns([3.5, 1.5])
         with c_fetch_hub1:
-            st.caption(f"No search metrics loaded yet for {effective_site}. Click below to fetch or explore the 23 tools:")
+            st.caption(f"No search metrics loaded yet for {effective_site}. Click below to fetch or explore the 27 tools:")
         with c_fetch_hub2:
             if st.button("🚀 Fetch Analytics Live", key="btn_hub_fetch_live", use_container_width=True, type="primary"):
                 if service and effective_site and not effective_site.startswith("🧪") and "Consolidated" not in effective_site:
@@ -3748,7 +3788,7 @@ def render_dashboard_hub(effective_site: str, start_str: str, end_str: str, peri
     # 3. Quick Tool Search
     search_query = st.text_input(
         "Search tools",
-        placeholder="🔍 Quick search across all 23 tools (e.g. indexing, keywords, schema, crawler, aeo)...",
+        placeholder="🔍 Quick search across all 27 tools (e.g. indexing, keywords, schema, crawler, aeo)...",
         label_visibility="collapsed",
         key="hub_search_input"
     )
@@ -3803,7 +3843,7 @@ def render_dashboard_hub(effective_site: str, start_str: str, end_str: str, peri
 
     q = (search_query or "").strip().lower()
     if q:
-        # Render direct search results across all 23 tools
+        # Render direct search results across all 27 tools
         matched = []
         for t in TOOLS_CATALOG:
             m = (
@@ -3831,9 +3871,9 @@ def render_dashboard_hub(effective_site: str, start_str: str, end_str: str, peri
         ])
 
         # Category mapping for tools
-        perf_ids = ["overview", "keywords", "quick_wins", "cannibalization", "keyword_clusters", "intent_regex", "ctr_curve"]
-        tech_ids = ["url_inspection", "indexing_api", "pages", "sitemaps", "crawler", "log_reconciliation"]
-        ai_ids = ["ai_studio", "wp_sync", "alerts_bot", "ai_aeo", "algo_updates"]
+        perf_ids = ["overview", "keywords", "quick_wins", "cannibalization", "keyword_clusters", "intent_regex", "ctr_curve", "traffic_forecast", "competitor_audit"]
+        tech_ids = ["url_inspection", "indexing_api", "pages", "sitemaps", "crawler", "log_reconciliation", "internal_links_graph"]
+        ai_ids = ["ai_studio", "wp_sync", "alerts_bot", "ai_aeo", "algo_updates", "seo_kanban"]
         rep_ids = ["realtime", "properties", "client_portal", "reports", "settings"]
 
         tools_by_id = {t["id"]: t for t in TOOLS_CATALOG}
@@ -6383,26 +6423,26 @@ elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
                 <div style="font-size:22px; font-weight:800; color:#38bdf8; letter-spacing:-0.4px;">📤 ENTERPRISE REPORTS & ALL-IN-ONE MASTER DATA EXPORT</div>
-                <div style="font-size:13px; color:#94a3b8; margin-top:4px;">Unified multi-channel export suite. Compile and download all 23 enterprise analytical datasets simultaneously for deep offline analysis in Excel, Power BI, Tableau, or Google Sheets.</div>
+                <div style="font-size:13px; color:#94a3b8; margin-top:4px;">Unified multi-channel export suite. Compile and download all 27 enterprise analytical datasets simultaneously for deep offline analysis in Excel, Power BI, Tableau, or Google Sheets.</div>
             </div>
-            <div style="background:rgba(56, 189, 248, 0.12); border:1px solid rgba(56, 189, 248, 0.35); padding:6px 14px; border-radius:8px; font-size:12px; font-family:'JetBrains Mono',monospace; color:#38bdf8; font-weight:700;">● 23 FEATURES READY</div>
+            <div style="background:rgba(56, 189, 248, 0.12); border:1px solid rgba(56, 189, 248, 0.35); padding:6px 14px; border-radius:8px; font-size:12px; font-family:'JetBrains Mono',monospace; color:#38bdf8; font-weight:700;">● 27 FEATURES READY</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Compile all 23 datasets
+    # Compile all 27 datasets
     datasets_23 = compile_all_23_features(df, current_site=current_site, session_state=st.session_state)
     site_file_slug = (current_site or "gsc_enterprise").replace("https://", "").replace("http://", "").replace("/", "_").strip("_")
     date_stamp = datetime.now().strftime("%Y%m%d")
 
-    # Hero Card: All-in-One 23-Feature Master Export
+    # Hero Card: All-in-One 27-Feature Master Export
     st.markdown("""
     <div style="background:linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95)); border:1.5px solid rgba(56, 189, 248, 0.4); border-radius:16px; padding:22px; margin-bottom:22px; box-shadow:0 12px 32px rgba(0,0,0,0.35);">
         <div style="display:flex; align-items:center; gap:12px;">
             <div style="background:#0284c7; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px;">📦</div>
             <div>
-                <div style="font-size:18px; font-weight:800; color:#f8fafc;">Universal 23-in-1 Master Data Export Suite</div>
-                <div style="font-size:12.5px; color:#cbd5e1;">One-click bulk export across all 23 analytical tools in this dashboard. Ideal for data scientists, SEO teams, and executive reporting.</div>
+                <div style="font-size:18px; font-weight:800; color:#f8fafc;">Universal 27-in-1 Master Data Export Suite</div>
+                <div style="font-size:12.5px; color:#cbd5e1;">One-click bulk export across all 27 analytical tools in this dashboard. Ideal for data scientists, SEO teams, and executive reporting.</div>
             </div>
         </div>
     </div>
@@ -6414,7 +6454,7 @@ elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
         st.markdown("""
         <div class="gsc-scorecard">
             <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">DATASETS COMPILED</div>
-            <div style="font-size:26px; font-weight:800; color:#38bdf8; margin-top:4px;">23 / 23</div>
+            <div style="font-size:26px; font-weight:800; color:#38bdf8; margin-top:4px;">27 / 27</div>
             <div style="font-size:11px; color:#38bdf8; margin-top:2px;">100% Complete Suite</div>
         </div>
         """, unsafe_allow_html=True)
@@ -6431,7 +6471,7 @@ elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
         st.markdown("""
         <div class="gsc-scorecard">
             <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-family:'JetBrains Mono',monospace;">EXCEL WORKBOOK TABS</div>
-            <div style="font-size:26px; font-weight:800; color:#f59e0b; margin-top:4px;">23 Sheets</div>
+            <div style="font-size:26px; font-weight:800; color:#f59e0b; margin-top:4px;">27 Sheets</div>
             <div style="font-size:11px; color:#f59e0b; margin-top:2px;">Pre-styled with Headers</div>
         </div>
         """, unsafe_allow_html=True)
@@ -6453,15 +6493,15 @@ elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
         <div style="background:rgba(30, 41, 59, 0.6); border:1px solid rgba(16, 185, 129, 0.3); border-radius:12px; padding:14px; text-align:center; margin-bottom:12px;">
             <div style="font-size:24px; margin-bottom:4px;">📊</div>
             <div style="font-weight:700; color:#10b981; font-size:14px; margin-bottom:2px;">Master Excel Workbook</div>
-            <div style="font-size:11px; color:#94a3b8;">All 23 tools in 23 separate, styled sheets (.xlsx)</div>
+            <div style="font-size:11px; color:#94a3b8;">All 27 tools in 27 separate, styled sheets (.xlsx)</div>
         </div>
         """, unsafe_allow_html=True)
         try:
             excel_bytes = generate_master_excel_23(datasets_23, site_name=current_site or "GSC_Enterprise")
             st.download_button(
-                "📥 Download 23-Sheet Excel (.xlsx)",
+                "📥 Download 27-Sheet Excel (.xlsx)",
                 data=excel_bytes,
-                file_name=f"{site_file_slug}_all_23_features_{date_stamp}.xlsx",
+                file_name=f"{site_file_slug}_all_27_features_{date_stamp}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
                 key="btn_dl_master_excel_23"
@@ -6474,15 +6514,15 @@ elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
         <div style="background:rgba(30, 41, 59, 0.6); border:1px solid rgba(56, 189, 248, 0.3); border-radius:12px; padding:14px; text-align:center; margin-bottom:12px;">
             <div style="font-size:24px; margin-bottom:4px;">🗜️</div>
             <div style="font-weight:700; color:#38bdf8; font-size:14px; margin-bottom:2px;">Universal ZIP Archive</div>
-            <div style="font-size:11px; color:#94a3b8;">23 individual CSV files + README Data Guide (.zip)</div>
+            <div style="font-size:11px; color:#94a3b8;">27 individual CSV files + README Data Guide (.zip)</div>
         </div>
         """, unsafe_allow_html=True)
         try:
             zip_bytes = generate_master_zip_23(datasets_23, site_name=current_site or "GSC_Enterprise")
             st.download_button(
-                "🗜️ Download 23 CSVs Bundle (.zip)",
+                "🗜️ Download 27 CSVs Bundle (.zip)",
                 data=zip_bytes,
-                file_name=f"{site_file_slug}_all_23_features_{date_stamp}.zip",
+                file_name=f"{site_file_slug}_all_27_features_{date_stamp}.zip",
                 mime="application/zip",
                 use_container_width=True,
                 key="btn_dl_master_zip_23"
@@ -6503,7 +6543,7 @@ elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
             st.download_button(
                 "📄 Download Master JSON (.json)",
                 data=json_bytes,
-                file_name=f"{site_file_slug}_all_23_features_{date_stamp}.json",
+                file_name=f"{site_file_slug}_all_27_features_{date_stamp}.json",
                 mime="application/json",
                 use_container_width=True,
                 key="btn_dl_master_json_23"
@@ -6511,9 +6551,9 @@ elif page in ["📤 Reports & PDF Export", "📤 Reports & Export"]:
         except Exception as ex:
             st.error(f"JSON compilation error: {ex}")
 
-    # Expandable preview of all 23 datasets
-    with st.expander("📋 Click to Preview All 23 Exported Datasets & Data Dictionary", expanded=False):
-        st.markdown("<div style='font-size:13px; color:#94a3b8; margin-bottom:12px;'>The following 23 datasets are compiled in the master export packages:</div>", unsafe_allow_html=True)
+    # Expandable preview of all 27 datasets
+    with st.expander("📋 Click to Preview All 27 Exported Datasets & Data Dictionary", expanded=False):
+        st.markdown("<div style='font-size:13px; color:#94a3b8; margin-bottom:12px;'>The following 27 datasets are compiled in the master export packages:</div>", unsafe_allow_html=True)
         for idx, (sheet_name, d_df) in enumerate(datasets_23.items(), 1):
             st.markdown(f"**{idx}. `{sheet_name}`** — *{len(d_df)} rows, {len(d_df.columns)} columns*")
             st.dataframe(d_df.head(5), use_container_width=True)
@@ -7156,5 +7196,315 @@ elif page == "💼 White-Label Client Portal":
                     st.success("✅ Executive White-Label Report compiled successfully!")
                 except Exception as ex:
                     st.error(f"PDF compilation error: {ex}")
+
+# ----------------------------------------------------
+# 24. Predictive AI Traffic Forecaster
+# ----------------------------------------------------
+elif page == "🔮 Predictive AI Traffic Forecaster":
+    render_back_to_overview("traffic_forecast")
+    st.markdown("""
+    <div style="background:rgba(15, 23, 42, 0.75); border:1px solid rgba(56, 189, 248, 0.35); border-radius:14px; padding:22px; margin-bottom:24px; backdrop-filter:blur(10px);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:22px; font-weight:800; color:#38bdf8; letter-spacing:-0.4px;">🔮 PREDICTIVE AI TRAFFIC & REVENUE FORECASTER</div>
+                <div style="font-size:13px; color:#94a3b8; margin-top:4px;">Machine learning time-series forecasting based on up to 16 months of historical Search Console daily trends. Generates 30-90 day forward trajectories with confidence bounds.</div>
+            </div>
+            <div style="background:rgba(56, 189, 248, 0.12); border:1px solid rgba(56, 189, 248, 0.35); padding:6px 14px; border-radius:8px; font-size:12px; font-family:'JetBrains Mono',monospace; color:#38bdf8; font-weight:700;">● TIME-SERIES ML</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    fc_col1, fc_col2 = st.columns([1.5, 1])
+    with fc_col1:
+        f_days = st.select_slider("Forecast Horizon (Days Ahead):", options=[30, 60, 90, 120], value=60, key="slider_forecast_horizon")
+    with fc_col2:
+        f_val = st.number_input("Est. Value Per Click ($):", min_value=0.10, max_value=50.0, value=1.50, step=0.25, key="input_val_per_click")
+
+    with st.spinner("Training time-series regression model & computing confidence bounds..."):
+        f_df, f_metrics, f_chart = generate_traffic_forecast(df, days_ahead=f_days, value_per_click=f_val)
+
+    # Scorecards
+    sc1, sc2, sc3, sc4 = st.columns(4)
+    with sc1:
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">PAST HISTORICAL CLICKS</div>
+            <div style="font-size:26px; font-weight:800; color:#38bdf8; margin-top:4px;">{f_metrics['past_total_clicks']:,}</div>
+            <div style="font-size:11px; color:#38bdf8; margin-top:2px;">Recorded Search Traffic</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with sc2:
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">PROJECTED CLICKS ({f_days}D)</div>
+            <div style="font-size:26px; font-weight:800; color:#10b981; margin-top:4px;">{f_metrics['projected_total_clicks']:,}</div>
+            <div style="font-size:11px; color:#10b981; margin-top:2px;">Avg ~{f_metrics['daily_projected_avg']} clicks/day</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with sc3:
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">ESTIMATED REVENUE VALUE</div>
+            <div style="font-size:26px; font-weight:800; color:#f59e0b; margin-top:4px;">${f_metrics['projected_total_value']:,.2f}</div>
+            <div style="font-size:11px; color:#f59e0b; margin-top:2px;">At ${f_val:.2f} per organic click</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with sc4:
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">TRAFFIC MOMENTUM</div>
+            <div style="font-size:20px; font-weight:800; color:{f_metrics['momentum_color']}; margin-top:6px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{f_metrics['momentum_label']}</div>
+            <div style="font-size:11px; color:{f_metrics['momentum_color']}; margin-top:4px;">Trend slope: {f_metrics['daily_slope']:+.2f} / day</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+    st.plotly_chart(f_chart, use_container_width=True)
+
+    with st.expander("📊 View Detailed Forecast Table & Confidence Ranges", expanded=False):
+        future_subset = f_df[f_df["type"] == "Forecast"][["date", "forecast_clicks", "lower_80", "upper_80", "lower_95", "upper_95", "estimated_value"]]
+        st.dataframe(future_subset, use_container_width=True)
+        st.download_button("📥 Download Forecast CSV", future_subset.to_csv(index=False), "gsc_predictive_forecast.csv", "text/csv", use_container_width=True, key="btn_dl_forecast_csv")
+
+# ----------------------------------------------------
+# 25. Interactive Internal Linking Network Graph
+# ----------------------------------------------------
+elif page == "🕸️ Internal Linking Network Graph":
+    render_back_to_overview("internal_links_graph")
+    st.markdown("""
+    <div style="background:rgba(15, 23, 42, 0.75); border:1px solid rgba(16, 185, 129, 0.35); border-radius:14px; padding:22px; margin-bottom:24px; backdrop-filter:blur(10px);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:22px; font-weight:800; color:#10b981; letter-spacing:-0.4px;">🕸️ INTERACTIVE INTERNAL LINKING GRAPH & PAGERANK</div>
+                <div style="font-size:13px; color:#94a3b8; margin-top:4px;">Visualize how internal link authority flows between your indexed pages. Pinpoint isolated orphan pages with zero incoming links and optimize topical clusters.</div>
+            </div>
+            <div style="background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.35); padding:6px 14px; border-radius:8px; font-size:12px; font-family:'JetBrains Mono',monospace; color:#10b981; font-weight:700;">● PAGERANK ENGINE</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with st.spinner("Analyzing internal link architecture & calculating PageRank vectors..."):
+        nodes_df, edges_df, recs, graph_fig = build_internal_link_network(df, current_site=current_site)
+
+    n_orphans = len(nodes_df[nodes_df["in_degree"] == 0])
+    top_hub = nodes_df.sort_values("pagerank_score", ascending=False).iloc[0]["label"]
+
+    lg_c1, lg_c2, lg_c3, lg_c4 = st.columns(4)
+    with lg_c1:
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">MAPPED PAGES</div>
+            <div style="font-size:26px; font-weight:800; color:#38bdf8; margin-top:4px;">{len(nodes_df)}</div>
+            <div style="font-size:11px; color:#38bdf8; margin-top:2px;">Internal Site Nodes</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with lg_c2:
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">INTERNAL LINKS</div>
+            <div style="font-size:26px; font-weight:800; color:#10b981; margin-top:4px;">{len(edges_df)}</div>
+            <div style="font-size:11px; color:#10b981; margin-top:2px;">Total Connected Edges</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with lg_c3:
+        orphan_col = "#ef4444" if n_orphans > 0 else "#10b981"
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">ORPHAN PAGES</div>
+            <div style="font-size:26px; font-weight:800; color:{orphan_col}; margin-top:4px;">{n_orphans}</div>
+            <div style="font-size:11px; color:{orphan_col}; margin-top:2px;">{'Requires Internal Links' if n_orphans > 0 else 'All Pages Linked'}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with lg_c4:
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">TOP AUTHORITY HUB</div>
+            <div style="font-size:18px; font-weight:800; color:#f59e0b; margin-top:8px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{top_hub}</div>
+            <div style="font-size:11px; color:#f59e0b; margin-top:4px;">Highest PageRank</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+    st.plotly_chart(graph_fig, use_container_width=True)
+
+    tab_lg1, tab_lg2 = st.tabs(["⚡ Strategic Link Recommendations", "📋 Complete Internal PageRank Matrix"])
+    with tab_lg1:
+        for rec in recs:
+            badge_bg = "rgba(239, 68, 68, 0.15)" if rec["priority"] == "HIGH" else "rgba(56, 189, 248, 0.15)"
+            badge_color = "#ef4444" if rec["priority"] == "HIGH" else "#38bdf8"
+            st.markdown(f"""
+            <div style="background:rgba(30, 41, 59, 0.6); border:1px solid rgba(148, 163, 184, 0.25); border-radius:10px; padding:14px 18px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-weight:700; color:#f8fafc; font-size:14px;">{rec['action']}</div>
+                    <div style="background:{badge_bg}; color:{badge_color}; padding:3px 10px; border-radius:6px; font-size:11px; font-weight:700; font-family:'JetBrains Mono',monospace;">{rec['priority']} PRIORITY</div>
+                </div>
+                <div style="font-size:12.5px; color:#cbd5e1; margin-top:6px;"><b>Link From:</b> <code>{rec['source_recommended']}</code> ➔ <b>Link To:</b> <code>{rec['target_page']}</code></div>
+                <div style="font-size:12px; color:#94a3b8; margin-top:4px;">💡 {rec['rationale']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    with tab_lg2:
+        st.dataframe(nodes_df[['page', 'in_degree', 'out_degree', 'pagerank_score', 'clicks', 'impressions', 'status']], use_container_width=True)
+        st.download_button("📥 Export Internal PageRank Data (CSV)", nodes_df.to_csv(index=False), "internal_pagerank_network.csv", "text/csv", use_container_width=True, key="btn_dl_pagerank_csv")
+
+# ----------------------------------------------------
+# 26. Automated SEO Action Plan & Priority Kanban Board
+# ----------------------------------------------------
+elif page == "📋 Automated Action Plan & Kanban":
+    render_back_to_overview("seo_kanban")
+    st.markdown("""
+    <div style="background:rgba(15, 23, 42, 0.75); border:1px solid rgba(168, 85, 247, 0.35); border-radius:14px; padding:22px; margin-bottom:24px; backdrop-filter:blur(10px);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:22px; font-weight:800; color:#c084fc; letter-spacing:-0.4px;">📋 AUTOMATED SEO ACTION PLAN & PRIORITY KANBAN</div>
+                <div style="font-size:13px; color:#94a3b8; margin-top:4px;">Synthesizes algorithmic discoveries across cannibalization, quick wins, content decay, and CTR gaps into a clear priority execution workflow.</div>
+            </div>
+            <div style="background:rgba(168, 85, 247, 0.12); border:1px solid rgba(168, 85, 247, 0.35); padding:6px 14px; border-radius:8px; font-size:12px; font-family:'JetBrains Mono',monospace; color:#c084fc; font-weight:700;">● WORKFLOW AUTOMATION</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    tasks_df = generate_seo_action_plan(df, current_site=current_site)
+
+    kb1, kb2, kb3, kb4 = st.columns(4)
+    with kb1:
+        n_crit = len(tasks_df[tasks_df["column"].str.contains("Critical", na=False)])
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">CRITICAL ISSUES</div>
+            <div style="font-size:26px; font-weight:800; color:#ef4444; margin-top:4px;">{n_crit}</div>
+            <div style="font-size:11px; color:#ef4444; margin-top:2px;">Cannibalization / Dilution</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with kb2:
+        n_qw = len(tasks_df[tasks_df["column"].str.contains("Quick Wins", na=False)])
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">QUICK WINS READY</div>
+            <div style="font-size:26px; font-weight:800; color:#38bdf8; margin-top:4px;">{n_qw}</div>
+            <div style="font-size:11px; color:#38bdf8; margin-top:2px;">Striking Distance (Pos 4-20)</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with kb3:
+        n_med = len(tasks_df[tasks_df["column"].str.contains("Medium", na=False)])
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">OPTIMIZATION TASKS</div>
+            <div style="font-size:26px; font-weight:800; color:#f59e0b; margin-top:4px;">{n_med}</div>
+            <div style="font-size:11px; color:#f59e0b; margin-top:2px;">CTR & Content Refresh</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with kb4:
+        n_done = len(tasks_df[tasks_df["column"].str.contains("Done", na=False)])
+        st.markdown(f"""
+        <div class="gsc-scorecard">
+            <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">RESOLVED / DONE</div>
+            <div style="font-size:26px; font-weight:800; color:#10b981; margin-top:4px;">{n_done}</div>
+            <div style="font-size:11px; color:#10b981; margin-top:2px;">Validated Best Practices</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
+
+    col_crit, col_qw, col_med, col_done = st.columns(4)
+    kanban_cols = [
+        (col_crit, "🚨 Critical / High Impact", "#ef4444", "rgba(239, 68, 68, 0.15)"),
+        (col_qw, "⚡ Quick Wins (Low Effort)", "#38bdf8", "rgba(56, 189, 248, 0.15)"),
+        (col_med, "🛠️ Medium Term Optimization", "#f59e0b", "rgba(245, 158, 11, 0.15)"),
+        (col_done, "✅ Done / Resolved", "#10b981", "rgba(16, 185, 129, 0.15)"),
+    ]
+
+    for ui_col, col_name, c_color, c_bg in kanban_cols:
+        with ui_col:
+            st.markdown(f"""
+            <div style="background:{c_bg}; border:1px solid {c_color}; border-radius:10px; padding:10px 14px; margin-bottom:14px; text-align:center;">
+                <div style="font-weight:700; color:{c_color}; font-size:13px;">{col_name}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            tasks_subset = tasks_df[tasks_df["column"] == col_name]
+            for _, t in tasks_subset.iterrows():
+                st.markdown(f"""
+                <div style="background:rgba(30, 41, 59, 0.7); border:1px solid rgba(148, 163, 184, 0.25); border-radius:10px; padding:14px; margin-bottom:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:11px; font-family:'JetBrains Mono',monospace; color:#94a3b8;">{t['task_id']}</span>
+                        <span style="font-size:10px; background:rgba(56, 189, 248, 0.2); color:#38bdf8; padding:2px 8px; border-radius:6px; font-weight:700;">{t['estimated_lift']}</span>
+                    </div>
+                    <div style="font-size:13px; font-weight:700; color:#f8fafc; line-height:1.3; margin-bottom:4px;">{t['title']}</div>
+                    <div style="font-size:11.5px; color:#cbd5e1; margin-bottom:8px;">{t['detail']}</div>
+                    <div style="font-size:11px; color:#94a3b8; background:rgba(15, 23, 42, 0.6); padding:8px; border-radius:6px; border-left:3px solid {c_color};">
+                        <b>Action:</b> {t['action']}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+    st.download_button("📥 Export Complete Action Plan (CSV)", tasks_df.to_csv(index=False), "seo_action_plan_kanban.csv", "text/csv", use_container_width=True, key="btn_dl_kanban_csv")
+
+# ----------------------------------------------------
+# 27. Free Side-by-Side Competitor On-Page Auditor
+# ----------------------------------------------------
+elif page == "⚔️ Free Competitor On-Page Auditor":
+    render_back_to_overview("competitor_audit")
+    st.markdown("""
+    <div style="background:rgba(15, 23, 42, 0.75); border:1px solid rgba(244, 63, 94, 0.35); border-radius:14px; padding:22px; margin-bottom:24px; backdrop-filter:blur(10px);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:22px; font-weight:800; color:#f43f5e; letter-spacing:-0.4px;">⚔️ FREE COMPETITOR ON-PAGE & CONTENT GAP AUDITOR</div>
+                <div style="font-size:13px; color:#94a3b8; margin-top:4px;">Compare any of your pages head-to-head against a competitor ranking on Page 1. Audits word count, heading hierarchy, meta tags, and reveals missing topical subtopics—100% free with zero paid third-party APIs.</div>
+            </div>
+            <div style="background:rgba(244, 63, 94, 0.12); border:1px solid rgba(244, 63, 94, 0.35); padding:6px 14px; border-radius:8px; font-size:12px; font-family:'JetBrains Mono',monospace; color:#f43f5e; font-weight:700;">● ZERO-COST SERP AUDIT</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    site_def = current_site or "https://example.com"
+    cmp_c1, cmp_c2 = st.columns(2)
+    with cmp_c1:
+        url_your = st.text_input("Your Landing Page URL:", value=site_def, key="input_cmp_your_url")
+    with cmp_c2:
+        url_comp = st.text_input("Competitor Target Page URL:", value="https://ahrefs.com/blog/seo-audit/", key="input_cmp_comp_url")
+
+    btn_run_cmp = st.button("🚀 Run Free Side-by-Side Audit", type="primary", use_container_width=True, key="btn_trigger_cmp_audit")
+
+    with st.spinner("Crawling on-page DOM, extracting headings, word counts, and metadata..."):
+        cmp_result = audit_competitor_comparison(url_your, url_comp)
+
+    your_d = cmp_result["your_data"]
+    comp_d = cmp_result["comp_data"]
+    metrics_tbl = cmp_result["metrics_table"]
+    missing_t = cmp_result["missing_topics"]
+
+    # Comparison KPI summary
+    st.markdown("#### 📊 Head-to-Head Technical Benchmark")
+    st.dataframe(metrics_tbl, use_container_width=True)
+
+    # Content gap section
+    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+    gap_col1, gap_col2 = st.columns([1.4, 1])
+    with gap_col1:
+        st.markdown("#### 🔍 Missing Topical Sections (Content Gap)")
+        st.markdown("<div style='font-size:12.5px; color:#94a3b8; margin-bottom:12px;'>The following subtopics are covered in your competitor's H2 headings but are missing from your page:</div>", unsafe_allow_html=True)
+        if missing_t:
+            for t in missing_t:
+                st.markdown(f"""
+                <div style="background:rgba(30, 41, 59, 0.6); border-left:3px solid #f43f5e; border-radius:6px; padding:10px 14px; margin-bottom:8px; font-size:13px; color:#f8fafc;">
+                    💡 <b>Missing Section:</b> {t}
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.success("🎉 Outstanding! Your page covers all core topical headings found on the competitor page.")
+
+    with gap_col2:
+        st.markdown("#### 📑 Outline Architecture Comparison")
+        st.markdown(f"**Your Page ({len(your_d.get('h2_tags', []))} H2s):**")
+        for h in your_d.get("h2_tags", [])[:4]:
+            st.markdown(f"- `{h}`")
+        st.markdown(f"**Competitor Page ({len(comp_d.get('h2_tags', []))} H2s):**")
+        for h in comp_d.get("h2_tags", [])[:4]:
+            st.markdown(f"- `{h}`")
+
+    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+    st.download_button("📥 Export Competitor Audit (CSV)", metrics_tbl.to_csv(index=False), "competitor_onpage_audit.csv", "text/csv", use_container_width=True, key="btn_dl_cmp_csv")
+
 else:
     st.info(f"👉 Please select a feature from the sidebar navigation to view its report. (Active: {page})")
