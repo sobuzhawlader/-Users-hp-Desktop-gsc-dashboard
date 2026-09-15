@@ -3235,16 +3235,16 @@ def render_empty_state_action(feature_title: str = "this report"):
         f'</div>'
     ) if is_http_only else ''
 
-    st.markdown(f"""
+    _render_safe_html(f"""
     <div style="background:rgba(30, 41, 59, 0.45); border:1px solid rgba(56, 189, 248, 0.25); border-radius:12px; padding:22px 18px; margin:16px 0 20px 0; text-align:center;">
         <div style="font-size:28px; margin-bottom:6px;">📊</div>
         <div style="font-size:16px; font-weight:700; color:#f8fafc;">No Search Performance Data Loaded for <span style="color:#38bdf8; font-family:'JetBrains Mono',monospace;">{eff_site}</span></div>
         <div style="font-size:12.5px; color:#94a3b8; max-width:580px; margin:6px auto 14px auto; line-height:1.5;">
             {notice_http}
-            Click below to query Google Search Console API live, or select your HTTPS / Domain property in the sidebar.
+            <div style="margin-top:4px;">Click below to query Google Search Console API live, or select your HTTPS / Domain property in the sidebar.</div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
     
     c_act1, c_act2, c_act3 = st.columns([1, 1.8, 1])
     with c_act2:
