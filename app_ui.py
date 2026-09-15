@@ -2301,171 +2301,358 @@ if 'page' in st.query_params:
 page = st.session_state.selected_page
 
 # ====================================================
-# Authentication Screen (Clean, Centered, Minimal)
+# Authentication Screen (Stitch SaaS Design Pixel-Perfect)
 # ====================================================
 def render_auth_page(auth_url=None, is_dark=False):
     """
-    Renders the modern, clean, enterprise-grade Authentication Gate.
+    Renders the modern, clean, enterprise-grade Authentication Gate matching the Stitch SaaS design.
     Features:
-      - Centered minimalist card with Google branding
-      - ONE primary action: Continue with Google
-      - ONE secondary action: Explore with Demo Data
-      - Hidden Advanced Options expander for Service Account JSON
-      - Hidden Help & Documentation expander (clean, no internal dev instructions)
-      - Suppresses the operational sidebar completely
+      - Top SaaS Navigation Bar (RANKSEO / Enterprise Suite v2.4, Systems Operational, Documentation)
+      - Subtle dot-grid canvas background
+      - Top accent gradient border on elevated card
+      - Floating Google App Icon
+      - Title & Subtitle with 3 feature badges (Real-Time Indexing, Keyword Intelligence, SOC2)
+      - Google Email input with @ and OPT indicators
+      - ONE primary action: Continue with Google (with Google logo)
+      - Centered divider: OR EXPLORE SANDBOX
+      - ONE secondary action: ⚡ Explore Live Demo Sandbox (warm amber button)
+      - Green trust banner (Read-Only & In-Memory)
+      - Two styled expanders for Service Account and Setup Guide
+      - Enterprise compliance footer bar (Privacy, Terms, Compliance, TLS, US-EAST-1, Manage app)
+      - Completely suppresses operational sidebar
     """
     st.markdown("""
     <style>
-    [data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
+    [data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"], [data-testid="stExpandSidebarButton"] {
         display: none !important;
     }
+    [data-testid="stAppViewContainer"], .main {
+        background-color: #f8fafc !important;
+        background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px) !important;
+        background-size: 24px 24px !important;
+    }
     .main .block-container {
-        max-width: 680px !important;
-        margin: 0 auto !important;
-        padding-top: 3.2rem !important;
+        max-width: 100% !important;
+        padding-top: 0 !important;
+        padding-bottom: 2rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    /* Top Navbar */
+    .auth-top-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 28px;
+        background: #ffffff;
+        border-bottom: 1px solid #e2e8f0;
+        margin: 0 -1rem 28px -1rem;
+    }
+    /* Primary Google Button */
+    .st-key-auth_btn_continue_google button {
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+        border: 1px solid #dadce0 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        height: 44px !important;
+        border-radius: 10px !important;
+        transition: all 0.2s ease !important;
+    }
+    .st-key-auth_btn_continue_google button:hover {
+        background-color: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+    }
+    .st-key-auth_btn_continue_google button p::before {
+        content: "";
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+        vertical-align: -2px;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="%234285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/><path fill="%23EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/><path fill="%23FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/><path fill="%2334A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/></svg>');
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+    /* Secondary Demo Sandbox Button */
+    .st-key-btn_auth_demo_explore button {
+        background-color: #fffbeb !important;
+        color: #b45309 !important;
+        border: 1px solid #fde047 !important;
+        box-shadow: 0 1px 3px rgba(245, 158, 11, 0.1) !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        height: 44px !important;
+        border-radius: 10px !important;
+        transition: all 0.2s ease !important;
+    }
+    .st-key-btn_auth_demo_explore button:hover {
+        background-color: #fef3c7 !important;
+        border-color: #facc15 !important;
+        color: #92400e !important;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.18) !important;
+    }
+    /* Expanders styling */
+    [data-testid="stExpander"] {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+        margin-bottom: 12px !important;
+    }
+    [data-testid="stExpander"] details summary {
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+        padding: 12px 16px !important;
+    }
+    div[data-testid="stTextInput"] input {
+        border-radius: 10px !important;
+        border: 1px solid #e2e8f0 !important;
+        background-color: #ffffff !important;
+        height: 42px !important;
+        font-size: 13.5px !important;
+        padding-left: 14px !important;
+    }
+    div[data-testid="stTextInput"] input:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    title_col = "#f8fafc" if is_dark else "#0f172a"
-    sub_col = "#94a3b8" if is_dark else "#64748b"
-
-    with st.container():
-        with st.container(border=True):
-            st.markdown(f"""
-            <div style="text-align:center; padding: 18px 12px 6px 12px;">
-                <div style="display:flex; justify-content:center; margin-bottom:18px;">
-                    <svg width="48" height="48" viewBox="0 0 48 48">
-                        <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                        <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                        <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                        <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+    # 1. Top SaaS Navigation Bar
+    st.markdown("""
+    <div class="auth-top-nav">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 26px; height: 26px; background: #2563eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(37,99,235,0.3);">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="white">
+                        <path d="M12 4L3 20h18L12 4z"/>
                     </svg>
                 </div>
-                <div style="font-size:24px; font-weight:800; color:{title_col}; margin-bottom:8px; letter-spacing:-0.4px;">
-                    Google Search Console Enterprise Suite
-                </div>
-                <div style="font-size:14px; color:{sub_col}; margin-bottom:22px; line-height:1.5;">
-                    Connect your Google account to access real-time SEO analytics, indexing, and keyword intelligence.
-                </div>
+                <span style="font-weight: 800; font-size: 15px; letter-spacing: -0.2px; color: #0f172a;">
+                    RANK<span style="color: #2563eb;">SEO</span>
+                </span>
             </div>
-            """, unsafe_allow_html=True)
+            <span style="color: #cbd5e1; font-weight: 300;">/</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; padding: 2px 9px; border-radius: 14px; font-size: 11px; font-weight: 600;">
+                <span style="width: 6px; height: 6px; background: #2563eb; border-radius: 50%;"></span>
+                Enterprise Suite v2.4
+            </span>
+        </div>
 
-            # 1. Primary Action: Continue with Google
-            with st.form("auth_google_login_form", clear_on_submit=False, border=False):
-                email_input = st.text_input(
-                    "Google Account Email",
-                    placeholder="Enter your Gmail or Workspace account (optional)",
-                    key="auth_login_email_input",
-                    label_visibility="collapsed"
-                )
-                st.markdown('<div class="claude-google-btn-wrapper">', unsafe_allow_html=True)
-                btn_sign_in_google = st.form_submit_button("Continue with Google", use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
+        <div style="display: flex; align-items: center; gap: 18px;">
+            <span style="display: inline-flex; align-items: center; gap: 6px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 3px 11px; border-radius: 14px; font-size: 11px; font-weight: 600;">
+                <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%;"></span>
+                Systems Operational
+            </span>
+            <a href="https://developers.google.com/search/docs" target="_blank" style="text-decoration: none; color: #64748b; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
+                Documentation 
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+            </a>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-                if btn_sign_in_google:
-                    raw_email = (email_input or "").strip() or "google.user@gmail.com"
-                    if "@" not in raw_email:
-                        raw_email = f"{raw_email}@gmail.com"
-                    user_domain = raw_email.split("@")[-1]
-                    domain_name = user_domain if user_domain not in ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com'] else raw_email.split("@")[0] + ".com"
-                    default_site = f"sc-domain:{domain_name}"
+    # 2. Centered Card Container
+    st.markdown("""
+    <div style="max-width: 620px; margin: 0 auto; padding: 0 12px;">
+        <!-- Top Cyan-Blue Accent Bar -->
+        <div style="height: 5px; background: linear-gradient(90deg, #00d2ff, #0072ff); border-radius: 20px 20px 0 0; margin-bottom: -1px;"></div>
+
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 20px 20px; padding: 34px 34px 28px 34px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04); margin-bottom: 16px;">
+            <!-- Floating Google App Icon -->
+            <div style="width: 58px; height: 58px; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                <svg width="28" height="28" viewBox="0 0 48 48">
+                    <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                    <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                    <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                    <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+                </svg>
+            </div>
+
+            <!-- Title & Subtitle -->
+            <div style="font-size: 25px; font-weight: 800; color: #0f172a; text-align: center; letter-spacing: -0.4px; margin-bottom: 8px;">
+                Google Search Console Enterprise Suite
+            </div>
+            <div style="font-size: 13.5px; color: #64748b; text-align: center; line-height: 1.5; margin-bottom: 18px; max-width: 480px; margin-left: auto; margin-right: auto;">
+                Connect your Google account to access real-time SEO analytics, indexing automation, and keyword intelligence.
+            </div>
+
+            <!-- 3 Feature Badges -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 22px;">
+                <span style="background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; padding: 4px 11px; border-radius: 14px; font-size: 11.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                    ⚡ Real-Time Indexing
+                </span>
+                <span style="background: #faf5ff; color: #7c3aed; border: 1px solid #f3e8ff; padding: 4px 11px; border-radius: 14px; font-size: 11.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                    📈 Keyword Intelligence
+                </span>
+                <span style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 4px 11px; border-radius: 14px; font-size: 11.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                    🛡️ SOC2 Type II Certified
+                </span>
+            </div>
+    """, unsafe_allow_html=True)
+
+    # 3. Google Form & Actions
+    with st.form("auth_google_login_form", clear_on_submit=False, border=False):
+        email_input = st.text_input(
+            "Google Account Email",
+            placeholder="Enter your Gmail or Workspace account (optional)",
+            key="auth_login_email_input",
+            label_visibility="collapsed"
+        )
+        btn_sign_in_google = st.form_submit_button("Continue with Google", use_container_width=True, key="auth_btn_continue_google")
+
+        if btn_sign_in_google:
+            raw_email = (email_input or "").strip() or "google.user@gmail.com"
+            if "@" not in raw_email:
+                raw_email = f"{raw_email}@gmail.com"
+            user_domain = raw_email.split("@")[-1]
+            domain_name = user_domain if user_domain not in ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com'] else raw_email.split("@")[0] + ".com"
+            default_site = f"sc-domain:{domain_name}"
+            st.session_state.authenticated = True
+            st.session_state.demo_mode = False
+            st.session_state.user_email = raw_email
+            st.session_state.sites = [default_site, f"https://{domain_name}/"]
+            st.session_state.sites_detailed = [
+                {"siteUrl": default_site, "permissionLevel": "siteOwner"},
+                {"siteUrl": f"https://{domain_name}/", "permissionLevel": "siteOwner"}
+            ]
+            st.session_state.current_site = default_site
+            st.session_state.df = generate_mock_gsc_data(default_site, days=90)
+            st.session_state.portfolio_needs_refresh = True
+            st.session_state.selected_page = "📊 Dashboard Hub"
+            st.session_state.current_active_view = "hub"
+            st.toast(f"✅ Signed in as {raw_email}!", icon="🎉")
+            st.rerun()
+
+    # 4. Divider: OR EXPLORE SANDBOX
+    st.markdown("""
+    <div style="display: flex; align-items: center; margin: 16px 0 18px 0;">
+        <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+        <span style="padding: 0 12px; color: #94a3b8; font-size: 10.5px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;">
+            OR EXPLORE SANDBOX
+        </span>
+        <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 5. Secondary Action: Explore Live Demo Sandbox
+    if st.button("⚡ Explore Live Demo Sandbox", key="btn_auth_demo_explore", use_container_width=True, help="Load enterprise sample dataset to preview all 23 dashboard tools"):
+        demo_site = "sc-domain:example-enterprise.com"
+        st.session_state.authenticated = True
+        st.session_state.demo_mode = True
+        st.session_state.user_email = "demo.analyst@example-enterprise.com"
+        st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
+        st.session_state.sites_detailed = [
+            {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
+            {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
+        ]
+        st.session_state.current_site = demo_site
+        st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+        st.session_state.portfolio_needs_refresh = True
+        st.session_state.selected_page = "📊 Dashboard Hub"
+        st.session_state.current_active_view = "hub"
+        st.toast("⚡ Loaded demo enterprise dataset!", icon="🚀")
+        st.rerun()
+
+    # 6. Read-Only Trust Banner
+    st.markdown("""
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-top: 18px; display: flex; align-items: center; gap: 10px;">
+            <span style="color: #059669; font-size: 16px;">🔒</span>
+            <div style="font-size: 11.5px; color: #475569; line-height: 1.45;">
+                <b style="color: #0f172a;">Read-Only &amp; In-Memory:</b> Your credentials and Search Console telemetry are processed in strictly isolated, volatile memory sessions.
+            </div>
+        </div>
+        </div> <!-- End of main card -->
+    """, unsafe_allow_html=True)
+
+    # 7. First Expandable Card: Enterprise Service Account JSON
+    with st.expander("▶  Enterprise: Connect via Service Account JSON        [ Recommended for orgs ]", expanded=False):
+        if auth_url:
+            st.markdown("##### 🌐 Connect via Google Cloud OAuth (Live API)")
+            st.caption("Authenticate directly using configured Google OAuth 2.0 Client credentials:")
+            st.link_button("🌐 Connect via Official Google Cloud OAuth (Live API)", auth_url, use_container_width=True)
+            st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+
+        st.markdown("##### 🔑 Service Account JSON File")
+        st.caption("If your team has a Google Cloud Service Account with Search Console delegation, upload the JSON credentials:")
+        sa_upload = st.file_uploader("Upload service_account.json", type=["json"], key="auth_sa_uploader")
+        if sa_upload is not None:
+            try:
+                sa_content = json.load(sa_upload)
+                if 'client_email' in sa_content or 'type' in sa_content:
+                    sa_creds, sa_svc, sa_svcv1, sa_sites = authenticate_service_account(sa_content)
+                    st.session_state.user_creds = sa_creds
+                    st.session_state.service = sa_svc
+                    st.session_state.service_v1 = sa_svcv1
+                    st.session_state.sites = sa_sites
+                    st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in sa_sites]
+                    st.session_state.user_email = sa_content.get('client_email', 'service-account')
+                    st.session_state.current_site = sa_sites[0] if sa_sites else None
+                    st.session_state.portfolio_needs_refresh = True
                     st.session_state.authenticated = True
                     st.session_state.demo_mode = False
-                    st.session_state.user_email = raw_email
-                    st.session_state.sites = [default_site, f"https://{domain_name}/"]
-                    st.session_state.sites_detailed = [
-                        {"siteUrl": default_site, "permissionLevel": "siteOwner"},
-                        {"siteUrl": f"https://{domain_name}/", "permissionLevel": "siteOwner"}
-                    ]
-                    st.session_state.current_site = default_site
-                    st.session_state.df = generate_mock_gsc_data(default_site, days=90)
-                    st.session_state.portfolio_needs_refresh = True
+                    st.session_state.df = pd.DataFrame()
                     st.session_state.selected_page = "📊 Dashboard Hub"
                     st.session_state.current_active_view = "hub"
-                    st.toast(f"✅ Signed in as {raw_email}!", icon="🎉")
+                    st.success(f"Connected as {st.session_state.user_email}!")
                     st.rerun()
+                else:
+                    st.error("Invalid Service Account JSON: Missing 'client_email'.")
+            except Exception as sa_err:
+                st.error(f"Service Account Error: {sa_err}")
 
-            # 2. Secondary Action: Explore Demo Mode
-            if st.button("⚡ Explore Demo Mode", key="btn_auth_demo_explore", use_container_width=True, help="Load enterprise sample dataset to preview all 23 dashboard tools without logging in"):
-                demo_site = "sc-domain:example-enterprise.com"
-                st.session_state.authenticated = True
-                st.session_state.demo_mode = True
-                st.session_state.user_email = "demo.analyst@example-enterprise.com"
-                st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
-                st.session_state.sites_detailed = [
-                    {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
-                    {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
-                ]
-                st.session_state.current_site = demo_site
-                st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
-                st.session_state.portfolio_needs_refresh = True
-                st.session_state.selected_page = "📊 Dashboard Hub"
-                st.session_state.current_active_view = "hub"
-                st.toast("⚡ Loaded demo enterprise dataset!", icon="🚀")
-                st.rerun()
+    # 8. Second Expandable Card: Setup Guide & Permissions
+    with st.expander("▶  Setup Guide & Permissions        [ 3 min read ]", expanded=False):
+        st.markdown("""
+        ##### 1. Verify Property Ownership in Search Console
+        Ensure your website is already added and verified in the official [Google Search Console](https://search.google.com/search-console).
 
-            # 3. Security Notice
-            st.markdown(f"""
-            <div style="font-size:11.5px; color:{'#94a3b8' if is_dark else '#64748b'}; text-align:center; margin-top:14px; margin-bottom:4px; line-height:1.45;">
-                🔒 Read-Only &amp; In-Memory: Your credentials and Search Console data are processed securely in volatile session memory.
-            </div>
-            """, unsafe_allow_html=True)
+        ##### 2. Confirm Google Account Permissions
+        The connected Gmail or Google Workspace account must have at least **Full** or **Restricted** user access (or **Owner**) on the target property.
 
-        st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+        ##### 3. Domain Properties vs. URL-Prefix Properties
+        - **Domain Property (`sc-domain:example.com`)**: Verified via DNS TXT record. Tracks traffic across all protocols (`http://` and `https://`) and all subdomains (`www`, `blog`, `shop`).
+        - **URL-Prefix Property (`https://example.com/`)**: Verified via HTML tag or file. Tracks only URLs starting with that exact address.
 
-        # 4. Advanced Options (Hidden inside st.expander)
-        with st.expander("Enterprise: Connect via Service Account JSON", expanded=False):
-            if auth_url:
-                st.markdown("##### 🌐 Connect via Google Cloud OAuth (Live API)")
-                st.caption("Authenticate directly using configured Google OAuth 2.0 Client credentials:")
-                st.link_button("🌐 Connect via Official Google Cloud OAuth (Live API)", auth_url, use_container_width=True)
-                st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+        ##### 4. Troubleshooting Empty Sites
+        If your verified site doesn't appear immediately, verify you are signed into the Google Account that holds ownership or user rights in Search Console.
+        """)
 
-            st.markdown("##### 🔑 Service Account JSON File")
-            st.caption("If your team has a Google Cloud Service Account with Search Console delegation, upload the JSON credentials:")
-            sa_upload = st.file_uploader("Upload service_account.json", type=["json"], key="auth_sa_uploader")
-            if sa_upload is not None:
-                try:
-                    sa_content = json.load(sa_upload)
-                    if 'client_email' in sa_content or 'type' in sa_content:
-                        sa_creds, sa_svc, sa_svcv1, sa_sites = authenticate_service_account(sa_content)
-                        st.session_state.user_creds = sa_creds
-                        st.session_state.service = sa_svc
-                        st.session_state.service_v1 = sa_svcv1
-                        st.session_state.sites = sa_sites
-                        st.session_state.sites_detailed = [{"siteUrl": s, "permissionLevel": "siteOwner"} for s in sa_sites]
-                        st.session_state.user_email = sa_content.get('client_email', 'service-account')
-                        st.session_state.current_site = sa_sites[0] if sa_sites else None
-                        st.session_state.portfolio_needs_refresh = True
-                        st.session_state.authenticated = True
-                        st.session_state.demo_mode = False
-                        st.session_state.df = pd.DataFrame()
-                        st.session_state.selected_page = "📊 Dashboard Hub"
-                        st.session_state.current_active_view = "hub"
-                        st.success(f"Connected as {st.session_state.user_email}!")
-                        st.rerun()
-                    else:
-                        st.error("Invalid Service Account JSON: Missing 'client_email'.")
-                except Exception as sa_err:
-                    st.error(f"Service Account Error: {sa_err}")
-
-        # 5. Help & Documentation Expander (Clean, enterprise user guide)
-        with st.expander("Setup Guide & Permissions", expanded=False):
-            st.markdown("""
-            ##### 1. Verify Property Ownership in Search Console
-            Ensure your website is already added and verified in the official [Google Search Console](https://search.google.com/search-console).
-
-            ##### 2. Confirm Google Account Permissions
-            The connected Gmail or Google Workspace account must have at least **Full** or **Restricted** user access (or **Owner**) on the target property.
-
-            ##### 3. Domain Properties vs. URL-Prefix Properties
-            - **Domain Property (`sc-domain:example.com`)**: Verified via DNS TXT record. Tracks traffic across all protocols (`http://` and `https://`) and all subdomains (`www`, `blog`, `shop`).
-            - **URL-Prefix Property (`https://example.com/`)**: Verified via HTML tag or file. Tracks only URLs starting with that exact address.
-
-            ##### 4. Troubleshooting Empty Sites
-            If your verified site doesn't appear immediately, verify you are signed into the Google Account that holds ownership or user rights in Search Console.
-            """)
+    # 9. Bottom Enterprise Compliance Footer
+    st.markdown("""
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 4px 10px 4px; border-top: 1px solid #e2e8f0; margin-top: 36px; font-size: 11.5px; color: #64748b; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span>Privacy Policy</span>
+            <span>•</span>
+            <span>Terms of Service</span>
+            <span>•</span>
+            <span>Compliance &amp; Trust</span>
+            <span>•</span>
+            <span style="display: inline-flex; align-items: center; gap: 4px; color: #059669; font-weight: 600;">
+                🛡️ 256-Bit TLS Encryption
+            </span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 3px 9px; border-radius: 14px; font-size: 11px; font-weight: 600; color: #475569;">
+                <span style="width: 5px; height: 5px; background: #10b981; border-radius: 50%;"></span>
+                US-EAST-1
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 4px; border: 1px solid #e2e8f0; background: #ffffff; padding: 3px 9px; border-radius: 14px; font-size: 11px; font-weight: 500; color: #475569;">
+                &lt; Manage app
+            </span>
+        </div>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ====================================================
