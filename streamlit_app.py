@@ -2953,21 +2953,27 @@ def render_sidebar(cfg=None, auth_url=None, is_dark=False, live_site_users=0, ac
             </a>
             """, unsafe_allow_html=True)
 
-        # 2. Return to Dashboard Hub Navigation Button
-        if page != "📊 Dashboard Hub":
-            if st.button("🏠 Return to Dashboard Hub", key="sb_btn_return_hub", use_container_width=True, type="primary"):
-                st.session_state.selected_page = "📊 Dashboard Hub"
-                st.session_state.current_active_view = "hub"
-                st.query_params['view'] = "hub"
-                st.rerun()
-        else:
-            st.markdown(f"""
-            <div style="background:{'rgba(56, 189, 248, 0.12)' if is_dark else '#e8f0fe'}; border:1px solid {'rgba(56, 189, 248, 0.3)' if is_dark else '#d2e3fc'}; border-radius:8px; padding:7px 10px; margin-bottom:12px; font-size:12px; font-weight:700; color:{'#38bdf8' if is_dark else '#1a73e8'}; text-align:center;">
-                🏠 Dashboard Hub (Active)
-            </div>
-            """, unsafe_allow_html=True)
+        # 1. Official GSC Property Selector Card
+        effective_site_curr = st.session_state.get('current_site') or (clean_active_sites[0] if clean_active_sites else "https://example.com")
+        is_blog = "blogspot" in str(effective_site_curr).lower() or "blogger" in str(effective_site_curr).lower()
+        p_icon_bg = "#f97316" if is_blog else "#1a73e8"
+        p_icon_txt = "B" if is_blog else "G"
+        disp_prop = str(effective_site_curr).replace("sc-domain:", "").strip("/")
+        if len(disp_prop) > 23:
+            disp_prop = disp_prop[:20] + "..."
 
-        # 3. Active Workspace / Property Selector
+        st.markdown(f"""
+        <div style="background:{'rgba(30, 41, 59, 0.7)' if is_dark else '#ffffff'}; border:1px solid {'rgba(56, 189, 248, 0.25)' if is_dark else '#dadce0'}; border-radius:8px; padding:7px 10px; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 2px rgba(60,64,67,0.08);">
+            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                <div style="background:{p_icon_bg}; width:22px; height:22px; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#ffffff; font-weight:800; font-size:11px; flex-shrink:0;">{p_icon_txt}</div>
+                <div style="font-size:12px; font-weight:600; color:{'#f8fafc' if is_dark else '#202124'}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:'Roboto', 'Google Sans', sans-serif;">
+                    {disp_prop}
+                </div>
+            </div>
+            <span style="color:{'#94a3b8' if is_dark else '#5f6368'}; font-size:11px;">▾</span>
+        </div>
+        """, unsafe_allow_html=True)
+
         if is_authenticated:
             if total_p > 0:
                 portfolio_label = f"🌐 [ALL SITES] Consolidated Portfolio ({total_p} sites)"
@@ -2994,9 +3000,6 @@ def render_sidebar(cfg=None, auth_url=None, is_dark=False, live_site_users=0, ac
         elif clean_active_sites and clean_active_sites[0] in site_options:
             def_idx = site_options.index(clean_active_sites[0])
 
-        dropdown_title = f"📁 ACTIVE PROPERTY ({total_p} SITES):" if total_p > 0 else "📁 ACTIVE PROPERTY:"
-        dropdown_col = "#38bdf8" if is_dark else "#1a73e8"
-        st.markdown(f"<div style='font-size:11px; font-weight:700; color:{dropdown_col}; margin-top:4px; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.5px;'>{dropdown_title}</div>", unsafe_allow_html=True)
         selected_choice = st.selectbox("Property", site_options, index=def_idx, label_visibility="collapsed", key="sidebar_property_selector")
 
         if selected_choice == "➕ Enter Custom Property URL":
@@ -3020,7 +3023,85 @@ def render_sidebar(cfg=None, auth_url=None, is_dark=False, live_site_users=0, ac
                 st.session_state.portfolio_needs_refresh = True
             st.rerun()
 
-        st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+
+        # 2. Official Google Search Console Navigation Tree
+        curr_page = st.session_state.get('selected_page', '📊 Dashboard Hub')
+        curr_slug = st.session_state.get('current_active_view', 'hub')
+
+        def _render_gsc_nav_btn(item_label: str, target_page: str, target_slug: str, item_icon: str = ""):
+            is_active = (curr_page == target_page) or (curr_slug == target_slug)
+            full_label = f"{item_icon}  {item_label}" if item_icon else item_label
+            k = f"sb_nav_btn_{target_slug}"
+            
+            if is_active:
+                st.markdown(f"""
+                <div style="background:{'rgba(56, 189, 248, 0.16)' if is_dark else '#e8f0fe'}; border-radius:0 20px 20px 0; padding:7px 14px; margin:2px 0; display:flex; align-items:center; justify-content:space-between; border-left:3px solid {'#38bdf8' if is_dark else '#1a73e8'};">
+                    <span style="font-weight:600; font-size:13px; color:{'#38bdf8' if is_dark else '#1a73e8'}; font-family:'Roboto', 'Google Sans', sans-serif;">{full_label}</span>
+                    <span style="font-size:10px; color:{'#38bdf8' if is_dark else '#1a73e8'};">●</span>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                if st.button(full_label, key=k, use_container_width=True, type="secondary"):
+                    st.session_state.selected_page = target_page
+                    st.session_state.current_active_view = target_slug
+                    st.query_params['view'] = target_slug
+                    st.rerun()
+
+        # Core Navigation Items
+        _render_gsc_nav_btn("Overview", "📊 Dashboard Hub", "hub", "🏠")
+        _render_gsc_nav_btn("Performance", "📈 Performance", "overview", "📈")
+        _render_gsc_nav_btn("URL inspection", "🔍 URL inspection & Schema", "url_inspection", "🔍")
+
+        st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
+
+        # Indexing Section
+        is_indexing_active = curr_slug in ["pages", "sitemaps", "indexing_api"]
+        with st.expander("📄 Indexing", expanded=is_indexing_active):
+            _render_gsc_nav_btn("Pages & Index Status", "📄 Pages & Indexing", "pages", "📄")
+            _render_gsc_nav_btn("Sitemaps", "🗺️ Sitemaps Manager", "sitemaps", "🗺️")
+            _render_gsc_nav_btn("Instant Indexing API", "🚀 Instant Google Indexing API", "indexing_api", "⚡")
+
+        # Experience & Technical Section
+        is_exp_active = curr_slug in ["quick_wins", "crawler", "log_reconciliation", "internal_links_graph"]
+        with st.expander("⚡ Experience & Technical", expanded=is_exp_active):
+            _render_gsc_nav_btn("Core Web Vitals", "⚡ Core Web Vitals & Quick Wins", "quick_wins", "⏱️")
+            _render_gsc_nav_btn("Technical Crawler", "🕷️ Technical On-Page Crawler", "crawler", "🕷️")
+            _render_gsc_nav_btn("Log Reconciliation", "🪵 Log Reconciliation", "log_reconciliation", "🪵")
+            _render_gsc_nav_btn("Internal Links Graph", "🕸️ Internal Linking Network Graph", "internal_links_graph", "🕸️")
+
+        # Search Performance & Queries Section
+        is_query_active = curr_slug in ["keywords", "cannibalization", "keyword_clusters", "ctr_curve", "traffic_forecast", "competitor_audit", "intent_regex"]
+        with st.expander("🎯 Search Queries & SERP", expanded=is_query_active):
+            _render_gsc_nav_btn("Top Queries", "🎯 Top Keywords & Queries", "keywords", "🏆")
+            _render_gsc_nav_btn("Cannibalization", "⚔️ Keyword Cannibalization", "cannibalization", "🔀")
+            _render_gsc_nav_btn("Semantic Clusters", "🧩 Semantic Keyword Clusters", "keyword_clusters", "🧩")
+            _render_gsc_nav_btn("Custom CTR Curve", "📈 Custom CTR Curve", "ctr_curve", "📊")
+            _render_gsc_nav_btn("Traffic Forecaster", "🔮 Predictive AI Traffic Forecaster", "traffic_forecast", "🔮")
+            _render_gsc_nav_btn("Competitor Audit", "⚔️ Free Competitor On-Page Auditor", "competitor_audit", "⚔️")
+            _render_gsc_nav_btn("Search Intent Regex", "🎯 Search Intent & Regex", "intent_regex", "🧭")
+
+        # AI & Automation Section
+        is_ai_active = curr_slug in ["ai_studio", "wp_sync", "alerts_bot", "ai_aeo", "algo_updates", "seo_kanban"]
+        with st.expander("🤖 AI & Automations", expanded=is_ai_active):
+            _render_gsc_nav_btn("AI Meta & Schema", "✨ AI Meta & Schema Studio", "ai_studio", "✨")
+            _render_gsc_nav_btn("WordPress 1-Click Sync", "🔌 WordPress 1-Click Sync", "wp_sync", "🔌")
+            _render_gsc_nav_btn("Anomaly Telegram Bot", "🚨 24/7 Anomaly & Telegram Bot", "alerts_bot", "🚨")
+            _render_gsc_nav_btn("AI Overviews & AEO", "🤖 AI Features & AEO", "ai_aeo", "🌐")
+            _render_gsc_nav_btn("Algo Update Impact", "📉 Algo Update Impact", "algo_updates", "📉")
+            _render_gsc_nav_btn("Action Plan & Kanban", "📋 Automated Action Plan & Kanban", "seo_kanban", "📋")
+
+        # Settings & Management Section
+        is_rep_active = curr_slug in ["properties", "realtime", "client_portal", "reports", "settings"]
+        with st.expander("⚙️ Settings & Management", expanded=is_rep_active):
+            _render_gsc_nav_btn("All Sites Portfolio", "🌐 All Sites & Properties", "properties", "🏢")
+            _render_gsc_nav_btn("Real-Time Active Users", "🟢 Real-Time Active Users", "realtime", "⚡")
+            _render_gsc_nav_btn("Client Portal", "💼 White-Label Client Portal", "client_portal", "👥")
+            _render_gsc_nav_btn("Reports & Master Export", "📤 Reports & PDF Export", "reports", "📤")
+            _render_gsc_nav_btn("Settings & Connection", "⚙️ Settings & Google Connection", "settings", "⚙️")
+
+        st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+        st.divider()
 
         # 4. Global Date Range Filter
         st.markdown(f"<div style='font-size:11px; font-weight:700; color:{'#94a3b8' if is_dark else '#5f6368'}; margin-top:6px; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.5px;'>📅 GLOBAL DATE RANGE:</div>", unsafe_allow_html=True)
@@ -3542,101 +3623,118 @@ def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, act
     is_authenticated = bool(st.session_state.get('authenticated')) or bool(st.session_state.get('service'))
     is_demo = bool(st.session_state.get('demo_mode'))
 
-    # Top row: 3 columns (Branding | Telemetry | Account Popover)
-    c_left, c_mid, c_right = st.columns([4.8, 3.2, 2.0], vertical_alignment="center")
+    # Top row: 3 columns (Official GSC Branding | Universal URL Inspection Bar | Account & Utility Icons)
+    c_left, c_mid, c_right = st.columns([3.2, 5.2, 3.6], vertical_alignment="center")
 
     with c_left:
-        brand_logo_title = (
-            '<span style="font-size:16px; font-weight:700; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.3px;">Search Console <span style="font-size:10px; font-weight:700; color:#38bdf8; -webkit-text-fill-color:#38bdf8; background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px; border:1px solid rgba(56,189,248,0.3); vertical-align:middle; margin-left:4px;">TECH VIBE</span></span>'
-            if is_dark_mode else
-            '<span style="font-size:16px; font-weight:500; color:#5f6368; letter-spacing:-0.2px;"><b style="color:#202124; font-weight:600;">Google</b> Search Console</span>'
-        )
-        st.markdown(f"""
-        <div style="display:flex; align-items:center; gap:8px;">
-            <a href="?view=hub" target="_self" style="text-decoration:none; display:flex; align-items:center; gap:8px; cursor:pointer;" title="Return to Dashboard Hub">
-                <svg width="24" height="24" viewBox="0 0 48 48">
-                    <path fill="#38BDF8" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
-                    <path fill="#F43F5E" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
-                    <path fill="#FBBF24" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
-                    <path fill="#10B981" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
+        gsc_logo_html = f"""
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="font-size:20px; color:{'#94a3b8' if is_dark_mode else '#5f6368'}; cursor:pointer; line-height:1; user-select:none;" title="Main Menu">☰</div>
+            <a href="?view=hub" target="_self" style="text-decoration:none; display:flex; align-items:center; gap:8px; cursor:pointer;" title="Google Search Console">
+                <svg width="26" height="26" viewBox="0 0 48 48">
+                    <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
+                    <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
+                    <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
+                    <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
                 </svg>
-                {brand_logo_title}
+                <div style="font-family:'Roboto', 'Google Sans', sans-serif; font-size:18px; font-weight:400; color:{'#cbd5e1' if is_dark_mode else '#5f6368'}; letter-spacing:-0.2px; white-space:nowrap;">
+                    <b style="color:{'#f8fafc' if is_dark_mode else '#202124'}; font-weight:500;">Google</b> Search Console
+                </div>
             </a>
         </div>
-        """, unsafe_allow_html=True)
+        """
+        st.markdown(gsc_logo_html, unsafe_allow_html=True)
 
     with c_mid:
-        live_bg = "rgba(16, 185, 129, 0.12)" if is_dark_mode else "#e6f4ea"
-        live_border = "1px solid rgba(16, 185, 129, 0.3)" if is_dark_mode else "1px solid #ceead6"
-        live_col = "#34d399" if is_dark_mode else "#137333"
-        dash_bg = "rgba(56, 189, 248, 0.12)" if is_dark_mode else "#e8f0fe"
-        dash_border = "1px solid rgba(56, 189, 248, 0.3)" if is_dark_mode else "1px solid #d2e3fc"
-        dash_col = "#38bdf8" if is_dark_mode else "#1a73e8"
-
-        st.markdown(f"""
-        <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
-            <div style="background:{live_bg}; border:{live_border}; border-radius:14px; padding:4px 10px; font-size:11px; font-weight:700; color:{live_col}; font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:6px;" title="Real-time active website visitors">
-                <span class="gsc-pulse-dot"></span>
-                <span>{live_users} LIVE</span>
-            </div>
-            <div style="background:{dash_bg}; border:{dash_border}; border-radius:14px; padding:4px 10px; font-size:11px; font-weight:700; color:{dash_col}; font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:5px;" title="Active dashboard viewers">
-                <span>👥</span>
-                <span>{active_users} DASH</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        clean_site_hint = site_label.replace("sc-domain:", "").strip()
+        top_inspect_val = st.text_input(
+            "Inspect URL",
+            placeholder=f"🔍 Inspect any URL in '{clean_site_hint}' or jump to any tool...",
+            label_visibility="collapsed",
+            key="gsc_universal_top_search_bar"
+        )
+        if top_inspect_val and top_inspect_val.strip():
+            q_clean = top_inspect_val.strip()
+            if "/" in q_clean or q_clean.startswith("http"):
+                st.session_state['txt_custom_inspect_url'] = q_clean
+                st.session_state.selected_page = "🔍 URL inspection & Schema"
+                st.session_state.current_active_view = "url_inspection"
+                st.query_params['view'] = "url_inspection"
+                st.rerun()
+            else:
+                for t in TOOLS_CATALOG:
+                    if q_clean.lower() in t['name'].lower() or q_clean.lower() in t['id'].lower():
+                        st.session_state.selected_page = VIEW_SLUG_TO_PAGE.get(t['id'], t['name'])
+                        st.session_state.current_active_view = t['id']
+                        st.query_params['view'] = t['id']
+                        st.rerun()
 
     with c_right:
-        if is_authenticated or is_demo:
-            user_mail = st.session_state.get('user_email') or ('demo.analyst@example.com' if is_demo else 'Connected Account')
-            with st.popover("👤 Account", use_container_width=True):
-                st.markdown(f"""
-                <div style="padding:2px 0 4px 0;">
-                    <div style="font-size:10px; color:{'#94a3b8' if is_dark_mode else '#5f6368'}; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">SIGNED IN AS</div>
-                    <div style="font-size:12px; font-weight:700; color:{'#38bdf8' if is_dark_mode else '#1a73e8'}; word-break:break-all; font-family:'JetBrains Mono',monospace; margin-top:2px;">
-                        {user_mail}
+        r_u1, r_u2, r_u3 = st.columns([1.2, 1.2, 2.4], vertical_alignment="center")
+        with r_u1:
+            st.markdown(f"""
+            <div style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; background:{'rgba(255,255,255,0.06)' if is_dark_mode else '#f8f9fa'}; border:1px solid {'rgba(255,255,255,0.1)' if is_dark_mode else '#dadce0'}; color:{'#94a3b8' if is_dark_mode else '#5f6368'}; font-size:14px; font-weight:700; cursor:pointer;" title="Help & Documentation">
+                ?
+            </div>
+            """, unsafe_allow_html=True)
+        with r_u2:
+            st.markdown(f"""
+            <div style="position:relative; display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; background:{'rgba(255,255,255,0.06)' if is_dark_mode else '#f8f9fa'}; border:1px solid {'rgba(255,255,255,0.1)' if is_dark_mode else '#dadce0'}; font-size:15px; cursor:pointer;" title="Notifications (3 updates)">
+                🔔
+                <span style="position:absolute; top:-2px; right:-3px; background:#d93025; color:#fff; font-size:9px; font-weight:800; border-radius:10px; padding:1px 5px; line-height:1.2;">3</span>
+            </div>
+            """, unsafe_allow_html=True)
+        with r_u3:
+            if is_authenticated or is_demo:
+                user_mail = st.session_state.get('user_email') or ('demo.analyst@example.com' if is_demo else 'Connected Account')
+                with st.popover("👤 Account", use_container_width=True):
+                    st.markdown(f"""
+                    <div style="padding:2px 0 4px 0;">
+                        <div style="font-size:10px; color:{'#94a3b8' if is_dark_mode else '#5f6368'}; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">SIGNED IN AS</div>
+                        <div style="font-size:12px; font-weight:700; color:{'#38bdf8' if is_dark_mode else '#1a73e8'}; word-break:break-all; font-family:'JetBrains Mono',monospace; margin-top:2px;">
+                            {user_mail}
+                        </div>
+                        <div style="font-size:10.5px; color:{'#34d399' if is_dark_mode else '#137333'}; margin-top:2px;">
+                            {'🧪 Demo Mode' if is_demo else '🟢 Google Account Verified'}
+                        </div>
                     </div>
-                    <div style="font-size:10.5px; color:{'#34d399' if is_dark_mode else '#137333'}; margin-top:2px;">
-                        {'🧪 Demo Mode' if is_demo else '🟢 Google Account Verified'}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                st.divider()
+                    """, unsafe_allow_html=True)
+                    st.divider()
 
-                if cfg and not is_demo:
-                    try:
-                        default_redirect = resolve_redirect_uri(cfg)
-                        auth_url_switch, _ = get_auth_url(default_redirect, config=cfg, prompt="select_account consent")
-                        st.link_button("🔄 Switch Account", auth_url_switch, use_container_width=True, help="Switch Google Account without clearing browser session")
-                    except Exception:
-                        pass
-                
-                if st.button("🚪 Sign Out", key="top_bar_account_signout_btn", use_container_width=True, type="secondary"):
-                    delete_saved_credentials()
-                    if 'clear_portfolio_cache' in globals():
-                        clear_portfolio_cache()
-                    if 'clear_sites_cache' in globals():
-                        clear_sites_cache()
-                    st.session_state.authenticated = False
-                    st.session_state.demo_mode = False
-                    st.session_state.service = None
-                    st.session_state.service_v1 = None
-                    st.session_state.sites = []
-                    st.session_state.sites_detailed = []
-                    st.session_state.user_creds = None
-                    st.session_state.user_email = None
-                    st.session_state.current_site = None
-                    st.session_state.portfolio_data = None
-                    st.session_state.portfolio_needs_refresh = True
-                    st.session_state.df = pd.DataFrame()
-                    st.rerun()
-        else:
-            if auth_url:
-                st.link_button("Sign In with Google", auth_url, type="primary", use_container_width=True)
+                    if cfg and not is_demo:
+                        try:
+                            default_redirect = resolve_redirect_uri(cfg)
+                            auth_url_switch, _ = get_auth_url(default_redirect, config=cfg, prompt="select_account consent")
+                            st.link_button("🔄 Switch Account", auth_url_switch, use_container_width=True, help="Switch Google Account without clearing browser session")
+                        except Exception:
+                            pass
+                    
+                    if st.button("🚪 Sign Out", key="top_bar_account_signout_btn", use_container_width=True, type="secondary"):
+                        delete_saved_credentials()
+                        if 'clear_portfolio_cache' in globals():
+                            clear_portfolio_cache()
+                        if 'clear_sites_cache' in globals():
+                            clear_sites_cache()
+                        st.session_state.authenticated = False
+                        st.session_state.demo_mode = False
+                        st.session_state.service = None
+                        st.session_state.service_v1 = None
+                        st.session_state.sites = []
+                        st.session_state.sites_detailed = []
+                        st.session_state.user_creds = None
+                        st.session_state.user_email = None
+                        st.session_state.current_site = None
+                        st.session_state.portfolio_data = None
+                        st.session_state.portfolio_needs_refresh = True
+                        st.session_state.df = pd.DataFrame()
+                        st.rerun()
             else:
-                if st.button("Sign In", key="top_bar_signin_btn", type="primary", use_container_width=True):
-                    st.session_state.authenticated = False
-                    st.rerun()
+                if auth_url:
+                    st.link_button("Sign In with Google", auth_url, type="primary", use_container_width=True)
+                else:
+                    if st.button("Sign In", key="top_bar_signin_btn", type="primary", use_container_width=True):
+                        st.session_state.authenticated = False
+                        st.rerun()
 
     # URL Inspector collapsible accordion
     with st.expander(f"🔍 URL Inspector — {site_label}", expanded=False):
@@ -3942,41 +4040,17 @@ elif page in ["📈 Performance", "📊 Overview"]:
         st.session_state.portfolio_needs_refresh = True
 
     # 2. GSC Performance Header
-    hdr_c1, hdr_c_refresh, hdr_c2, hdr_c3 = st.columns([3.2, 1.2, 1.0, 1.0])
-    with hdr_c1:
+    # 2. Official Google Search Console Performance Header
+    hdr_left, hdr_right = st.columns([8.2, 1.8], vertical_alignment="center")
+    with hdr_left:
         text_theme_color = "#f8fafc" if is_dark else "#202124"
-        if is_portfolio_mode:
-            st.markdown(f"""
-            <div style="font-size:22px; font-weight:700; color:{text_theme_color}; margin-bottom:2px; letter-spacing:-0.3px;">Performance across All Verified Properties ({len(real_active_sites)} Sites)</div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-            <div style="font-size:22px; font-weight:700; color:{text_theme_color}; margin-bottom:2px; letter-spacing:-0.3px;">Performance on Search Results</div>
-            """, unsafe_allow_html=True)
-    with hdr_c_refresh:
-        if st.button("🔄 Refresh Data", key="top_hdr_refresh_data_btn", use_container_width=True, help="Force fresh data from Google Search Console"):
-            with st.spinner("Refreshing Search Console data..."):
-                if is_portfolio_mode:
-                    st.session_state.portfolio_needs_refresh = True
-                    if 'clear_portfolio_cache' in globals():
-                        clear_portfolio_cache()
-                elif st.session_state.service and selected_site:
-                    try:
-                        st.session_state.df = pd.DataFrame()
-                        refreshed = fetch_gsc_data(st.session_state.service, selected_site, start_str, end_str)
-                        if not refreshed.empty:
-                            save_data(refreshed, selected_site)
-                            st.session_state.df = refreshed
-                    except Exception as e:
-                        st.error(f"Refresh error: {e}")
-                st.rerun()
-    with hdr_c2:
-        top_toggle = st.toggle("🌙 Dark Theme", value=is_dark, key="top_hdr_theme_toggle", help="Turn ON for Cyber Dark Mode or OFF for Clean Google Search Console Light Mode")
-        if top_toggle != is_dark:
-            st.session_state.theme_mode = 'Dark' if top_toggle else 'Light'
-            st.query_params['theme'] = 'dark' if top_toggle else 'light'
-            st.rerun()
-    with hdr_c3:
+        perf_title = f"Performance across All Verified Properties ({len(real_active_sites)} Sites)" if is_portfolio_mode else "Performance"
+        st.markdown(f"""
+        <div style="font-family:'Roboto', 'Google Sans', sans-serif; font-size:24px; font-weight:400; color:{text_theme_color}; margin: 2px 0 6px 0; letter-spacing:-0.2px;">
+            {perf_title}
+        </div>
+        """, unsafe_allow_html=True)
+    with hdr_right:
         if is_portfolio_mode and st.session_state.get('portfolio_data'):
             p_df_export = st.session_state.portfolio_data.get('df_sites', pd.DataFrame())
             if not p_df_export.empty:
@@ -3986,6 +4060,7 @@ elif page in ["📈 Performance", "📊 Overview"]:
                     "gsc_portfolio_export.csv",
                     "text/csv",
                     use_container_width=True,
+                    key="btn_gsc_perf_export",
                     on_click=lambda: st.toast("✅ Data exported successfully as CSV!", icon="📥")
                 )
         elif not df.empty:
@@ -3995,20 +4070,40 @@ elif page in ["📈 Performance", "📊 Overview"]:
                 "gsc_performance_export.csv",
                 "text/csv",
                 use_container_width=True,
+                key="btn_gsc_perf_export",
                 on_click=lambda: st.toast("✅ Data exported successfully as CSV!", icon="📥")
             )
 
-    # Compact Grouped Filter Controls
-    f_col1, f_col2, f_col3 = st.columns([1.5, 1.8, 1.3])
-    with f_col1:
-        st.markdown(f"<div style='font-size:11px; font-weight:700; color:{'#94a3b8' if is_dark else '#5f6368'}; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.5px;'>🔍 SEARCH TYPE</div>", unsafe_allow_html=True)
-        search_type_opt = st.selectbox("Search type", ["Web", "Discover", "Google News", "Image", "Video"], index=0, key="perf_search_type_select", label_visibility="collapsed")
-    with f_col2:
-        st.markdown(f"<div style='font-size:11px; font-weight:700; color:{'#94a3b8' if is_dark else '#5f6368'}; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.5px;'>📅 DATE RANGE</div>", unsafe_allow_html=True)
-        date_chip_opt = st.selectbox("Date range", ["Last 3 months", "Last 28 days", "Last 7 days", "Last 24 hours", "Compare"], index=0, key="perf_date_range_select", label_visibility="collapsed")
-    with f_col3:
-        st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
-        fresh_toggle = st.toggle("⚡ Fresh Data (Hourly)", value=False, key="perf_fresh_toggle", help="Include latest hourly and unfinalized same-day data via GSC dataState='all'")
+    # Official GSC Filter Ribbon (Pills + Search Type + Add filter + Timestamp)
+    rib_pills, rib_type, rib_filt, rib_meta = st.columns([4.2, 2.2, 1.6, 2.0], vertical_alignment="center")
+    with rib_pills:
+        date_chip_opt = st.radio(
+            "Date range",
+            ["24 hours", "7 days", "28 days", "3 months", "Compare"],
+            index=3,
+            horizontal=True,
+            label_visibility="collapsed",
+            key="perf_date_range_pills"
+        )
+        if not date_chip_opt:
+            date_chip_opt = "3 months"
+    with rib_type:
+        search_type_opt = st.selectbox(
+            "Search type",
+            ["Web", "Discover", "Google News", "Image", "Video"],
+            index=0,
+            format_func=lambda s: f"Search type: {s}",
+            key="perf_search_type_select",
+            label_visibility="collapsed"
+        )
+    with rib_filt:
+        fresh_toggle = st.toggle("⚡ Fresh", value=False, key="perf_fresh_toggle", help="Include latest hourly data (dataState='all')")
+    with rib_meta:
+        st.markdown(f"""
+        <div style="text-align:right; font-size:12px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-family:'Roboto', sans-serif; padding-top:4px;">
+            Last update: 6.5 hours ago
+        </div>
+        """, unsafe_allow_html=True)
 
     is_compare_mode = (date_chip_opt == "Compare")
     comp_type_choice = "Compare last 28 days to previous period"
@@ -4299,70 +4394,211 @@ elif page in ["📈 Performance", "📊 Overview"]:
     show_ctr = st.session_state.show_ctr
     show_position = st.session_state.show_position
 
+    # Dynamic CSS injection for official Google Search Console Scorecards
+    sc_styles = f"""
+    <style>
+    /* GSC Date Range Filter Pills */
+    div[data-testid="stRadio"] div[role="radiogroup"] {{
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 6px !important;
+        background: transparent !important;
+        align-items: center !important;
+    }}
+    div[data-testid="stRadio"] div[role="radiogroup"] label {{
+        background: {'rgba(30,41,59,0.7)' if is_dark else '#ffffff'} !important;
+        border: 1px solid {'rgba(255,255,255,0.15)' if is_dark else '#dadce0'} !important;
+        border-radius: 18px !important;
+        padding: 4px 14px !important;
+        cursor: pointer !important;
+        margin: 0 !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        color: {'#e2e8f0' if is_dark else '#3c4043'} !important;
+        transition: all 0.15s ease !important;
+    }}
+    div[data-testid="stRadio"] div[role="radiogroup"] label:hover {{
+        background: {'rgba(56,189,248,0.15)' if is_dark else '#f1f3f4'} !important;
+    }}
+    div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {{
+        background: {'rgba(26,115,232,0.25)' if is_dark else '#e8f0fe'} !important;
+        border-color: {'#38bdf8' if is_dark else '#1a73e8'} !important;
+        color: {'#38bdf8' if is_dark else '#1a73e8'} !important;
+        font-weight: 600 !important;
+    }}
+    div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child:not([data-testid="stMarkdownContainer"]) {{
+        display: none !important;
+    }}
+
+    /* Card 1: Total clicks */
+    div[data-testid="column"]:has(button[key="btn_toggle_sc_clicks"]) .stButton > button {{
+        background: {'#1a73e8' if show_clicks else ('rgba(30,41,59,0.7)' if is_dark else '#ffffff')} !important;
+        color: {'#ffffff' if show_clicks else ('#94a3b8' if is_dark else '#5f6368')} !important;
+        border: 1px solid {'#1a73e8' if show_clicks else ('rgba(56,189,248,0.2)' if is_dark else '#dadce0')} !important;
+        border-bottom: none !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        justify-content: flex-start !important;
+        padding: 8px 14px !important;
+    }}
+    .gsc-card-clicks-on {{
+        background: {'#1a73e8' if not is_dark else 'linear-gradient(180deg, #1a73e8 0%, rgba(15,23,42,0.95) 100%)'} !important;
+        border: 1px solid {'#1a73e8' if not is_dark else 'rgba(56,189,248,0.4)'} !important;
+        border-top: none !important;
+    }}
+    .gsc-card-clicks-on .gsc-card-val-big {{
+        color: #ffffff !important;
+    }}
+    
+    /* Card 2: Total impressions */
+    div[data-testid="column"]:has(button[key="btn_toggle_sc_imps"]) .stButton > button {{
+        background: {'#5c6bc0' if show_impressions else ('rgba(30,41,59,0.7)' if is_dark else '#ffffff')} !important;
+        color: {'#ffffff' if show_impressions else ('#94a3b8' if is_dark else '#5f6368')} !important;
+        border: 1px solid {'#5c6bc0' if show_impressions else ('rgba(168,85,247,0.2)' if is_dark else '#dadce0')} !important;
+        border-bottom: none !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        justify-content: flex-start !important;
+        padding: 8px 14px !important;
+    }}
+    .gsc-card-imps-on {{
+        background: {'#5c6bc0' if not is_dark else 'linear-gradient(180deg, #5c6bc0 0%, rgba(15,23,42,0.95) 100%)'} !important;
+        border: 1px solid {'#5c6bc0' if not is_dark else 'rgba(168,85,247,0.4)'} !important;
+        border-top: none !important;
+    }}
+    .gsc-card-imps-on .gsc-card-val-big {{
+        color: #ffffff !important;
+    }}
+    
+    /* Card 3: Average CTR */
+    div[data-testid="column"]:has(button[key="btn_toggle_sc_ctr"]) .stButton > button {{
+        background: {'#00897b' if show_ctr else ('rgba(30,41,59,0.7)' if is_dark else '#ffffff')} !important;
+        color: {'#ffffff' if show_ctr else ('#94a3b8' if is_dark else '#5f6368')} !important;
+        border: 1px solid {'#00897b' if show_ctr else ('rgba(20,184,166,0.2)' if is_dark else '#dadce0')} !important;
+        border-bottom: none !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        justify-content: flex-start !important;
+        padding: 8px 14px !important;
+    }}
+    .gsc-card-ctr-on {{
+        background: {'#00897b' if not is_dark else 'linear-gradient(180deg, #00897b 0%, rgba(15,23,42,0.95) 100%)'} !important;
+        border: 1px solid {'#00897b' if not is_dark else 'rgba(20,184,166,0.4)'} !important;
+        border-top: none !important;
+    }}
+    .gsc-card-ctr-on .gsc-card-val-big {{
+        color: #ffffff !important;
+    }}
+    
+    /* Card 4: Average position */
+    div[data-testid="column"]:has(button[key="btn_toggle_sc_pos"]) .stButton > button {{
+        background: {'#e37400' if show_position else ('rgba(30,41,59,0.7)' if is_dark else '#ffffff')} !important;
+        color: {'#ffffff' if show_position else ('#94a3b8' if is_dark else '#5f6368')} !important;
+        border: 1px solid {'#e37400' if show_position else ('rgba(245,158,11,0.2)' if is_dark else '#dadce0')} !important;
+        border-bottom: none !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        justify-content: flex-start !important;
+        padding: 8px 14px !important;
+    }}
+    .gsc-card-pos-on {{
+        background: {'#e37400' if not is_dark else 'linear-gradient(180deg, #e37400 0%, rgba(15,23,42,0.95) 100%)'} !important;
+        border: 1px solid {'#e37400' if not is_dark else 'rgba(245,158,11,0.4)'} !important;
+        border-top: none !important;
+    }}
+    .gsc-card-pos-on .gsc-card-val-big {{
+        color: #ffffff !important;
+    }}
+    
+    /* Off cards */
+    .gsc-card-off {{
+        background: {'rgba(15,23,42,0.5)' if is_dark else '#ffffff'} !important;
+        border: 1px solid {'rgba(255,255,255,0.08)' if is_dark else '#dadce0'} !important;
+        border-top: none !important;
+    }}
+    .gsc-card-off .gsc-card-val-big {{
+        color: {'#94a3b8' if is_dark else '#5f6368'} !important;
+    }}
+    </style>
+    """
+    st.markdown(sc_styles, unsafe_allow_html=True)
+
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
     sc_col1, sc_col2, sc_col3, sc_col4 = st.columns(4)
 
     # Card 1: Total Clicks
     with sc_col1:
         click_card_class = "gsc-card-clicks-on" if show_clicks else "gsc-card-off"
-        btn_click_icon = "✓" if show_clicks else "＋"
+        btn_click_icon = "☑" if show_clicks else "☐"
         st.button(f"{btn_click_icon} Total clicks", key="btn_toggle_sc_clicks", on_click=toggle_sc_clicks, use_container_width=True, help="Click to toggle Clicks line on the chart below")
 
         delta_clicks_badge = calc_delta_badge(total_clicks, comp_clicks, True)
-        trend_clicks_html = f"{delta_clicks_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
+        trend_clicks_html = f"{delta_clicks_badge} <span style='font-size:11px; color:#ffffff; font-weight:400;'>vs prev</span>" if is_compare_mode else ""
 
         st.markdown(f"""
-        <div class="gsc-scorecard-card {click_card_class}" style="white-space:nowrap !important;">
-            <div class="gsc-card-val-big" style="white-space:nowrap !important; word-break:keep-all !important;">{fmt_gsc_num(total_clicks)}</div>
-            <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_clicks_html}</div>
+        <div class="gsc-scorecard-card {click_card_class}" style="white-space:nowrap !important; min-height:85px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div class="gsc-card-val-big" style="font-size:36px !important; font-weight:400 !important; font-family:'Roboto', 'Google Sans', sans-serif !important; margin-top:2px !important;">{fmt_gsc_num(total_clicks)}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_clicks_html}</div>
+                <div style="color:{'#ffffff' if show_clicks else '#94a3b8'}; font-size:11px; border:1px solid {'rgba(255,255,255,0.4)' if show_clicks else '#dadce0'}; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center; line-height:1;" title="Total organic clicks">?</div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
     # Card 2: Total Impressions
     with sc_col2:
         imps_card_class = "gsc-card-imps-on" if show_impressions else "gsc-card-off"
-        btn_imps_icon = "✓" if show_impressions else "＋"
+        btn_imps_icon = "☑" if show_impressions else "☐"
         st.button(f"{btn_imps_icon} Total impressions", key="btn_toggle_sc_imps", on_click=toggle_sc_imps, use_container_width=True, help="Click to toggle Impressions line on the chart below")
 
         delta_imps_badge = calc_delta_badge(total_imps, comp_imps, True)
-        trend_imps_html = f"{delta_imps_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
+        trend_imps_html = f"{delta_imps_badge} <span style='font-size:11px; color:#ffffff; font-weight:400;'>vs prev</span>" if is_compare_mode else ""
 
         st.markdown(f"""
-        <div class="gsc-scorecard-card {imps_card_class}" style="white-space:nowrap !important;">
-            <div class="gsc-card-val-big" style="white-space:nowrap !important; word-break:keep-all !important;">{imps_disp}</div>
-            <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_imps_html}</div>
+        <div class="gsc-scorecard-card {imps_card_class}" style="white-space:nowrap !important; min-height:85px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div class="gsc-card-val-big" style="font-size:36px !important; font-weight:400 !important; font-family:'Roboto', 'Google Sans', sans-serif !important; margin-top:2px !important;">{imps_disp}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_imps_html}</div>
+                <div style="color:{'#ffffff' if show_impressions else '#94a3b8'}; font-size:11px; border:1px solid {'rgba(255,255,255,0.4)' if show_impressions else '#dadce0'}; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center; line-height:1;" title="Total search impressions">?</div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
     # Card 3: Average CTR
     with sc_col3:
         ctr_card_class = "gsc-card-ctr-on" if show_ctr else "gsc-card-off"
-        btn_ctr_icon = "✓" if show_ctr else "＋"
+        btn_ctr_icon = "☑" if show_ctr else "☐"
         st.button(f"{btn_ctr_icon} Average CTR", key="btn_toggle_sc_ctr", on_click=toggle_sc_ctr, use_container_width=True, help="Click to toggle Average CTR line on the chart below")
 
         delta_ctr_badge = calc_delta_badge(avg_ctr, comp_ctr, True)
-        trend_ctr_html = f"{delta_ctr_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
+        trend_ctr_html = f"{delta_ctr_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev</span>" if is_compare_mode else ""
 
         st.markdown(f"""
-        <div class="gsc-scorecard-card {ctr_card_class}" style="white-space:nowrap !important;">
-            <div class="gsc-card-val-big" style="white-space:nowrap !important; word-break:keep-all !important;">{avg_ctr or 0}%</div>
-            <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_ctr_html}</div>
+        <div class="gsc-scorecard-card {ctr_card_class}" style="white-space:nowrap !important; min-height:85px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div class="gsc-card-val-big" style="font-size:36px !important; font-weight:400 !important; font-family:'Roboto', 'Google Sans', sans-serif !important; margin-top:2px !important;">{avg_ctr or 0}%</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_ctr_html}</div>
+                <div style="color:{'#ffffff' if show_ctr else '#94a3b8'}; font-size:11px; border:1px solid {'rgba(255,255,255,0.4)' if show_ctr else '#dadce0'}; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center; line-height:1;" title="Average Click-Through Rate">?</div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
     # Card 4: Average Position
     with sc_col4:
         pos_card_class = "gsc-card-pos-on" if show_position else "gsc-card-off"
-        btn_pos_icon = "✓" if show_position else "＋"
+        btn_pos_icon = "☑" if show_position else "☐"
         st.button(f"{btn_pos_icon} Average position", key="btn_toggle_sc_pos", on_click=toggle_sc_pos, use_container_width=True, help="Click to toggle Average Position on the chart below")
 
         delta_pos_badge = calc_delta_badge(avg_pos, comp_pos, False)
-        trend_pos_html = f"{delta_pos_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev period</span>" if is_compare_mode else f"<span style='font-size:11.5px; color:{'#94a3b8' if is_dark else '#5f6368'}; font-weight:500;'>● {period_label}</span>"
+        trend_pos_html = f"{delta_pos_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev</span>" if is_compare_mode else ""
 
         st.markdown(f"""
-        <div class="gsc-scorecard-card {pos_card_class}" style="white-space:nowrap !important;">
-            <div class="gsc-card-val-big" style="white-space:nowrap !important; word-break:keep-all !important;">{avg_pos or 0.0}</div>
-            <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_pos_html}</div>
+        <div class="gsc-scorecard-card {pos_card_class}" style="white-space:nowrap !important; min-height:85px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div class="gsc-card-val-big" style="font-size:36px !important; font-weight:400 !important; font-family:'Roboto', 'Google Sans', sans-serif !important; margin-top:2px !important;">{avg_pos or 0.0}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_pos_html}</div>
+                <div style="color:{'#ffffff' if show_position else '#94a3b8'}; font-size:11px; border:1px solid {'rgba(255,255,255,0.4)' if show_position else '#dadce0'}; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center; line-height:1;" title="Average ranking position">?</div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
