@@ -2314,14 +2314,14 @@ if 'selected_page' not in st.session_state or (qp_view and qp_view != st.session
                 if qp_v in v or v in qp_v:
                     found_k = k
                     break
-            st.session_state.selected_page = found_k or "📊 Dashboard Hub"
+            st.session_state.selected_page = found_k or "📈 Performance"
         st.session_state.current_active_view = qp_view
     elif qp_p and qp_p in ALL_NAV_PAGES:
         st.session_state.selected_page = qp_p
-        st.session_state.current_active_view = PAGE_TO_VIEW_SLUG.get(qp_p, 'hub')
+        st.session_state.current_active_view = PAGE_TO_VIEW_SLUG.get(qp_p, 'overview')
     else:
-        st.session_state.selected_page = "📊 Dashboard Hub"
-        st.session_state.current_active_view = "hub"
+        st.session_state.selected_page = "📈 Performance"
+        st.session_state.current_active_view = "overview"
 
 # Handle programmatic module selection events
 if st.session_state.get('selected_module'):
@@ -2333,15 +2333,15 @@ if st.session_state.get('selected_module'):
     elif mod in ALL_NAV_PAGES:
         st.session_state.selected_page = mod
     st.session_state['selected_module'] = None
-    new_v = PAGE_TO_VIEW_SLUG.get(st.session_state.selected_page, 'hub')
+    new_v = PAGE_TO_VIEW_SLUG.get(st.session_state.selected_page, 'overview')
     st.session_state.current_active_view = new_v
     st.query_params['view'] = new_v
 
 if 'selected_page' not in st.session_state or st.session_state.selected_page not in ALL_NAV_PAGES:
-    st.session_state.selected_page = "📊 Dashboard Hub"
+    st.session_state.selected_page = "📈 Performance"
 
 # Always keep query parameter view synchronized
-current_slug = PAGE_TO_VIEW_SLUG.get(st.session_state.selected_page, 'hub')
+current_slug = PAGE_TO_VIEW_SLUG.get(st.session_state.selected_page, 'overview')
 st.session_state.current_active_view = current_slug
 st.query_params['view'] = current_slug
 if 'page' in st.query_params:
@@ -2704,21 +2704,21 @@ def render_auth_page(auth_url=None, is_dark=False):
 
             # Callbacks for auth state transitions
             def _handle_demo_login():
-                demo_site = "sc-domain:example-enterprise.com"
+                demo_site = "https://testgsc12345.blogspot.com/"
                 st.session_state.authenticated = True
                 st.session_state.demo_mode = True
-                st.session_state.user_email = "demo.analyst@example-enterprise.com"
-                st.session_state.sites = [demo_site, "https://example-enterprise.com/blog/"]
+                st.session_state.user_email = "demo.analyst@example.com"
+                st.session_state.sites = [demo_site, "sc-domain:example-enterprise.com"]
                 st.session_state.sites_detailed = [
                     {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
-                    {"siteUrl": "https://example-enterprise.com/blog/", "permissionLevel": "siteOwner"}
+                    {"siteUrl": "sc-domain:example-enterprise.com", "permissionLevel": "siteOwner"}
                 ]
                 st.session_state.current_site = demo_site
                 st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
                 st.session_state.portfolio_needs_refresh = True
-                st.session_state.selected_page = "📊 Dashboard Hub"
-                st.session_state.current_active_view = "hub"
-                st.toast("⚡ Loaded demo enterprise dataset!", icon="🚀")
+                st.session_state.selected_page = "📈 Performance"
+                st.session_state.current_active_view = "overview"
+                st.toast("⚡ Loaded Google Search Console workspace!", icon="🚀")
 
             def _handle_google_login(auth_url=None):
                 email_val = (st.session_state.get('auth_login_email_input') or "").strip()
@@ -2752,8 +2752,8 @@ def render_auth_page(auth_url=None, is_dark=False):
                     st.session_state.current_site = default_site
                     st.session_state.df = generate_mock_gsc_data(default_site, days=90)
                     st.session_state.portfolio_needs_refresh = True
-                    st.session_state.selected_page = "📊 Dashboard Hub"
-                    st.session_state.current_active_view = "hub"
+                    st.session_state.selected_page = "📈 Performance"
+                    st.session_state.current_active_view = "overview"
                     st.toast(f"✅ Signed in as {raw_email}!", icon="🎉")
 
             # Email Input Field
@@ -3026,8 +3026,8 @@ def render_sidebar(cfg=None, auth_url=None, is_dark=False, live_site_users=0, ac
         st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
         # 2. Official Google Search Console Navigation Tree
-        curr_page = st.session_state.get('selected_page', '📊 Dashboard Hub')
-        curr_slug = st.session_state.get('current_active_view', 'hub')
+        curr_page = st.session_state.get('selected_page', '📈 Performance')
+        curr_slug = st.session_state.get('current_active_view', 'overview')
 
         def _render_gsc_nav_btn(item_label: str, target_page: str, target_slug: str, item_icon: str = ""):
             is_active = (curr_page == target_page) or (curr_slug == target_slug)
@@ -3267,11 +3267,29 @@ if st.query_params.get("view") in ["auth", "login", "home", "landing"] or "logou
     st.session_state.service = None
     st.session_state.user_creds = None
 
-# Auto-mark as authenticated if active credentials are present AND user didn't explicitly log out
+# Auto-mark as authenticated if active credentials are present OR auto-load GSC demo mode for instant access
 if not is_authenticated and not is_demo_mode and st.session_state.get('authenticated') is not False:
     if st.session_state.get('user_creds'):
         is_authenticated = True
         st.session_state.authenticated = True
+    elif st.query_params.get("view") not in ["auth", "login", "home", "landing"] and "logout" not in st.query_params:
+        # Seamless first-visit experience: Auto-initialize demo GSC workspace so users immediately see Google Search Console!
+        demo_site = "https://testgsc12345.blogspot.com/"
+        st.session_state.authenticated = True
+        st.session_state.demo_mode = True
+        st.session_state.user_email = "demo.analyst@example.com"
+        st.session_state.sites = [demo_site, "sc-domain:example-enterprise.com"]
+        st.session_state.sites_detailed = [
+            {"siteUrl": demo_site, "permissionLevel": "siteOwner"},
+            {"siteUrl": "sc-domain:example-enterprise.com", "permissionLevel": "siteOwner"}
+        ]
+        st.session_state.current_site = demo_site
+        st.session_state.df = generate_mock_gsc_data(demo_site, days=90)
+        st.session_state.portfolio_needs_refresh = True
+        st.session_state.selected_page = "📈 Performance"
+        st.session_state.current_active_view = "overview"
+        is_authenticated = True
+        is_demo_mode = True
 
 is_logged_in = is_authenticated or is_demo_mode
 
@@ -4017,14 +4035,6 @@ if page in ["📊 Dashboard Hub", "🏠 Dashboard Hub", "hub"]:
 # 1. Performance Overview
 # ----------------------------------------------------
 elif page in ["📈 Performance", "📊 Overview"]:
-    # Return to Dashboard Hub button
-    col_hub_back, _ = st.columns([2.5, 7.5])
-    with col_hub_back:
-        if st.button("← Back to Dashboard Hub", key="btn_perf_back_to_hub", use_container_width=True, type="primary"):
-            st.session_state.selected_page = "📊 Dashboard Hub"
-            st.session_state.current_active_view = "hub"
-            st.query_params['view'] = "hub"
-            st.rerun()
 
     if is_connected and not real_active_sites:
         user_e = st.session_state.get('user_email') or 'your Google Account'
