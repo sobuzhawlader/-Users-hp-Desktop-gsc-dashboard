@@ -267,14 +267,47 @@ def inject_dashboard_styles(is_dark=False):
         .gsc-card-val-big {
             white-space: nowrap !important;
             overflow: visible !important;
-            font-size: clamp(1.7rem, 2.2vw, 1.9rem) !important;
-            line-height: 1.2 !important;
+            font-size: 28px !important;
+            font-weight: 400 !important;
+            font-family: 'Google Sans', 'Roboto', Arial, sans-serif !important;
+            line-height: 1.15 !important;
             word-break: keep-all !important;
             overflow-wrap: normal !important;
-            letter-spacing: -0.5px !important;
+            letter-spacing: -0.2px !important;
         }
         .gsc-card-trend-pill, .gsc-card-sub, .gsc-scorecard-card * {
             white-space: nowrap !important;
+        }
+
+        /* Official Google Search Console Typography System */
+        html, body, [data-testid="stAppViewContainer"], .stApp {
+            font-family: 'Roboto', 'Google Sans', Arial, sans-serif !important;
+            font-size: 13px !important;
+        }
+        
+        /* Heading font sizes */
+        h1, [data-testid="stHeadingWithActionElements"] h1 {
+            font-family: 'Google Sans', 'Roboto', Arial, sans-serif !important;
+            font-size: 22px !important;
+            font-weight: 400 !important;
+            letter-spacing: -0.2px !important;
+        }
+        h2, [data-testid="stHeadingWithActionElements"] h2 {
+            font-family: 'Google Sans', 'Roboto', Arial, sans-serif !important;
+            font-size: 17px !important;
+            font-weight: 500 !important;
+        }
+        h3, [data-testid="stHeadingWithActionElements"] h3 {
+            font-family: 'Google Sans', 'Roboto', Arial, sans-serif !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+        }
+
+        /* Sidebar item typography */
+        section[data-testid="stSidebar"] button {
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            font-family: 'Roboto', 'Google Sans', Arial, sans-serif !important;
         }
     
         /* Claude-Style Minimalist Centered Login Card */
@@ -3648,15 +3681,15 @@ def render_gsc_top_bar(site_label: str, is_dark_mode: bool, live_users: int, act
         gsc_logo_html = f"""
         <div style="display:flex; align-items:center; gap:12px;">
             <div style="font-size:20px; color:{'#94a3b8' if is_dark_mode else '#5f6368'}; cursor:pointer; line-height:1; user-select:none;" title="Main Menu">☰</div>
-            <a href="?view=hub" target="_self" style="text-decoration:none; display:flex; align-items:center; gap:8px; cursor:pointer;" title="Google Search Console">
-                <svg width="26" height="26" viewBox="0 0 48 48">
+            <a href="?view=overview" target="_self" style="text-decoration:none; display:flex; align-items:center; gap:8px; cursor:pointer;" title="Google Search Console">
+                <svg width="24" height="24" viewBox="0 0 48 48">
                     <path fill="#4285F4" d="M43.6 20.1H42V20H24v8h11.3C33.7 33.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8 13.4 4.8 4.8 13.4 4.8 24S13.4 43.2 24 43.2c10.6 0 19.2-8.6 19.2-19.2 0-1.3-.1-2.6-.4-3.9z"/>
                     <path fill="#EA4335" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13.6 24 13.6c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.4 6.6 29.5 4.8 24 4.8c-7.7 0-14.4 4.3-17.7 9.9z"/>
                     <path fill="#FBBC05" d="M24 43.2c5.3 0 10.1-1.8 13.8-4.9l-6.4-5.3c-2.1 1.4-4.6 2.2-7.4 2.2-5.3 0-9.7-3.6-11.3-8.5l-6.6 5.1C9.5 38.3 16.2 43.2 24 43.2z"/>
                     <path fill="#34A853" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.7-2.6 4.9-4.9 6.5l6.4 5.3c4.7-4.4 7.6-10.8 7.6-18.7 0-1.3-.1-2.6-.4-3.9z"/>
                 </svg>
-                <div style="font-family:'Roboto', 'Google Sans', sans-serif; font-size:18px; font-weight:400; color:{'#cbd5e1' if is_dark_mode else '#5f6368'}; letter-spacing:-0.2px; white-space:nowrap;">
-                    <b style="color:{'#f8fafc' if is_dark_mode else '#202124'}; font-weight:500;">Google</b> Search Console
+                <div style="font-family:'Google Sans', 'Roboto', Arial, sans-serif; font-size:18px; font-weight:400; color:{'#e8eaed' if is_dark_mode else '#5f6368'}; letter-spacing:-0.2px; white-space:nowrap;">
+                    Google Search Console
                 </div>
             </a>
         </div>
@@ -4446,15 +4479,18 @@ elif page in ["📈 Performance", "📊 Overview"]:
         color: {'#ffffff' if show_clicks else ('#94a3b8' if is_dark else '#5f6368')} !important;
         border: 1px solid {'#1a73e8' if show_clicks else ('rgba(56,189,248,0.2)' if is_dark else '#dadce0')} !important;
         border-bottom: none !important;
-        font-weight: 600 !important;
+        font-weight: 500 !important;
         font-size: 13px !important;
+        font-family: 'Google Sans', 'Roboto', Arial, sans-serif !important;
         justify-content: flex-start !important;
-        padding: 8px 14px !important;
+        padding: 6px 12px !important;
+        border-radius: 8px 8px 0 0 !important;
     }}
     .gsc-card-clicks-on {{
         background: {'#1a73e8' if not is_dark else 'linear-gradient(180deg, #1a73e8 0%, rgba(15,23,42,0.95) 100%)'} !important;
         border: 1px solid {'#1a73e8' if not is_dark else 'rgba(56,189,248,0.4)'} !important;
         border-top: none !important;
+        border-radius: 0 0 8px 8px !important;
     }}
     .gsc-card-clicks-on .gsc-card-val-big {{
         color: #ffffff !important;
@@ -4466,15 +4502,18 @@ elif page in ["📈 Performance", "📊 Overview"]:
         color: {'#ffffff' if show_impressions else ('#94a3b8' if is_dark else '#5f6368')} !important;
         border: 1px solid {'#5c6bc0' if show_impressions else ('rgba(168,85,247,0.2)' if is_dark else '#dadce0')} !important;
         border-bottom: none !important;
-        font-weight: 600 !important;
+        font-weight: 500 !important;
         font-size: 13px !important;
+        font-family: 'Google Sans', 'Roboto', Arial, sans-serif !important;
         justify-content: flex-start !important;
-        padding: 8px 14px !important;
+        padding: 6px 12px !important;
+        border-radius: 8px 8px 0 0 !important;
     }}
     .gsc-card-imps-on {{
         background: {'#5c6bc0' if not is_dark else 'linear-gradient(180deg, #5c6bc0 0%, rgba(15,23,42,0.95) 100%)'} !important;
         border: 1px solid {'#5c6bc0' if not is_dark else 'rgba(168,85,247,0.4)'} !important;
         border-top: none !important;
+        border-radius: 0 0 8px 8px !important;
     }}
     .gsc-card-imps-on .gsc-card-val-big {{
         color: #ffffff !important;
@@ -4486,15 +4525,18 @@ elif page in ["📈 Performance", "📊 Overview"]:
         color: {'#ffffff' if show_ctr else ('#94a3b8' if is_dark else '#5f6368')} !important;
         border: 1px solid {'#00897b' if show_ctr else ('rgba(20,184,166,0.2)' if is_dark else '#dadce0')} !important;
         border-bottom: none !important;
-        font-weight: 600 !important;
+        font-weight: 500 !important;
         font-size: 13px !important;
+        font-family: 'Google Sans', 'Roboto', Arial, sans-serif !important;
         justify-content: flex-start !important;
-        padding: 8px 14px !important;
+        padding: 6px 12px !important;
+        border-radius: 8px 8px 0 0 !important;
     }}
     .gsc-card-ctr-on {{
         background: {'#00897b' if not is_dark else 'linear-gradient(180deg, #00897b 0%, rgba(15,23,42,0.95) 100%)'} !important;
         border: 1px solid {'#00897b' if not is_dark else 'rgba(20,184,166,0.4)'} !important;
         border-top: none !important;
+        border-radius: 0 0 8px 8px !important;
     }}
     .gsc-card-ctr-on .gsc-card-val-big {{
         color: #ffffff !important;
@@ -4506,15 +4548,18 @@ elif page in ["📈 Performance", "📊 Overview"]:
         color: {'#ffffff' if show_position else ('#94a3b8' if is_dark else '#5f6368')} !important;
         border: 1px solid {'#e37400' if show_position else ('rgba(245,158,11,0.2)' if is_dark else '#dadce0')} !important;
         border-bottom: none !important;
-        font-weight: 600 !important;
+        font-weight: 500 !important;
         font-size: 13px !important;
+        font-family: 'Google Sans', 'Roboto', Arial, sans-serif !important;
         justify-content: flex-start !important;
-        padding: 8px 14px !important;
+        padding: 6px 12px !important;
+        border-radius: 8px 8px 0 0 !important;
     }}
     .gsc-card-pos-on {{
         background: {'#e37400' if not is_dark else 'linear-gradient(180deg, #e37400 0%, rgba(15,23,42,0.95) 100%)'} !important;
         border: 1px solid {'#e37400' if not is_dark else 'rgba(245,158,11,0.4)'} !important;
         border-top: none !important;
+        border-radius: 0 0 8px 8px !important;
     }}
     .gsc-card-pos-on .gsc-card-val-big {{
         color: #ffffff !important;
@@ -4525,9 +4570,37 @@ elif page in ["📈 Performance", "📊 Overview"]:
         background: {'rgba(15,23,42,0.5)' if is_dark else '#ffffff'} !important;
         border: 1px solid {'rgba(255,255,255,0.08)' if is_dark else '#dadce0'} !important;
         border-top: none !important;
+        border-radius: 0 0 8px 8px !important;
     }}
     .gsc-card-off .gsc-card-val-big {{
         color: {'#94a3b8' if is_dark else '#5f6368'} !important;
+    }}
+
+    /* Sub-tabs below chart (QUERIES, PAGES, COUNTRIES, etc.) */
+    div[data-testid="stTabs"] button[role="tab"] {{
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        font-family: 'Google Sans', 'Roboto', Arial, sans-serif !important;
+        letter-spacing: 0.4px !important;
+        text-transform: uppercase !important;
+        padding: 8px 16px !important;
+        color: {'#94a3b8' if is_dark else '#5f6368'} !important;
+    }}
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {{
+        color: {'#38bdf8' if is_dark else '#1a73e8'} !important;
+        border-bottom: 3px solid {'#38bdf8' if is_dark else '#1a73e8'} !important;
+        font-weight: 600 !important;
+    }}
+    
+    /* Table Typography */
+    div[data-testid="stDataFrame"] {{
+        font-family: 'Roboto', Arial, sans-serif !important;
+        font-size: 13px !important;
+    }}
+    div[data-testid="stDataFrame"] [role="columnheader"] {{
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        color: {'#94a3b8' if is_dark else '#70757a'} !important;
     }}
     </style>
     """
@@ -4546,8 +4619,8 @@ elif page in ["📈 Performance", "📊 Overview"]:
         trend_clicks_html = f"{delta_clicks_badge} <span style='font-size:11px; color:#ffffff; font-weight:400;'>vs prev</span>" if is_compare_mode else ""
 
         st.markdown(f"""
-        <div class="gsc-scorecard-card {click_card_class}" style="white-space:nowrap !important; min-height:85px; display:flex; flex-direction:column; justify-content:space-between;">
-            <div class="gsc-card-val-big" style="font-size:36px !important; font-weight:400 !important; font-family:'Roboto', 'Google Sans', sans-serif !important; margin-top:2px !important;">{fmt_gsc_num(total_clicks)}</div>
+        <div class="gsc-scorecard-card {click_card_class}" style="white-space:nowrap !important; min-height:64px; display:flex; flex-direction:column; justify-content:space-between; padding:4px 12px 8px 12px;">
+            <div class="gsc-card-val-big" style="font-size:28px !important; font-weight:400 !important; font-family:'Google Sans', 'Roboto', Arial, sans-serif !important; line-height:1.15 !important; letter-spacing:-0.2px !important; margin-top:2px !important;">{fmt_gsc_num(total_clicks)}</div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_clicks_html}</div>
                 <div style="color:{'#ffffff' if show_clicks else '#94a3b8'}; font-size:11px; border:1px solid {'rgba(255,255,255,0.4)' if show_clicks else '#dadce0'}; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center; line-height:1;" title="Total organic clicks">?</div>
@@ -4565,8 +4638,8 @@ elif page in ["📈 Performance", "📊 Overview"]:
         trend_imps_html = f"{delta_imps_badge} <span style='font-size:11px; color:#ffffff; font-weight:400;'>vs prev</span>" if is_compare_mode else ""
 
         st.markdown(f"""
-        <div class="gsc-scorecard-card {imps_card_class}" style="white-space:nowrap !important; min-height:85px; display:flex; flex-direction:column; justify-content:space-between;">
-            <div class="gsc-card-val-big" style="font-size:36px !important; font-weight:400 !important; font-family:'Roboto', 'Google Sans', sans-serif !important; margin-top:2px !important;">{imps_disp}</div>
+        <div class="gsc-scorecard-card {imps_card_class}" style="white-space:nowrap !important; min-height:64px; display:flex; flex-direction:column; justify-content:space-between; padding:4px 12px 8px 12px;">
+            <div class="gsc-card-val-big" style="font-size:28px !important; font-weight:400 !important; font-family:'Google Sans', 'Roboto', Arial, sans-serif !important; line-height:1.15 !important; letter-spacing:-0.2px !important; margin-top:2px !important;">{imps_disp}</div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_imps_html}</div>
                 <div style="color:{'#ffffff' if show_impressions else '#94a3b8'}; font-size:11px; border:1px solid {'rgba(255,255,255,0.4)' if show_impressions else '#dadce0'}; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center; line-height:1;" title="Total search impressions">?</div>
@@ -4584,8 +4657,8 @@ elif page in ["📈 Performance", "📊 Overview"]:
         trend_ctr_html = f"{delta_ctr_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev</span>" if is_compare_mode else ""
 
         st.markdown(f"""
-        <div class="gsc-scorecard-card {ctr_card_class}" style="white-space:nowrap !important; min-height:85px; display:flex; flex-direction:column; justify-content:space-between;">
-            <div class="gsc-card-val-big" style="font-size:36px !important; font-weight:400 !important; font-family:'Roboto', 'Google Sans', sans-serif !important; margin-top:2px !important;">{avg_ctr or 0}%</div>
+        <div class="gsc-scorecard-card {ctr_card_class}" style="white-space:nowrap !important; min-height:64px; display:flex; flex-direction:column; justify-content:space-between; padding:4px 12px 8px 12px;">
+            <div class="gsc-card-val-big" style="font-size:28px !important; font-weight:400 !important; font-family:'Google Sans', 'Roboto', Arial, sans-serif !important; line-height:1.15 !important; letter-spacing:-0.2px !important; margin-top:2px !important;">{avg_ctr or 0}%</div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_ctr_html}</div>
                 <div style="color:{'#ffffff' if show_ctr else '#94a3b8'}; font-size:11px; border:1px solid {'rgba(255,255,255,0.4)' if show_ctr else '#dadce0'}; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center; line-height:1;" title="Average Click-Through Rate">?</div>
@@ -4603,8 +4676,8 @@ elif page in ["📈 Performance", "📊 Overview"]:
         trend_pos_html = f"{delta_pos_badge} <span style='font-size:11px; color:#64748b; font-weight:400;'>vs prev</span>" if is_compare_mode else ""
 
         st.markdown(f"""
-        <div class="gsc-scorecard-card {pos_card_class}" style="white-space:nowrap !important; min-height:85px; display:flex; flex-direction:column; justify-content:space-between;">
-            <div class="gsc-card-val-big" style="font-size:36px !important; font-weight:400 !important; font-family:'Roboto', 'Google Sans', sans-serif !important; margin-top:2px !important;">{avg_pos or 0.0}</div>
+        <div class="gsc-scorecard-card {pos_card_class}" style="white-space:nowrap !important; min-height:64px; display:flex; flex-direction:column; justify-content:space-between; padding:4px 12px 8px 12px;">
+            <div class="gsc-card-val-big" style="font-size:28px !important; font-weight:400 !important; font-family:'Google Sans', 'Roboto', Arial, sans-serif !important; line-height:1.15 !important; letter-spacing:-0.2px !important; margin-top:2px !important;">{avg_pos or 0.0}</div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div class="gsc-card-trend-pill" style="white-space:nowrap !important;">{trend_pos_html}</div>
                 <div style="color:{'#ffffff' if show_position else '#94a3b8'}; font-size:11px; border:1px solid {'rgba(255,255,255,0.4)' if show_position else '#dadce0'}; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center; line-height:1;" title="Average ranking position">?</div>
